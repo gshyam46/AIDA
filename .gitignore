@@ -22,3 +22,7 @@ dist/
 build/
 frontend/.next/
 frontend/out/
+
+
+uploads/
+database/
