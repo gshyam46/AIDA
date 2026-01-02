@@ -1,0 +1,43 @@
+# Business Logic Configuration for SQL MVP
+
+# Metric mappings - map natural language terms to database columns
+metric_mappings:
+  revenue: amount
+  total: amount
+  sales: amount
+  orders: id
+  customers: id
+  users: id
+  price: amount
+  cost: amount
+  value: amount
+
+# Entity mappings - map natural language terms to table names
+entity_mappings:
+  order: orders
+  sale: orders
+  customer: customers
+  user: customers
+  product: products
+  item: products
+
+# Default filters applied automatically to certain tables
+default_filters:
+  orders:
+    - column: status
+      operator: "="
+      value: completed
+  
+# Time column mappings for different tables
+time_columns:
+  orders: created_at
+  customers: created_at
+  products: created_at
+
+# Supported aggregation functions
+aggregation_functions:
+  - sum
+  - count
+  - avg
+  - min
+  - max
