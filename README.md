@@ -6,6 +6,8 @@ AIDA uses a small local language model to interpret a business question, then va
 
 **Current reliability:** the [new 50-question transfer assessment](docs/BLIND_EVALUATION.md) passed all 40 explicit SQL plans but answered only **19/40 supported natural-language questions correctly** and incorrectly executed **6/10 unsupported or ambiguous requests**. This is a working local demonstration with documented language failures; it does **not** pass the release gate for reliable querying across new databases. The frozen results, repeatability/privacy measurements and prioritized fixes are preserved in that report.
 
+[Model, test data and repository status](docs/MODEL_TEST_DATA_AND_REPOSITORY.md) explains the pinned model choice, exactly what enters model prompts, which six databases to use for each test layer, how to evaluate another model, and which repository cleanup remains before publication.
+
 ## Start on Windows
 
 Install Python 3.11+ and Node.js 22.9+, then run from this repository:

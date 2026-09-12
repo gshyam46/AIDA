@@ -47,8 +47,10 @@ The intended product uses a small model for language understanding and determini
 - [x] Record ten session replays and ten fresh-parser repeats, actual request/token/timing evidence and privacy payload audits; all frozen-file hashes remain unchanged.
 - [x] Run the full backend suite: 455 tests pass, including the new scoring checks.
 - [x] Verify the new source in the real browser: all 15 integration checks pass; six language questions reproduce the first-pass outcomes, including two failures. Preserve both browser attempts and leave the logistics source available locally.
+- [x] Document the pinned local model, prompt/database boundary, test-database selection, future model comparison and repository hygiene in [MODEL_TEST_DATA_AND_REPOSITORY.md](MODEL_TEST_DATA_AND_REPOSITORY.md).
 - [ ] Repair semantic coverage, unsupported-operation handling, candidate restrictions and false-refusal guards according to [BLIND_EVALUATION.md](BLIND_EVALUATION.md).
 - [ ] After fixes, run a separately authored and sealed transfer set; retain these 50 cases as regression evidence.
+- [ ] Remove or document the three unreferenced `Research/` PDFs, reduce raw evidence on the product branch, sanitize local machine metadata, and consolidate the current verification status before a public release.
 
 The transfer assessment is complete; its release criteria failed. Earlier regression pass counts do not establish broad language reliability. This phase measured the unchanged product and did not tune it to the new questions.
 

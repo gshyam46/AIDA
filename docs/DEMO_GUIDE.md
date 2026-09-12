@@ -4,6 +4,8 @@ Start with `powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1` and
 
 The [new-database assessment](BLIND_EVALUATION.md) found substantial natural-language failures: 19/40 supported questions correct and six unsupported requests incorrectly executed. Present this as a local demonstration with documented limits. Its separate 15-check browser journey passed upload, structured querying, charts, CSV, lineage and dashboard refresh; those UI results do not establish interpretation accuracy.
 
+Use [Model, test data and repository status](MODEL_TEST_DATA_AND_REPOSITORY.md) to choose the correct fixture, explain why the model never receives database rows or physical mappings, and distinguish the current 4B baseline from a future larger-model comparison.
+
 The walkthrough below is a repeatable acceptance journey. [VERIFICATION.md](VERIFICATION.md) records actual model and browser evidence. The model extracts fields and grounded unresolved phrases; code decides readiness. Semantic field IDs are opaque tokens, while approved filter values are grounded in the question. Relational SQL and join keys are chosen by the compiler from owner-approved mappings.
 
 For the automated semantic acceptance check, run `.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite acceptance --output artifacts/semantic-acceptance.json` from the repository root. This covers the 16 starter questions and six browser-workflow questions. Run model suites sequentially. For browser testing, use a fresh backend before asking any questions, generate the fixture with `.\.venv\Scripts\python.exe scripts/create-e2e-source.py`, then run `node scripts/e2e.cjs`. The full browser test needs local mode and must not overlap a model evaluation.
