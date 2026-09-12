@@ -26,3 +26,12 @@ frontend/out/
 
 uploads/
 database/
+.venv/
+.pytest_cache/
+.npm-cache/
+backend/data/
+artifacts/
+frontend/test-results/
+frontend/playwright-report/
+frontend/tsconfig.tsbuildinfo
+.runtime/

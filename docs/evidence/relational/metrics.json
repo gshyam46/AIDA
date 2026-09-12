@@ -1,0 +1,10 @@
+{
+    "queries":  31,
+    "model_calls":  31,
+    "prompt_tokens":  44623,
+    "completion_tokens":  3570,
+    "median_model_ms":  6659.01,
+    "p95_model_ms":  9235.4,
+    "max_model_ms":  9451.8,
+    "median_database_ms":  4.54
+}

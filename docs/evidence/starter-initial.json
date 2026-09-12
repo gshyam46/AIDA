@@ -1,0 +1,11 @@
+{
+  "phase": "Advertised starter verification before default-scope correction",
+  "real_inference": true,
+  "question": "Monthly revenue trend",
+  "success": false,
+  "error_type": "clarification_required",
+  "error": "What is the time period for the monthly revenue trend?",
+  "expected_plan": {"metric": "revenue", "dimension": "month", "filters": {}, "date_from": null, "date_to": null, "sort": "dimension_asc", "limit": 100},
+  "observed_telemetry": {"model_calls": 1, "prompt_tokens": 962, "completion_tokens": 70, "total_tokens": 1032, "model_latency_ms": 2957.66},
+  "note": "The monthly grouping is defined; absent dates should mean all available records. This failure was discovered after the earlier model suites passed."
+}

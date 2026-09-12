@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "timestamp": "2026-09-12T07:04:06.488924+00:00",
+  "base_url": "http://127.0.0.1:3000",
+  "requests": 60,
+  "successes": 60,
+  "model_calls": 6,
+  "cache_hits": 54,
+  "p50_http_ms": 16.27,
+  "semantic_cache_hits": 54,
+  "actual_tokens": 6896,
+  "p50_inference_request_ms": 3072.74,
+  "p50_reused_request_ms": 16.05,
+  "p95_http_ms": 2931.76,
+  "max_http_ms": 6378.13,
+  "scope": "Sequential requests to a local server; includes warmed cache. Not a capacity benchmark."
+}

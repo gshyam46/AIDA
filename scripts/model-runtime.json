@@ -1,0 +1,21 @@
+{
+  "runtime": {
+    "release": "b10809",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b10809/llama-b10809-bin-win-vulkan-x64.zip",
+    "sha256": "97e50b3ef0cdd2cb4d5afd446a9006b3496bee6c0d0ba7083d32f36075771870",
+    "license": "MIT"
+  },
+  "model": {
+    "name": "Qwen3-4B-Instruct-2507",
+    "publisher": "Qwen",
+    "quantization": "Q4_K_M",
+    "quantization_repository": "lmstudio-community/Qwen3-4B-Instruct-2507-GGUF",
+    "revision": "4edb920b6f14e3b9284d4502a6485103d72cde05",
+    "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "url": "https://huggingface.co/lmstudio-community/Qwen3-4B-Instruct-2507-GGUF/resolve/4edb920b6f14e3b9284d4502a6485103d72cde05/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "sha256": "8cdb57cbb880d313736a9bc4e3d3d2485f145b5e19cf33783746e753e82641fc",
+    "bytes": 2497280448,
+    "license": "Apache-2.0",
+    "upstream": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507"
+  }
+}

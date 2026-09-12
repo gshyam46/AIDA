@@ -1,0 +1,34 @@
+{
+    "captured_at":  "2026-09-12T10:00:40.9176073Z",
+    "model_pid":  25328,
+    "working_set_bytes":  29466624,
+    "private_bytes":  3764117504,
+    "model_health":  {
+                         "status":  "ok"
+                     },
+    "app_health":  {
+                       "status":  "healthy",
+                       "version":  "3.0.0",
+                       "timestamp":  "2026-09-12T10:00:41.124695+00:00",
+                       "mode":  "local",
+                       "dataset":  {
+                                       "id":  "commerce",
+                                       "name":  "Commerce demo",
+                                       "synthetic":  true,
+                                       "as_of":  "2025-12-31",
+                                       "date_from":  "2025-01-01",
+                                       "date_to":  "2025-12-31",
+                                       "currency":  "USD",
+                                       "catalog_version":  "8fd8b2c558d81f8f"
+                                   },
+                       "model":  {
+                                     "available":  true,
+                                     "model":  "aida-semantic",
+                                     "provider":  "llama.cpp",
+                                     "status":  "ready",
+                                     "error":  null,
+                                     "inference_location":  "local",
+                                     "external_requests":  false
+                                 }
+                   }
+}

@@ -1,22 +1,9 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+﻿import type {Metadata} from 'next'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
-  title: 'SQL MVP - Natural Language to SQL',
-  description: 'Transform natural language questions into SQL queries',
+  title: 'AIDA — Your data, a clear answer',
+  description: 'Ask questions using a small local model, inspect validated SQL, explore interactive charts, and build source-scoped dashboards.',
 }
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
-  )
+export default function RootLayout({children}: {children: React.ReactNode}) {
+  return <html lang="en"><body>{children}</body></html>
 }

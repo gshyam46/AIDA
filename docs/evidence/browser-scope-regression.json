@@ -1,0 +1,49 @@
+{
+  "started_at": "2026-09-12T06:43:23.892Z",
+  "base_url": "http://127.0.0.1:3000",
+  "steps": [
+    {
+      "name": "Desktop opens with a real demo result",
+      "status": "passed",
+      "duration_ms": 1136
+    },
+    {
+      "name": "Simple count executes locally and repeat query is deterministic",
+      "status": "passed",
+      "duration_ms": 3921,
+      "expected_count": 7810,
+      "first_execution_ms": 3517.97,
+      "repeat_execution_ms": 0.42
+    },
+    {
+      "name": "Grouped results have an interactive chart and table",
+      "status": "passed",
+      "duration_ms": 4432
+    },
+    {
+      "name": "Visual builder produces a real grouped result",
+      "status": "passed",
+      "duration_ms": 398
+    },
+    {
+      "name": "Dashboard saves definitions, persists across reload, refreshes and removes a card",
+      "status": "passed",
+      "duration_ms": 1152
+    },
+    {
+      "name": "Unsupported question shows a recoverable error",
+      "status": "passed",
+      "duration_ms": 2719
+    },
+    {
+      "name": "Empty averages and missing periods are not presented as fabricated zero values",
+      "status": "failed",
+      "duration_ms": 7956,
+      "error": "What is the time period for the monthly trend of average order value for pending orders?\n\nfalse !== true\n"
+    }
+  ],
+  "browser_errors": [],
+  "external_requests": [],
+  "status": "failed",
+  "finished_at": "2026-09-12T06:43:46.938Z"
+}

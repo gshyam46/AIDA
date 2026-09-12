@@ -1,0 +1,8 @@
+.git
+.runtime
+.venv
+artifacts
+backend/data
+frontend/node_modules
+frontend/.next
+frontend/.npm-cache

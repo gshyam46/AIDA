@@ -1,10 +1,15 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-litellm==1.17.9
-pydantic==2.5.0
-python-multipart==0.0.6
-python-dotenv==1.0.0
-pyyaml==6.0.1
-hypothesis==6.92.1
-pytest==7.4.3
-pytest-asyncio==0.21.1
+fastapi==0.141.1
+uvicorn==0.52.4
+# Pin the runtime dependency set verified for this demo.
+starlette==1.6.0
+pydantic==2.13.5
+pydantic-core==2.46.5
+annotated-types==0.8.0
+annotated-doc==0.0.5
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+anyio==4.15.1
+idna==3.19
+click==8.5.0
+h11==0.16.0
+colorama==0.4.6; sys_platform == 'win32'

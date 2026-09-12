@@ -1,0 +1,249 @@
+{
+  "version": 2,
+  "name": "Retail warehouse",
+  "currency": "USD",
+  "as_of": "2026-09-12",
+  "date_from": "2025-01-01",
+  "date_to": "2026-08-28",
+  "fact": {
+    "table": "order_items",
+    "key": "line_id",
+    "columns": [
+      "line_id",
+      "order_id",
+      "product_id",
+      "quantity",
+      "line_total_cents"
+    ],
+    "archive_table": "archived_order_items"
+  },
+  "tables": {
+    "orders": {
+      "table": "orders"
+    },
+    "customers": {
+      "table": "customers"
+    },
+    "regions": {
+      "table": "regions"
+    },
+    "products": {
+      "table": "products"
+    },
+    "categories": {
+      "table": "categories"
+    }
+  },
+  "relations": [
+    {
+      "id": "line_order",
+      "from": "fact",
+      "from_column": "order_id",
+      "to": "orders",
+      "to_column": "order_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "order_customer",
+      "from": "orders",
+      "from_column": "customer_id",
+      "to": "customers",
+      "to_column": "customer_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "customer_region",
+      "from": "customers",
+      "from_column": "region_id",
+      "to": "regions",
+      "to_column": "region_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "line_product",
+      "from": "fact",
+      "from_column": "product_id",
+      "to": "products",
+      "to_column": "product_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "product_category",
+      "from": "products",
+      "from_column": "category_id",
+      "to": "categories",
+      "to_column": "category_id",
+      "kind": "many_to_one"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "revenue",
+      "label": "Revenue",
+      "table": "fact",
+      "aggregate": "SUM",
+      "description": "Sum of order-line totals in dollars, before refunds, across every order status unless filtered.",
+      "scale": 100,
+      "format": "currency",
+      "column": "line_total_cents"
+    },
+    {
+      "id": "units",
+      "label": "Units",
+      "table": "fact",
+      "aggregate": "SUM",
+      "description": "Sum of quantities on order lines.",
+      "scale": 1,
+      "format": "number",
+      "column": "quantity"
+    },
+    {
+      "id": "orders",
+      "label": "Orders",
+      "table": "fact",
+      "aggregate": "COUNT_DISTINCT",
+      "description": "Distinct orders represented by selected order lines; one order may belong to multiple product groups.",
+      "scale": 1,
+      "format": "number",
+      "column": "order_id"
+    },
+    {
+      "id": "average_line_value",
+      "label": "Average line value",
+      "table": "fact",
+      "aggregate": "AVG",
+      "description": "Average non-null order-line total in dollars, not average order value.",
+      "scale": 100,
+      "format": "currency",
+      "column": "line_total_cents"
+    },
+    {
+      "id": "line_count",
+      "label": "Order lines",
+      "table": "fact",
+      "aggregate": "COUNT",
+      "description": "Number of selected order-line records, including duplicate rows when UNION ALL is requested.",
+      "scale": 1,
+      "format": "number"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "region",
+      "label": "Region",
+      "table": "regions",
+      "column": "region_label",
+      "type": "string",
+      "values": [
+        "North",
+        "South",
+        "East",
+        "West"
+      ]
+    },
+    {
+      "id": "category",
+      "label": "Category",
+      "table": "categories",
+      "column": "category_label",
+      "type": "string",
+      "values": [
+        "Electronics",
+        "Home",
+        "Outdoor",
+        "Office"
+      ]
+    },
+    {
+      "id": "order_status",
+      "label": "Order status",
+      "table": "orders",
+      "column": "status",
+      "type": "string",
+      "values": [
+        "Completed",
+        "Processing",
+        "Cancelled"
+      ]
+    },
+    {
+      "id": "channel",
+      "label": "Sales channel",
+      "table": "orders",
+      "column": "channel",
+      "type": "string",
+      "values": [
+        "Online",
+        "Store",
+        "Partner"
+      ]
+    },
+    {
+      "id": "customer_segment",
+      "label": "Customer segment",
+      "table": "customers",
+      "column": "segment",
+      "type": "string",
+      "values": [
+        "Consumer",
+        "Business"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "id": "line_quantity",
+      "label": "Line quantity",
+      "table": "fact",
+      "column": "quantity",
+      "type": "number"
+    }
+  ],
+  "date": {
+    "table": "orders",
+    "column": "ordered_on"
+  },
+  "exists_relations": [
+    {
+      "id": "returns",
+      "label": "Returns",
+      "table": "returns",
+      "parent": "fact",
+      "parent_column": "line_id",
+      "child_column": "line_id",
+      "fields": [
+        {
+          "id": "return_reason",
+          "label": "Return reason",
+          "column": "reason",
+          "type": "string",
+          "values": [
+            "Damaged",
+            "Wrong item",
+            "Changed mind"
+          ]
+        },
+        {
+          "id": "return_status",
+          "label": "Return status",
+          "column": "status",
+          "type": "string",
+          "values": [
+            "Approved",
+            "Pending"
+          ]
+        }
+      ]
+    }
+  ],
+  "examples": [
+    "Revenue and units by region",
+    "Revenue by region and category for completed orders",
+    "Categories with revenue above 30000",
+    "Revenue by category for lines with damaged returns",
+    "Revenue by region for lines without returns",
+    "Regions with above-average revenue",
+    "Revenue by month including current and archived records",
+    "Order lines including current and archived records with exact duplicates removed"
+  ]
+}

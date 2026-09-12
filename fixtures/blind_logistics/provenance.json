@@ -1,0 +1,61 @@
+{
+  "dataset": "Blind synthetic logistics",
+  "contract_id": "blind-logistics-2026-09-12-v1",
+  "synthetic": true,
+  "authoring_method": "Agent-authored blind transfer evaluation; not an external human holdout",
+  "seed": 260912,
+  "as_of": "2026-09-12",
+  "sqlite_version": "3.50.4",
+  "table_counts": {
+    "markets": 5,
+    "zones": 6,
+    "shippers": 120,
+    "depots": 36,
+    "service_classes": 4,
+    "carriers": 6,
+    "consignments": 4960,
+    "shipment_legs": 12000,
+    "archive_shipment_legs": 3000,
+    "exception_events": 9189,
+    "operator_credentials": 8,
+    "contact_directory": 12
+  },
+  "data_checks": {
+    "exact_archive_overlaps": 120,
+    "union_all_rows": 15000,
+    "union_rows": 14880,
+    "current_null_measures": {
+      "weight_grams": 169,
+      "charge_cents": 134,
+      "transit_minutes": 828
+    },
+    "current_null_or_missing_consignment_refs": 34,
+    "legs_with_repeated_events": 2756,
+    "current_dates": [
+      "2026-01-01",
+      "2026-09-12"
+    ],
+    "archive_dates": [
+      "2025-07-01",
+      "2026-09-02"
+    ],
+    "foreign_key_violations_deliberately_retained": 186
+  },
+  "database_bytes": 1859584,
+  "structural_accommodations": {
+    "reason": "The existing schema inspector marks names ending in _name sensitive, including non-personal category labels. Initial manifest validation rejected these mappings.",
+    "physical_column_renames": {
+      "markets.market_name": "markets.market",
+      "zones.zone_name": "zones.zone",
+      "service_classes.class_name": "service_classes.service_class",
+      "carriers.carrier_name": "carriers.carrier"
+    },
+    "scope": "Physical names were changed before question sealing or model evaluation solely to satisfy structural approval. Business labels, semantic IDs, categorical values and intended measures stayed fixed. No application sensitivity rule was changed."
+  },
+  "sha256": {
+    "logistics.sqlite": "0adc23a8c2f4e24dce57c9416b32e8b64a2c7303ccf0973fe7e0fbe711e5fdbf",
+    "catalog.json": "af81e1f98f140c771822b31ba50e41c1f07c5ddccd965c06f1c1b21b46540b92",
+    "schema_contract.json": "30dd1b2f81281e68a37b0c2cdcb0b5b657f5112de4495b5118e1d333782936c0",
+    "build_database.py": "3ea3a847c6a3f63a0d5a47abd1eb5d0b05bffef3acb6b3a4be2c4afd139468e2"
+  }
+}

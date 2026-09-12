@@ -1,21 +1,16 @@
-FROM node:18-alpine
-
+FROM node:24-alpine AS build
 WORKDIR /app
-
-# Copy package files
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
+RUN npm ci
 COPY . .
-
-# Build the application
 RUN npm run build
 
-# Expose port
+FROM node:24-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+USER node
 EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

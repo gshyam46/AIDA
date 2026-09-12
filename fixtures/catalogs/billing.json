@@ -1,0 +1,226 @@
+{
+  "version": 2,
+  "name": "SaaS billing",
+  "currency": "USD",
+  "as_of": "2026-09-12",
+  "date_from": "2025-01-01",
+  "date_to": "2026-08-28",
+  "fact": {
+    "table": "invoice_lines",
+    "key": "entry_id",
+    "columns": [
+      "entry_id",
+      "invoice_id",
+      "subscription_id",
+      "seat_quantity",
+      "amount_cents"
+    ],
+    "archive_table": "archived_invoice_lines"
+  },
+  "tables": {
+    "invoices": {
+      "table": "invoices"
+    },
+    "accounts": {
+      "table": "accounts"
+    },
+    "subscriptions": {
+      "table": "subscriptions"
+    },
+    "plans": {
+      "table": "plans"
+    }
+  },
+  "relations": [
+    {
+      "id": "line_invoice",
+      "from": "fact",
+      "from_column": "invoice_id",
+      "to": "invoices",
+      "to_column": "invoice_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "invoice_account",
+      "from": "invoices",
+      "from_column": "account_id",
+      "to": "accounts",
+      "to_column": "account_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "line_subscription",
+      "from": "fact",
+      "from_column": "subscription_id",
+      "to": "subscriptions",
+      "to_column": "subscription_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "subscription_plan",
+      "from": "subscriptions",
+      "from_column": "plan_id",
+      "to": "plans",
+      "to_column": "plan_id",
+      "kind": "many_to_one"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "billed_amount",
+      "label": "Billed amount",
+      "table": "fact",
+      "aggregate": "SUM",
+      "description": "Sum of invoice-line amounts in dollars before credits, across every invoice status unless filtered.",
+      "scale": 100,
+      "format": "currency",
+      "column": "amount_cents"
+    },
+    {
+      "id": "seats",
+      "label": "Seats",
+      "table": "fact",
+      "aggregate": "SUM",
+      "description": "Sum of billed seat quantities on invoice lines.",
+      "scale": 1,
+      "format": "number",
+      "column": "seat_quantity"
+    },
+    {
+      "id": "invoices",
+      "label": "Invoices",
+      "table": "fact",
+      "aggregate": "COUNT_DISTINCT",
+      "description": "Distinct invoices represented by selected lines; one invoice may contain several plans.",
+      "scale": 1,
+      "format": "number",
+      "column": "invoice_id"
+    },
+    {
+      "id": "average_line_amount",
+      "label": "Average line amount",
+      "table": "fact",
+      "aggregate": "AVG",
+      "description": "Average non-null invoice-line amount in dollars, not average invoice total.",
+      "scale": 100,
+      "format": "currency",
+      "column": "amount_cents"
+    },
+    {
+      "id": "billing_lines",
+      "label": "Billing lines",
+      "table": "fact",
+      "aggregate": "COUNT",
+      "description": "Number of selected invoice-line records.",
+      "scale": 1,
+      "format": "number"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "segment",
+      "label": "Account segment",
+      "table": "accounts",
+      "column": "segment",
+      "type": "string",
+      "values": [
+        "Startup",
+        "Growth",
+        "Enterprise"
+      ]
+    },
+    {
+      "id": "plan_name",
+      "label": "Plan tier",
+      "table": "plans",
+      "column": "tier",
+      "type": "string",
+      "values": [
+        "Basic",
+        "Pro",
+        "Enterprise"
+      ]
+    },
+    {
+      "id": "invoice_status",
+      "label": "Invoice status",
+      "table": "invoices",
+      "column": "status",
+      "type": "string",
+      "values": [
+        "Paid",
+        "Open",
+        "Void"
+      ]
+    },
+    {
+      "id": "country",
+      "label": "Billing country",
+      "table": "accounts",
+      "column": "country",
+      "type": "string",
+      "values": [
+        "US",
+        "UK",
+        "India",
+        "Germany"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "id": "line_seats",
+      "label": "Seats on each line",
+      "table": "fact",
+      "column": "seat_quantity",
+      "type": "number"
+    }
+  ],
+  "date": {
+    "table": "invoices",
+    "column": "issued_on"
+  },
+  "exists_relations": [
+    {
+      "id": "credits",
+      "label": "Credits",
+      "table": "credits",
+      "parent": "fact",
+      "parent_column": "entry_id",
+      "child_column": "entry_id",
+      "fields": [
+        {
+          "id": "credit_reason",
+          "label": "Credit reason",
+          "column": "reason",
+          "type": "string",
+          "values": [
+            "Service issue",
+            "Billing correction",
+            "Promotion"
+          ]
+        },
+        {
+          "id": "credit_status",
+          "label": "Credit status",
+          "column": "status",
+          "type": "string",
+          "values": [
+            "Applied",
+            "Pending"
+          ]
+        }
+      ]
+    }
+  ],
+  "examples": [
+    "Billed amount and seats by account segment",
+    "Billed amount by plan tier and billing country for paid invoices",
+    "Plan tiers with billed amount above 100000",
+    "Billed amount by account segment for lines with service issue credits",
+    "Billed amount by plan tier for lines without credits",
+    "Account segments with above-average billed amount",
+    "Billed amount by month including current and archived records",
+    "Billing lines including current and archived records with exact duplicates removed"
+  ]
+}

@@ -1,0 +1,9 @@
+import {Database, GitBranch} from 'lucide-react'
+import {labelFor, QueryResponse} from '../lib/api'
+
+const operationLabels: Record<string, string> = {aggregate: 'Aggregate approved measures', where: 'Filter records before aggregation', having: 'Filter aggregate results', exists: 'Require matching related records', not_exists: 'Exclude matching related records', above_average: 'Compare with the group average', union_all: 'Combine current and archived records', union: 'Combine records and remove duplicates'}
+export default function QueryLineage({result, compact = false}: {result: QueryResponse; compact?: boolean}) {
+  const lineage = result.lineage
+  if (!lineage) return null
+  return <section className={`query-lineage ${compact ? 'compact' : ''}`} data-testid="query-lineage" aria-label="Tables and columns used"><h3><GitBranch size={16}/>How this answer uses your data</h3><div className="lineage-tables">{lineage.tables.map(table => <span key={table}><Database size={12}/>{table}</span>)}</div>{lineage.joins.length > 0 && <div className="lineage-joins">{lineage.joins.map((join, index) => <p key={index}><code>{join.from}.{join.from_column}</code><span>→</span><code>{join.to}.{join.to_column}</code><small>Many records to one · approved key</small></p>)}</div>}{!compact && <div className="lineage-columns"><table><caption>Selected fields and their source columns</caption><thead><tr><th>Meaning</th><th>Source column</th><th>Used for</th></tr></thead><tbody>{lineage.columns.map((column, index) => <tr key={index}><td>{labelFor(column.semantic_id || column.column)}</td><td><code>{column.table}.{column.column}</code></td><td>{labelFor(column.role)}</td></tr>)}</tbody></table></div>}<ol className="lineage-operations">{lineage.operations.map((operation, index) => <li key={index}>{operationLabels[operation] || labelFor(operation)}</li>)}</ol></section>
+}

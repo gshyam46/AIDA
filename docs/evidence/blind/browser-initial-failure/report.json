@@ -1,0 +1,227 @@
+{
+  "started_at": "2026-09-12T14:26:13.965Z",
+  "scope": "Secondary browser integration; never replaces or changes the original 50-case score.",
+  "method": "Actual upload/configure controls, natural-language controls and visible structured builder; actual network responses only. No response mocks or injected expected rows.",
+  "base_url": "http://127.0.0.1:3000",
+  "selected_nl_ids": [
+    "BL01",
+    "BL08",
+    "BL17",
+    "BL29",
+    "BL37",
+    "BL42"
+  ],
+  "structured_only_ids": [
+    "BL08",
+    "BL17",
+    "BL10"
+  ],
+  "provenance": {
+    "primary_report": "artifacts/blind/first-run-primary.json",
+    "primary_report_sha256": "fd31e03b8073a8a49f20631b6e17bc86d4387c6c0afd19f62f3a73b6b7d9c3d6",
+    "final_report": "artifacts/blind/first-run.json",
+    "final_report_sha256": "02beb622af159e942b177af31ceb1515778f472918837c6ed2e817ec8c48479e",
+    "protocol": "docs/evidence/blind/protocol-seal.json",
+    "protocol_sha256": "4016f495111678d2286341275e7355e1907ee687bf1340236702ac79f68c7125",
+    "browser_script_sha256": "b3dfb33a355e19b8f1f0148f30003a239d89c69f04a92c8532033872a2b873b8",
+    "sealed_files": {
+      "artifacts/blind/first-run-primary.json": "fd31e03b8073a8a49f20631b6e17bc86d4387c6c0afd19f62f3a73b6b7d9c3d6",
+      "artifacts/blind/first-run.json": "02beb622af159e942b177af31ceb1515778f472918837c6ed2e817ec8c48479e",
+      "docs/evidence/blind/protocol-seal.json": "4016f495111678d2286341275e7355e1907ee687bf1340236702ac79f68c7125",
+      "backend/main.py": "947223cf041c407a03f17a5cfd9127269f5fdf3ef128053891a3a1dde19d502e",
+      "backend/api/models.py": "1d4b45a578285005bd75c2f23c70e9e0e123a421c173a024c863b0967b43860f",
+      "backend/api/endpoints.py": "043c68262eda495a20cbf40808bf514f5f15fce940a950ee4415af61c56c9c73",
+      "backend/core/hybrid.py": "a2e33fd1d311b89db12a5640227835f2fc71ea39e3d037c2cc8af69249d98e03",
+      "backend/core/sources.py": "abd38934993a2c4351a36265288593c44c2b668bf938f3b1f8c21683f7307ee9",
+      "backend/core/relational.py": "1c2224c3c2bb411cc8bd76ffa4db5f68b62687079d6d15f83efa312be8f7130c",
+      "backend/core/relational_semantic.py": "f9f651c2ac4cca2796eb8f6eaf37ca48fa4ffb8d1b8b9804dc3bc045490e3c7d",
+      "backend/core/semantic.py": "60afbdf7c6b6c5298ffe713c74826ea236406ea5beabe2329043a929b6612421",
+      "scripts/model-runtime.json": "a31c70525c0070e7cd9d5e1b817a329a82dd75cd33f438251171dde40346fd10",
+      "fixtures/blind_logistics/logistics.sqlite": "0adc23a8c2f4e24dce57c9416b32e8b64a2c7303ccf0973fe7e0fbe711e5fdbf",
+      "fixtures/blind_logistics/catalog.json": "af81e1f98f140c771822b31ba50e41c1f07c5ddccd965c06f1c1b21b46540b92",
+      "fixtures/blind_logistics/schema_contract.json": "30dd1b2f81281e68a37b0c2cdcb0b5b657f5112de4495b5118e1d333782936c0",
+      "fixtures/blind_logistics/questions.json": "1fbe79856a67a1f051d1adc6a546030d966aeb091a5a2017d96511132109e689",
+      "scripts/evaluate_blind.py": "b7d66064cc6e0d9642ee96efebb49e63413f011157e6596927daec982f57057a",
+      "docs/BLIND_EVALUATION_PROTOCOL.md": "57e3a07298cc9d036ffde34a9ed38c1201870e81d98270c375bddbb9149b1e22"
+    }
+  },
+  "cases": [],
+  "structured_cases": [],
+  "steps": [
+    {
+      "name": "Upload and configure the frozen logistics database through the UI",
+      "status": "failed",
+      "duration_ms": 372,
+      "error": "response.json: Protocol error (Network.getResponseBody): Request content was evicted from inspector cache\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    }
+  ],
+  "query_requests": [
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": "month",
+          "filters": {},
+          "sort": "dimension_asc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "74780717d9b7f686",
+        "row_count": 12,
+        "elapsed_ms": 4.7,
+        "execution_time_ms": 4.7,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 4.15
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "80dce20d2acc42bf",
+        "row_count": 1,
+        "elapsed_ms": 0.21,
+        "execution_time_ms": 0.21,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.1
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "average_order_value",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "12b63d043d20a595",
+        "row_count": 1,
+        "elapsed_ms": 0.29,
+        "execution_time_ms": 0.29,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.17
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "orders",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "61ff7157e2cf4bfc",
+        "row_count": 1,
+        "elapsed_ms": 0.36,
+        "execution_time_ms": 0.36,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.18
+      }
+    }
+  ],
+  "browser_errors": [],
+  "external_requests": [],
+  "status": "failed",
+  "error": "response.json: Protocol error (Network.getResponseBody): Request content was evicted from inspector cache\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation.\n    at C:\\Shyam\\projects\\AIDA\\scripts\\e2e-blind.cjs:176:110\n    at async step (C:\\Shyam\\projects\\AIDA\\scripts\\e2e-blind.cjs:100:25)\n    at async main (C:\\Shyam\\projects\\AIDA\\scripts\\e2e-blind.cjs:171:5)",
+  "frozen_evidence_unchanged": true,
+  "finished_at": "2026-09-12T14:26:17.407Z",
+  "secondary_summary": {
+    "natural_language_cases": 0,
+    "natural_language_correct": 0,
+    "categories": {},
+    "structured_cases": 0,
+    "structured_correct": 0,
+    "recorded_model_calls": 0,
+    "first_50_score_recomputed": false
+  }
+}

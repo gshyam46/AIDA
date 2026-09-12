@@ -1,35 +1,43 @@
-version: '3.8'
-
 services:
+  model:
+    build:
+      context: .
+      dockerfile: docker/Model.Dockerfile
+    volumes:
+      - ./.runtime/Qwen3-4B-Instruct-2507-Q4_K_M.gguf:/models/semantic.gguf:ro
+    expose:
+      - "8000"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
-      - LOG_LEVEL=INFO
-      - DEFAULT_DB_PATH=/app/database/olist.sqlite
-    volumes:
-      - ./database:/app/database:ro
-      - ./backend/uploads:/app/uploads
-      - ./backend/config:/app/config
+      AIDA_DATA_DIR: /app/data
+      AIDA_PUBLIC_DEMO: "${AIDA_PUBLIC_DEMO:-1}"
+    network_mode: service:model
     depends_on:
-      - frontend
-    networks:
-      - sql-mvp-network
-
+      model:
+        condition: service_healthy
+    volumes:
+      - demo-data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    build: ./frontend
     ports:
-      - "3000:3000"
+      - "${AIDA_HOST:-127.0.0.1}:${AIDA_PORT:-3000}:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-    networks:
-      - sql-mvp-network
-
-networks:
-  sql-mvp-network:
-    driver: bridge
+      BACKEND_URL: http://model:8000
+      AIDA_PUBLIC_DEMO: "${AIDA_PUBLIC_DEMO:-1}"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  demo-data:

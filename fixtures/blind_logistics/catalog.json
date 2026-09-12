@@ -1,0 +1,372 @@
+{
+  "version": 2,
+  "name": "Blind synthetic logistics",
+  "currency": "USD",
+  "fact": {
+    "table": "shipment_legs",
+    "key": "leg_id",
+    "columns": [
+      "leg_id",
+      "consignment_id",
+      "service_class_id",
+      "carrier_id",
+      "departed_on",
+      "weight_grams",
+      "charge_cents",
+      "transit_minutes",
+      "distance_km",
+      "package_count",
+      "planned_transit_minutes",
+      "status"
+    ],
+    "archive_table": "archive_shipment_legs"
+  },
+  "tables": {
+    "consignments": {
+      "table": "consignments"
+    },
+    "shippers": {
+      "table": "shippers"
+    },
+    "markets": {
+      "table": "markets"
+    },
+    "depots": {
+      "table": "depots"
+    },
+    "zones": {
+      "table": "zones"
+    },
+    "service_classes": {
+      "table": "service_classes"
+    },
+    "carriers": {
+      "table": "carriers"
+    }
+  },
+  "relations": [
+    {
+      "id": "leg_consignment",
+      "from": "fact",
+      "from_column": "consignment_id",
+      "to": "consignments",
+      "to_column": "consignment_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "consignment_shipper",
+      "from": "consignments",
+      "from_column": "shipper_id",
+      "to": "shippers",
+      "to_column": "shipper_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "shipper_market",
+      "from": "shippers",
+      "from_column": "market_id",
+      "to": "markets",
+      "to_column": "market_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "consignment_destination",
+      "from": "consignments",
+      "from_column": "destination_depot_id",
+      "to": "depots",
+      "to_column": "depot_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "depot_zone",
+      "from": "depots",
+      "from_column": "zone_id",
+      "to": "zones",
+      "to_column": "zone_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "leg_service",
+      "from": "fact",
+      "from_column": "service_class_id",
+      "to": "service_classes",
+      "to_column": "service_class_id",
+      "kind": "many_to_one"
+    },
+    {
+      "id": "leg_carrier",
+      "from": "fact",
+      "from_column": "carrier_id",
+      "to": "carriers",
+      "to_column": "carrier_id",
+      "kind": "many_to_one"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "transported_weight",
+      "label": "Transported weight",
+      "description": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+      "aggregate": "SUM",
+      "table": "fact",
+      "scale": 1000,
+      "format": "number",
+      "column": "weight_grams"
+    },
+    {
+      "id": "handling_charges",
+      "label": "Handling charges",
+      "description": "Shipment-leg handling charges in USD, summing recorded leg charges and dividing cents by 100. Excludes consignment charges, service tariffs, carrier fees and exception fees. Null charges do not contribute.",
+      "aggregate": "SUM",
+      "table": "fact",
+      "scale": 100,
+      "format": "currency",
+      "column": "charge_cents"
+    },
+    {
+      "id": "average_transit_minutes",
+      "label": "Average transit minutes",
+      "description": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time.",
+      "aggregate": "AVG",
+      "table": "fact",
+      "scale": 1,
+      "format": "number",
+      "column": "transit_minutes"
+    },
+    {
+      "id": "distinct_consignments",
+      "label": "Distinct consignments",
+      "description": "Number of distinct non-null consignment references represented by selected shipment legs, including references missing from the consignment table. Count separately within each group; grouped counts are not additive.",
+      "aggregate": "COUNT_DISTINCT",
+      "table": "fact",
+      "scale": 1,
+      "format": "number",
+      "column": "consignment_id"
+    },
+    {
+      "id": "leg_count",
+      "label": "Leg count",
+      "description": "Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+      "aggregate": "COUNT",
+      "table": "fact",
+      "scale": 1,
+      "format": "number"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "customer_market",
+      "label": "Customer market",
+      "table": "markets",
+      "column": "market",
+      "type": "string",
+      "values": [
+        "Retail",
+        "Manufacturing",
+        "Healthcare",
+        "Technology",
+        "Public sector"
+      ]
+    },
+    {
+      "id": "destination_zone",
+      "label": "Destination zone",
+      "table": "zones",
+      "column": "zone",
+      "type": "string",
+      "values": [
+        "North",
+        "South",
+        "East",
+        "West",
+        "Central",
+        "Islands"
+      ]
+    },
+    {
+      "id": "service_class",
+      "label": "Service class",
+      "table": "service_classes",
+      "column": "service_class",
+      "type": "string",
+      "values": [
+        "Standard",
+        "Express",
+        "Overnight",
+        "Freight"
+      ]
+    },
+    {
+      "id": "carrier",
+      "label": "Carrier",
+      "table": "carriers",
+      "column": "carrier",
+      "type": "string",
+      "values": [
+        "Arrow Parcel",
+        "Cedar Freight",
+        "Harbor Air",
+        "Maple Logistics",
+        "Polar Transit",
+        "Quartz Express"
+      ]
+    },
+    {
+      "id": "shipment_state",
+      "label": "Shipment state",
+      "table": "consignments",
+      "column": "status",
+      "type": "string",
+      "values": [
+        "Delivered",
+        "In transit",
+        "On hold",
+        "Cancelled",
+        "Returned"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "id": "leg_weight_grams",
+      "label": "Leg weight in grams",
+      "table": "fact",
+      "column": "weight_grams",
+      "type": "number"
+    },
+    {
+      "id": "leg_handling_cents",
+      "label": "Leg handling charge in cents",
+      "table": "fact",
+      "column": "charge_cents",
+      "type": "number"
+    },
+    {
+      "id": "leg_transit_minutes",
+      "label": "Leg transit minutes",
+      "table": "fact",
+      "column": "transit_minutes",
+      "type": "number"
+    },
+    {
+      "id": "route_distance_km",
+      "label": "Route distance in kilometers",
+      "table": "fact",
+      "column": "distance_km",
+      "type": "number"
+    },
+    {
+      "id": "package_count",
+      "label": "Packages on a leg",
+      "table": "fact",
+      "column": "package_count",
+      "type": "number"
+    },
+    {
+      "id": "planned_transit_minutes",
+      "label": "Planned transit minutes",
+      "table": "fact",
+      "column": "planned_transit_minutes",
+      "type": "number"
+    },
+    {
+      "id": "service_tariff_cents",
+      "label": "Service tariff in cents",
+      "table": "service_classes",
+      "column": "charge_cents",
+      "type": "number"
+    },
+    {
+      "id": "consignment_charge_cents",
+      "label": "Consignment charge in cents",
+      "table": "consignments",
+      "column": "charge_cents",
+      "type": "number"
+    },
+    {
+      "id": "declared_value_cents",
+      "label": "Declared consignment value in cents",
+      "table": "consignments",
+      "column": "declared_value_cents",
+      "type": "number"
+    },
+    {
+      "id": "leg_state",
+      "label": "Leg state",
+      "table": "fact",
+      "column": "status",
+      "type": "string",
+      "values": [
+        "Completed",
+        "In transit",
+        "Delayed",
+        "Cancelled"
+      ]
+    },
+    {
+      "id": "carrier_state",
+      "label": "Carrier state",
+      "table": "carriers",
+      "column": "status",
+      "type": "string",
+      "values": [
+        "Active",
+        "Suspended"
+      ]
+    }
+  ],
+  "date": {
+    "table": "fact",
+    "column": "departed_on"
+  },
+  "as_of": "2026-09-12",
+  "date_from": "2025-07-01",
+  "date_to": "2026-09-12",
+  "exists_relations": [
+    {
+      "id": "exceptions",
+      "label": "Shipment leg exceptions",
+      "table": "exception_events",
+      "parent": "fact",
+      "parent_column": "leg_id",
+      "child_column": "leg_id",
+      "fields": [
+        {
+          "id": "exception_reason",
+          "label": "Exception reason",
+          "column": "reason",
+          "type": "string",
+          "values": [
+            "Weather",
+            "Damage",
+            "Customs",
+            "Capacity",
+            "Address"
+          ]
+        },
+        {
+          "id": "exception_state",
+          "label": "Exception state",
+          "column": "status",
+          "type": "string",
+          "values": [
+            "Open",
+            "Resolved",
+            "Waived"
+          ]
+        },
+        {
+          "id": "exception_severity",
+          "label": "Exception severity",
+          "column": "severity",
+          "type": "number"
+        }
+      ]
+    }
+  ],
+  "examples": [
+    "Show transported weight by customer market.",
+    "Show handling charges by destination zone for Express service.",
+    "Count shipment legs with a Weather exception."
+  ]
+}

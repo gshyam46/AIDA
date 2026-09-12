@@ -1,0 +1,5471 @@
+{
+  "started_at": "2026-09-12T14:27:15.090Z",
+  "scope": "Secondary browser integration; never replaces or changes the original 50-case score.",
+  "method": "Actual upload/configure controls, natural-language controls and visible structured builder; actual network responses only. No response mocks or injected expected rows.",
+  "base_url": "http://127.0.0.1:3000",
+  "selected_nl_ids": [
+    "BL01",
+    "BL08",
+    "BL17",
+    "BL29",
+    "BL37",
+    "BL42"
+  ],
+  "structured_only_ids": [
+    "BL08",
+    "BL17",
+    "BL10"
+  ],
+  "provenance": {
+    "primary_report": "artifacts/blind/first-run-primary.json",
+    "primary_report_sha256": "fd31e03b8073a8a49f20631b6e17bc86d4387c6c0afd19f62f3a73b6b7d9c3d6",
+    "final_report": "artifacts/blind/first-run.json",
+    "final_report_sha256": "02beb622af159e942b177af31ceb1515778f472918837c6ed2e817ec8c48479e",
+    "protocol": "docs/evidence/blind/protocol-seal.json",
+    "protocol_sha256": "4016f495111678d2286341275e7355e1907ee687bf1340236702ac79f68c7125",
+    "browser_script_sha256": "15f38257c0b6ac959b8c3dc0287a208e483cd86a2aa1c808956027db8e10cfda",
+    "sealed_files": {
+      "artifacts/blind/first-run-primary.json": "fd31e03b8073a8a49f20631b6e17bc86d4387c6c0afd19f62f3a73b6b7d9c3d6",
+      "artifacts/blind/first-run.json": "02beb622af159e942b177af31ceb1515778f472918837c6ed2e817ec8c48479e",
+      "docs/evidence/blind/protocol-seal.json": "4016f495111678d2286341275e7355e1907ee687bf1340236702ac79f68c7125",
+      "backend/main.py": "947223cf041c407a03f17a5cfd9127269f5fdf3ef128053891a3a1dde19d502e",
+      "backend/api/models.py": "1d4b45a578285005bd75c2f23c70e9e0e123a421c173a024c863b0967b43860f",
+      "backend/api/endpoints.py": "043c68262eda495a20cbf40808bf514f5f15fce940a950ee4415af61c56c9c73",
+      "backend/core/hybrid.py": "a2e33fd1d311b89db12a5640227835f2fc71ea39e3d037c2cc8af69249d98e03",
+      "backend/core/sources.py": "abd38934993a2c4351a36265288593c44c2b668bf938f3b1f8c21683f7307ee9",
+      "backend/core/relational.py": "1c2224c3c2bb411cc8bd76ffa4db5f68b62687079d6d15f83efa312be8f7130c",
+      "backend/core/relational_semantic.py": "f9f651c2ac4cca2796eb8f6eaf37ca48fa4ffb8d1b8b9804dc3bc045490e3c7d",
+      "backend/core/semantic.py": "60afbdf7c6b6c5298ffe713c74826ea236406ea5beabe2329043a929b6612421",
+      "scripts/model-runtime.json": "a31c70525c0070e7cd9d5e1b817a329a82dd75cd33f438251171dde40346fd10",
+      "fixtures/blind_logistics/logistics.sqlite": "0adc23a8c2f4e24dce57c9416b32e8b64a2c7303ccf0973fe7e0fbe711e5fdbf",
+      "fixtures/blind_logistics/catalog.json": "af81e1f98f140c771822b31ba50e41c1f07c5ddccd965c06f1c1b21b46540b92",
+      "fixtures/blind_logistics/schema_contract.json": "30dd1b2f81281e68a37b0c2cdcb0b5b657f5112de4495b5118e1d333782936c0",
+      "fixtures/blind_logistics/questions.json": "1fbe79856a67a1f051d1adc6a546030d966aeb091a5a2017d96511132109e689",
+      "scripts/evaluate_blind.py": "b7d66064cc6e0d9642ee96efebb49e63413f011157e6596927daec982f57057a",
+      "docs/BLIND_EVALUATION_PROTOCOL.md": "57e3a07298cc9d036ffde34a9ed38c1201870e81d98270c375bddbb9149b1e22"
+    }
+  },
+  "cases": [
+    {
+      "id": "BL01",
+      "question": "Our network planning sheet needs a current leg total. How many shipment legs are recorded?",
+      "expected": "answer",
+      "duration_ms": 5853,
+      "http_status": 200,
+      "request": {
+        "question": "Our network planning sheet needs a current leg total. How many shipment legs are recorded?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "leg_count": 12000
+          }
+        ],
+        "results": [
+          {
+            "leg_count": 12000
+          }
+        ],
+        "columns": [
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "leg_count"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "leg_count",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0) SELECT \"leg_count\" FROM __grouped ORDER BY \"leg_count\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "leg_count",
+          "series": [
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "leg_count": "number"
+          },
+          "additive": {
+            "leg_count": true
+          },
+          "title": "Leg count"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs"
+          ],
+          "columns": [],
+          "joins": [],
+          "operations": [
+            "aggregate"
+          ]
+        },
+        "explanation": "Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "title": "Leg count",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "ee05379e10f4cff8",
+          "row_count": 1,
+          "elapsed_ms": 5725.33,
+          "execution_time_ms": 5725.33,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1843,
+          "completion_tokens": 83,
+          "total_tokens": 1926,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1843,
+          "output_tokens": 83,
+          "model": "aida-semantic",
+          "model_latency_ms": 5494.1,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 4.68
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "ee05379e10f4cff8",
+          "row_count": 1,
+          "elapsed_ms": 5725.33,
+          "execution_time_ms": 5725.33,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1843,
+          "completion_tokens": 83,
+          "total_tokens": 1926,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1843,
+          "output_tokens": 83,
+          "model": "aida-semantic",
+          "model_latency_ms": 5494.1,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 4.68
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "semantic_ir": {
+          "metrics": [
+            "m4"
+          ],
+          "filters": [],
+          "having": [],
+          "exists": null,
+          "comparison": null,
+          "dimensions": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "time_expression": null,
+          "sort": null,
+          "limit": null,
+          "unresolved": []
+        }
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL01.png"
+    },
+    {
+      "id": "BL08",
+      "question": "Compare current service-class and carrier combinations using average transit minutes and leg count. Start with the shortest average, breaking ties alphabetically by service class and then carrier.",
+      "expected": "answer",
+      "duration_ms": 7749,
+      "http_status": 200,
+      "request": {
+        "question": "Compare current service-class and carrier combinations using average transit minutes and leg count. Start with the shortest average, breaking ties alphabetically by service class and then carrier.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": false,
+        "data": [],
+        "results": [],
+        "error": "The model omitted a literal condition attached to an explicitly named field.",
+        "error_type": "clarification_required",
+        "meta": {
+          "model_calls": 1,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1858,
+          "completion_tokens": 116,
+          "total_tokens": 1974,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1858,
+          "output_tokens": 116,
+          "model": "aida-semantic",
+          "model_latency_ms": 7477.45,
+          "semantic_cache_hit": false,
+          "estimated_model_cost_usd": 0,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "engine": "hybrid",
+          "elapsed_ms": 7541.3
+        },
+        "metadata": {
+          "model_calls": 1,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1858,
+          "completion_tokens": 116,
+          "total_tokens": 1974,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1858,
+          "output_tokens": 116,
+          "model": "aida-semantic",
+          "model_latency_ms": 7477.45,
+          "semantic_cache_hit": false,
+          "estimated_model_cost_usd": 0,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "engine": "hybrid",
+          "elapsed_ms": 7541.3
+        }
+      },
+      "judgment": {
+        "category": "false_refusal",
+        "passed": false,
+        "exact_plan": false,
+        "semantic_plan": false,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": false,
+          "missing_tables": [
+            "shipment_legs",
+            "service_classes",
+            "carriers"
+          ],
+          "missing_columns": [
+            "shipment_legs.transit_minutes",
+            "service_classes.service_class",
+            "carriers.carrier"
+          ],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_judgment": {
+        "category": "false_refusal",
+        "passed": false,
+        "exact_plan": false,
+        "semantic_plan": false,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": false,
+          "missing_tables": [
+            "carriers",
+            "service_classes",
+            "shipment_legs"
+          ],
+          "missing_columns": [
+            "shipment_legs.transit_minutes",
+            "service_classes.service_class",
+            "carriers.carrier"
+          ],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL08.png"
+    },
+    {
+      "id": "BL17",
+      "question": "Which destination zones have more than 850,000 kilograms of current transported weight? Show each qualifying total, largest first.",
+      "expected": "answer",
+      "duration_ms": 9384,
+      "http_status": 200,
+      "request": {
+        "question": "Which destination zones have more than 850,000 kilograms of current transported weight? Show each qualifying total, largest first.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [],
+        "results": [],
+        "columns": [
+          "destination_zone",
+          "transported_weight"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "destination_zone"
+          ],
+          "filters": [
+            {
+              "field": "leg_handling_cents",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t5.\"zone\" AS \"destination_zone\", (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) AS \"transported_weight\" FROM __facts t0 LEFT JOIN \"consignments\" t1 ON t0.\"consignment_id\" COLLATE BINARY = t1.\"consignment_id\" COLLATE BINARY LEFT JOIN \"depots\" t4 ON t1.\"destination_depot_id\" COLLATE BINARY = t4.\"depot_id\" COLLATE BINARY LEFT JOIN \"zones\" t5 ON t4.\"zone_id\" COLLATE BINARY = t5.\"zone_id\" COLLATE BINARY WHERE t0.\"charge_cents\" > :filter_0 GROUP BY t5.\"zone\") SELECT \"destination_zone\", \"transported_weight\" FROM __grouped ORDER BY \"transported_weight\" DESC, \"destination_zone\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_transported_weight": 1000,
+          "filter_0": 850000
+        },
+        "chart": {
+          "type": "bar",
+          "x": "destination_zone",
+          "y": "transported_weight",
+          "series": [
+            "transported_weight"
+          ],
+          "format": "number",
+          "formats": {
+            "transported_weight": "number"
+          },
+          "additive": {
+            "transported_weight": true
+          },
+          "title": "Transported weight by Destination zone"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "consignments",
+            "depots",
+            "zones"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "weight_grams",
+              "role": "measure",
+              "semantic_id": "transported_weight"
+            },
+            {
+              "table": "zones",
+              "column": "zone",
+              "role": "group",
+              "semantic_id": "destination_zone"
+            },
+            {
+              "table": "shipment_legs",
+              "column": "charge_cents",
+              "role": "filter",
+              "semantic_id": "leg_handling_cents"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "consignment_id",
+              "to": "consignments",
+              "to_column": "consignment_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "consignments",
+              "from_column": "destination_depot_id",
+              "to": "depots",
+              "to_column": "depot_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "depots",
+              "from_column": "zone_id",
+              "to": "zones",
+              "to_column": "zone_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "where",
+            "aggregate"
+          ]
+        },
+        "explanation": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "title": "Transported weight by Destination zone",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "660c254dff035553",
+          "row_count": 0,
+          "elapsed_ms": 9217.24,
+          "execution_time_ms": 9217.24,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1854,
+          "completion_tokens": 141,
+          "total_tokens": 1995,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1854,
+          "output_tokens": 141,
+          "model": "aida-semantic",
+          "model_latency_ms": 9159.01,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 9.18
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "660c254dff035553",
+          "row_count": 0,
+          "elapsed_ms": 9217.24,
+          "execution_time_ms": 9217.24,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1854,
+          "completion_tokens": 141,
+          "total_tokens": 1995,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1854,
+          "output_tokens": 141,
+          "model": "aida-semantic",
+          "model_latency_ms": 9159.01,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 9.18
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "semantic_ir": {
+          "metrics": [
+            "m0"
+          ],
+          "filters": [
+            {
+              "field": "f1",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "having": [],
+          "exists": null,
+          "comparison": null,
+          "dimensions": [
+            "d1"
+          ],
+          "population": "primary",
+          "set_operation": "union_all",
+          "time_expression": null,
+          "sort": {
+            "field": "m0",
+            "direction": "desc"
+          },
+          "limit": null,
+          "unresolved": []
+        }
+      },
+      "judgment": {
+        "category": "wrong_accepted_meaning",
+        "passed": false,
+        "exact_plan": false,
+        "semantic_plan": false,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_judgment": {
+        "category": "wrong_accepted_meaning",
+        "passed": false,
+        "exact_plan": false,
+        "semantic_plan": false,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL17.png"
+    },
+    {
+      "id": "BL29",
+      "question": "Append archived legs to current legs, retaining overlapping rows. How many leg records and distinct consignments does that combined population contain?",
+      "expected": "answer",
+      "duration_ms": 8206,
+      "http_status": 200,
+      "request": {
+        "question": "Append archived legs to current legs, retaining overlapping rows. How many leg records and distinct consignments does that combined population contain?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "distinct_consignments": 4984,
+            "leg_count": 15000
+          }
+        ],
+        "results": [
+          {
+            "distinct_consignments": 4984,
+            "leg_count": 15000
+          }
+        ],
+        "columns": [
+          "distinct_consignments",
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "distinct_consignments",
+            "leg_count"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "all",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "distinct_consignments",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\" UNION ALL SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"archive_shipment_legs\"), __grouped AS (SELECT COALESCE(COUNT(DISTINCT t0.\"consignment_id\"), 0) AS \"distinct_consignments\", COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0) SELECT \"distinct_consignments\", \"leg_count\" FROM __grouped ORDER BY \"distinct_consignments\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "distinct_consignments",
+          "series": [
+            "distinct_consignments",
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "distinct_consignments": "number",
+            "leg_count": "number"
+          },
+          "additive": {
+            "distinct_consignments": false,
+            "leg_count": true
+          },
+          "title": "Distinct consignments, Leg count"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "archive_shipment_legs"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "consignment_id",
+              "role": "measure",
+              "semantic_id": "distinct_consignments"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "union_all",
+            "aggregate"
+          ]
+        },
+        "explanation": "Number of distinct non-null consignment references represented by selected shipment legs, including references missing from the consignment table. Count separately within each group; grouped counts are not additive. Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements. Includes current and archived fact rows; every row is retained, including overlapping archive rows.",
+        "title": "Distinct consignments, Leg count",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "483c2f4df0eead5f",
+          "row_count": 1,
+          "elapsed_ms": 8041.72,
+          "execution_time_ms": 8041.72,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1852,
+          "completion_tokens": 88,
+          "total_tokens": 1940,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1852,
+          "output_tokens": 88,
+          "model": "aida-semantic",
+          "model_latency_ms": 7936.32,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 22.49
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "483c2f4df0eead5f",
+          "row_count": 1,
+          "elapsed_ms": 8041.72,
+          "execution_time_ms": 8041.72,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1852,
+          "completion_tokens": 88,
+          "total_tokens": 1940,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1852,
+          "output_tokens": 88,
+          "model": "aida-semantic",
+          "model_latency_ms": 7936.32,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 22.49
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "semantic_ir": {
+          "metrics": [
+            "m3",
+            "m4"
+          ],
+          "filters": [],
+          "having": [],
+          "exists": null,
+          "comparison": null,
+          "dimensions": [],
+          "population": "all",
+          "set_operation": "union_all",
+          "time_expression": null,
+          "sort": null,
+          "limit": null,
+          "unresolved": []
+        }
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": false,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": false,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL29.png"
+    },
+    {
+      "id": "BL37",
+      "question": "For current legs belonging to Cancelled shipments, what are the average transit minutes and the leg count?",
+      "expected": "answer",
+      "duration_ms": 7417,
+      "http_status": 200,
+      "request": {
+        "question": "For current legs belonging to Cancelled shipments, what are the average transit minutes and the leg count?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "average_transit_minutes": null,
+            "leg_count": 582
+          }
+        ],
+        "results": [
+          {
+            "average_transit_minutes": null,
+            "leg_count": 582
+          }
+        ],
+        "columns": [
+          "average_transit_minutes",
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [],
+          "filters": [
+            {
+              "field": "shipment_state",
+              "op": "eq",
+              "value": "Cancelled"
+            }
+          ],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT AVG(t0.\"transit_minutes\") AS \"average_transit_minutes\", COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0 LEFT JOIN \"consignments\" t1 ON t0.\"consignment_id\" COLLATE BINARY = t1.\"consignment_id\" COLLATE BINARY WHERE t1.\"status\" = :filter_0) SELECT \"average_transit_minutes\", \"leg_count\" FROM __grouped ORDER BY \"average_transit_minutes\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "filter_0": "Cancelled"
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "average_transit_minutes",
+          "series": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "average_transit_minutes": "number",
+            "leg_count": "number"
+          },
+          "additive": {
+            "average_transit_minutes": false,
+            "leg_count": true
+          },
+          "title": "Average transit minutes, Leg count"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "consignments"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "transit_minutes",
+              "role": "measure",
+              "semantic_id": "average_transit_minutes"
+            },
+            {
+              "table": "consignments",
+              "column": "status",
+              "role": "filter",
+              "semantic_id": "shipment_state"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "consignment_id",
+              "to": "consignments",
+              "to_column": "consignment_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "where",
+            "aggregate"
+          ]
+        },
+        "explanation": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time. Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "title": "Average transit minutes, Leg count",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d50f01a49e4fd3be",
+          "row_count": 1,
+          "elapsed_ms": 7252.51,
+          "execution_time_ms": 7252.51,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1846,
+          "completion_tokens": 116,
+          "total_tokens": 1962,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1846,
+          "output_tokens": 116,
+          "model": "aida-semantic",
+          "model_latency_ms": 7202.14,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 5.9
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 1,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d50f01a49e4fd3be",
+          "row_count": 1,
+          "elapsed_ms": 7252.51,
+          "execution_time_ms": 7252.51,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1846,
+          "completion_tokens": 116,
+          "total_tokens": 1962,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1846,
+          "output_tokens": 116,
+          "model": "aida-semantic",
+          "model_latency_ms": 7202.14,
+          "semantic_cache_hit": false,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "database_time_ms": 5.9
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "semantic_ir": {
+          "metrics": [
+            "m2",
+            "m4"
+          ],
+          "filters": [
+            {
+              "field": "d4",
+              "op": "eq",
+              "value": "Cancelled"
+            }
+          ],
+          "having": [],
+          "exists": null,
+          "comparison": null,
+          "dimensions": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "time_expression": null,
+          "sort": null,
+          "limit": null,
+          "unresolved": []
+        }
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL37.png"
+    },
+    {
+      "id": "BL42",
+      "question": "For each carrier, divide total handling charges by transported kilograms and rank carriers by that cost per kilogram.",
+      "expected": "refusal",
+      "duration_ms": 8114,
+      "http_status": 200,
+      "request": {
+        "question": "For each carrier, divide total handling charges by transported kilograms and rank carriers by that cost per kilogram.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": false,
+        "data": [],
+        "results": [],
+        "error": "The model did not preserve the above-average comparison.",
+        "error_type": "clarification_required",
+        "meta": {
+          "model_calls": 1,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1847,
+          "completion_tokens": 128,
+          "total_tokens": 1975,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1847,
+          "output_tokens": 128,
+          "model": "aida-semantic",
+          "model_latency_ms": 7928.89,
+          "semantic_cache_hit": false,
+          "estimated_model_cost_usd": 0,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "engine": "hybrid",
+          "elapsed_ms": 7966.2
+        },
+        "metadata": {
+          "model_calls": 1,
+          "interpretation_source": "local_model",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 1847,
+          "completion_tokens": 128,
+          "total_tokens": 1975,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "input_tokens": 1847,
+          "output_tokens": 128,
+          "model": "aida-semantic",
+          "model_latency_ms": 7928.89,
+          "semantic_cache_hit": false,
+          "estimated_model_cost_usd": 0,
+          "model_cost_basis": "local inference; hardware and electricity excluded",
+          "inference_location": "local",
+          "external_requests": false,
+          "engine": "hybrid",
+          "elapsed_ms": 7966.2
+        }
+      },
+      "judgment": {
+        "category": "correct_refusal",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": true
+        }
+      },
+      "primary_judgment": {
+        "category": "correct_refusal",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": false,
+        "ordered_rows_match": false,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": []
+        }
+      },
+      "primary_result_agrees": true,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/nl-BL42.png"
+    }
+  ],
+  "structured_cases": [
+    {
+      "id": "BL08",
+      "mode": "structured_builder_only",
+      "question_not_submitted": true,
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "results": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "columns": [
+          "service_class",
+          "carrier",
+          "average_transit_minutes",
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t6.\"service_class\" AS \"service_class\", t7.\"carrier\" AS \"carrier\", AVG(t0.\"transit_minutes\") AS \"average_transit_minutes\", COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0 LEFT JOIN \"carriers\" t7 ON t0.\"carrier_id\" COLLATE BINARY = t7.\"carrier_id\" COLLATE BINARY LEFT JOIN \"service_classes\" t6 ON t0.\"service_class_id\" COLLATE BINARY = t6.\"service_class_id\" COLLATE BINARY GROUP BY t6.\"service_class\", t7.\"carrier\") SELECT \"service_class\", \"carrier\", \"average_transit_minutes\", \"leg_count\" FROM __grouped ORDER BY \"average_transit_minutes\" ASC, \"service_class\" ASC, \"carrier\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "bar",
+          "x": "service_class",
+          "y": "average_transit_minutes",
+          "series": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "average_transit_minutes": "number",
+            "leg_count": "number"
+          },
+          "additive": {
+            "average_transit_minutes": false,
+            "leg_count": true
+          },
+          "title": "Average transit minutes, Leg count by Service class and Carrier"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "carriers",
+            "service_classes"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "transit_minutes",
+              "role": "measure",
+              "semantic_id": "average_transit_minutes"
+            },
+            {
+              "table": "service_classes",
+              "column": "service_class",
+              "role": "group",
+              "semantic_id": "service_class"
+            },
+            {
+              "table": "carriers",
+              "column": "carrier",
+              "role": "group",
+              "semantic_id": "carrier"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "carrier_id",
+              "to": "carriers",
+              "to_column": "carrier_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "shipment_legs",
+              "from_column": "service_class_id",
+              "to": "service_classes",
+              "to_column": "service_class_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "aggregate"
+          ]
+        },
+        "explanation": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time. Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "title": "Average transit minutes, Leg count by Service class and Carrier",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 18.17,
+          "execution_time_ms": 18.17,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 18.01
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 18.17,
+          "execution_time_ms": 18.17,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 18.01
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      }
+    },
+    {
+      "id": "BL17",
+      "mode": "structured_builder_only",
+      "question_not_submitted": true,
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "destination_zone"
+          ],
+          "filters": [],
+          "having": [
+            {
+              "metric": "transported_weight",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "destination_zone": "North",
+            "transported_weight": 953240.272
+          },
+          {
+            "destination_zone": "East",
+            "transported_weight": 905322.186
+          },
+          {
+            "destination_zone": "Islands",
+            "transported_weight": 902281.77
+          },
+          {
+            "destination_zone": "West",
+            "transported_weight": 857310.345
+          }
+        ],
+        "results": [
+          {
+            "destination_zone": "North",
+            "transported_weight": 953240.272
+          },
+          {
+            "destination_zone": "East",
+            "transported_weight": 905322.186
+          },
+          {
+            "destination_zone": "Islands",
+            "transported_weight": 902281.77
+          },
+          {
+            "destination_zone": "West",
+            "transported_weight": 857310.345
+          }
+        ],
+        "columns": [
+          "destination_zone",
+          "transported_weight"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "destination_zone"
+          ],
+          "filters": [],
+          "having": [
+            {
+              "metric": "transported_weight",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t5.\"zone\" AS \"destination_zone\", (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) AS \"transported_weight\" FROM __facts t0 LEFT JOIN \"consignments\" t1 ON t0.\"consignment_id\" COLLATE BINARY = t1.\"consignment_id\" COLLATE BINARY LEFT JOIN \"depots\" t4 ON t1.\"destination_depot_id\" COLLATE BINARY = t4.\"depot_id\" COLLATE BINARY LEFT JOIN \"zones\" t5 ON t4.\"zone_id\" COLLATE BINARY = t5.\"zone_id\" COLLATE BINARY GROUP BY t5.\"zone\" HAVING (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) > :having_0) SELECT \"destination_zone\", \"transported_weight\" FROM __grouped ORDER BY \"transported_weight\" DESC, \"destination_zone\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_transported_weight": 1000,
+          "having_0": 850000
+        },
+        "chart": {
+          "type": "bar",
+          "x": "destination_zone",
+          "y": "transported_weight",
+          "series": [
+            "transported_weight"
+          ],
+          "format": "number",
+          "formats": {
+            "transported_weight": "number"
+          },
+          "additive": {
+            "transported_weight": true
+          },
+          "title": "Transported weight by Destination zone"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "consignments",
+            "depots",
+            "zones"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "weight_grams",
+              "role": "measure",
+              "semantic_id": "transported_weight"
+            },
+            {
+              "table": "zones",
+              "column": "zone",
+              "role": "group",
+              "semantic_id": "destination_zone"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "consignment_id",
+              "to": "consignments",
+              "to_column": "consignment_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "consignments",
+              "from_column": "destination_depot_id",
+              "to": "depots",
+              "to_column": "depot_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "depots",
+              "from_column": "zone_id",
+              "to": "zones",
+              "to_column": "zone_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "aggregate",
+            "having"
+          ]
+        },
+        "explanation": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "title": "Transported weight by Destination zone",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d9a59c08d7883ce6",
+          "row_count": 4,
+          "elapsed_ms": 25.33,
+          "execution_time_ms": 25.33,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 23.18
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d9a59c08d7883ce6",
+          "row_count": 4,
+          "elapsed_ms": 25.33,
+          "execution_time_ms": 25.33,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 23.18
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      }
+    },
+    {
+      "id": "BL10",
+      "mode": "structured_builder_only",
+      "question_not_submitted": true,
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "month": "2026-01",
+            "transported_weight": 611898.032
+          },
+          {
+            "month": "2026-02",
+            "transported_weight": 563067.402
+          },
+          {
+            "month": "2026-03",
+            "transported_weight": 632283.63
+          },
+          {
+            "month": "2026-04",
+            "transported_weight": 709506.827
+          },
+          {
+            "month": "2026-05",
+            "transported_weight": 698265.921
+          },
+          {
+            "month": "2026-06",
+            "transported_weight": 662887.648
+          },
+          {
+            "month": "2026-07",
+            "transported_weight": 680193.749
+          },
+          {
+            "month": "2026-08",
+            "transported_weight": 667920.149
+          },
+          {
+            "month": "2026-09",
+            "transported_weight": 217750.905
+          }
+        ],
+        "results": [
+          {
+            "month": "2026-01",
+            "transported_weight": 611898.032
+          },
+          {
+            "month": "2026-02",
+            "transported_weight": 563067.402
+          },
+          {
+            "month": "2026-03",
+            "transported_weight": 632283.63
+          },
+          {
+            "month": "2026-04",
+            "transported_weight": 709506.827
+          },
+          {
+            "month": "2026-05",
+            "transported_weight": 698265.921
+          },
+          {
+            "month": "2026-06",
+            "transported_weight": 662887.648
+          },
+          {
+            "month": "2026-07",
+            "transported_weight": 680193.749
+          },
+          {
+            "month": "2026-08",
+            "transported_weight": 667920.149
+          },
+          {
+            "month": "2026-09",
+            "transported_weight": 217750.905
+          }
+        ],
+        "columns": [
+          "month",
+          "transported_weight"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT substr(t0.\"departed_on\", 1, 7) AS \"month\", (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) AS \"transported_weight\" FROM __facts t0 GROUP BY substr(t0.\"departed_on\", 1, 7)) SELECT \"month\", \"transported_weight\" FROM __grouped ORDER BY \"month\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_transported_weight": 1000
+        },
+        "chart": {
+          "type": "line",
+          "x": "month",
+          "y": "transported_weight",
+          "series": [
+            "transported_weight"
+          ],
+          "format": "number",
+          "formats": {
+            "transported_weight": "number"
+          },
+          "additive": {
+            "transported_weight": true
+          },
+          "title": "Transported weight by Month"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "weight_grams",
+              "role": "measure",
+              "semantic_id": "transported_weight"
+            },
+            {
+              "table": "shipment_legs",
+              "column": "departed_on",
+              "role": "group",
+              "semantic_id": "month"
+            },
+            {
+              "table": "shipment_legs",
+              "column": "departed_on",
+              "role": "date",
+              "semantic_id": "month"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "aggregate"
+          ]
+        },
+        "explanation": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "title": "Transported weight by Month",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "688784b15694b25c",
+          "row_count": 9,
+          "elapsed_ms": 2.49,
+          "execution_time_ms": 2.49,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.44
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "688784b15694b25c",
+          "row_count": 9,
+          "elapsed_ms": 2.49,
+          "execution_time_ms": 2.49,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.44
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      },
+      "judgment": {
+        "category": "correct_answer",
+        "passed": true,
+        "exact_plan": true,
+        "semantic_plan": true,
+        "rows_match": true,
+        "ordered_rows_match": true,
+        "lineage": {
+          "passed": true,
+          "missing_tables": [],
+          "missing_columns": [],
+          "forbidden_measures": [],
+          "missing_joins": []
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "name": "Upload and configure the frozen logistics database through the UI",
+      "status": "passed",
+      "duration_ms": 1152,
+      "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/00-uploaded-catalog-preview.png"
+    },
+    {
+      "name": "Structured builder BL08: actual API, plan and oracle rows",
+      "status": "passed",
+      "duration_ms": 747,
+      "id": "BL08",
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "results": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "columns": [
+          "service_class",
+          "carrier",
+          "average_transit_minutes",
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t6.\"service_class\" AS \"service_class\", t7.\"carrier\" AS \"carrier\", AVG(t0.\"transit_minutes\") AS \"average_transit_minutes\", COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0 LEFT JOIN \"carriers\" t7 ON t0.\"carrier_id\" COLLATE BINARY = t7.\"carrier_id\" COLLATE BINARY LEFT JOIN \"service_classes\" t6 ON t0.\"service_class_id\" COLLATE BINARY = t6.\"service_class_id\" COLLATE BINARY GROUP BY t6.\"service_class\", t7.\"carrier\") SELECT \"service_class\", \"carrier\", \"average_transit_minutes\", \"leg_count\" FROM __grouped ORDER BY \"average_transit_minutes\" ASC, \"service_class\" ASC, \"carrier\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "bar",
+          "x": "service_class",
+          "y": "average_transit_minutes",
+          "series": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "average_transit_minutes": "number",
+            "leg_count": "number"
+          },
+          "additive": {
+            "average_transit_minutes": false,
+            "leg_count": true
+          },
+          "title": "Average transit minutes, Leg count by Service class and Carrier"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "carriers",
+            "service_classes"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "transit_minutes",
+              "role": "measure",
+              "semantic_id": "average_transit_minutes"
+            },
+            {
+              "table": "service_classes",
+              "column": "service_class",
+              "role": "group",
+              "semantic_id": "service_class"
+            },
+            {
+              "table": "carriers",
+              "column": "carrier",
+              "role": "group",
+              "semantic_id": "carrier"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "carrier_id",
+              "to": "carriers",
+              "to_column": "carrier_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "shipment_legs",
+              "from_column": "service_class_id",
+              "to": "service_classes",
+              "to_column": "service_class_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "aggregate"
+          ]
+        },
+        "explanation": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time. Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "title": "Average transit minutes, Leg count by Service class and Carrier",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 18.17,
+          "execution_time_ms": 18.17,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 18.01
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 18.17,
+          "execution_time_ms": 18.17,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 18.01
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      }
+    },
+    {
+      "name": "BL08: visible table, CSV and SQL lineage match the actual response",
+      "status": "passed",
+      "duration_ms": 1467,
+      "csv": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL08.csv",
+      "table_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL08-table.png",
+      "lineage_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL08-lineage.png"
+    },
+    {
+      "name": "BL08: bar chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 736,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL08-bar.png"
+    },
+    {
+      "name": "BL08: scatter chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 306,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL08-scatter.png"
+    },
+    {
+      "name": "Save a verified structured chart, reload and refresh dashboard without model calls",
+      "status": "passed",
+      "duration_ms": 1206,
+      "model_calls": 0,
+      "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+    },
+    {
+      "name": "Structured builder BL17: actual API, plan and oracle rows",
+      "status": "passed",
+      "duration_ms": 696,
+      "id": "BL17",
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "destination_zone": "North",
+            "transported_weight": 953240.272
+          },
+          {
+            "destination_zone": "East",
+            "transported_weight": 905322.186
+          },
+          {
+            "destination_zone": "Islands",
+            "transported_weight": 902281.77
+          },
+          {
+            "destination_zone": "West",
+            "transported_weight": 857310.345
+          }
+        ],
+        "results": [
+          {
+            "destination_zone": "North",
+            "transported_weight": 953240.272
+          },
+          {
+            "destination_zone": "East",
+            "transported_weight": 905322.186
+          },
+          {
+            "destination_zone": "Islands",
+            "transported_weight": 902281.77
+          },
+          {
+            "destination_zone": "West",
+            "transported_weight": 857310.345
+          }
+        ],
+        "columns": [
+          "destination_zone",
+          "transported_weight"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "destination_zone"
+          ],
+          "filters": [],
+          "having": [
+            {
+              "metric": "transported_weight",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t5.\"zone\" AS \"destination_zone\", (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) AS \"transported_weight\" FROM __facts t0 LEFT JOIN \"consignments\" t1 ON t0.\"consignment_id\" COLLATE BINARY = t1.\"consignment_id\" COLLATE BINARY LEFT JOIN \"depots\" t4 ON t1.\"destination_depot_id\" COLLATE BINARY = t4.\"depot_id\" COLLATE BINARY LEFT JOIN \"zones\" t5 ON t4.\"zone_id\" COLLATE BINARY = t5.\"zone_id\" COLLATE BINARY GROUP BY t5.\"zone\" HAVING (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) > :having_0) SELECT \"destination_zone\", \"transported_weight\" FROM __grouped ORDER BY \"transported_weight\" DESC, \"destination_zone\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_transported_weight": 1000,
+          "having_0": 850000
+        },
+        "chart": {
+          "type": "bar",
+          "x": "destination_zone",
+          "y": "transported_weight",
+          "series": [
+            "transported_weight"
+          ],
+          "format": "number",
+          "formats": {
+            "transported_weight": "number"
+          },
+          "additive": {
+            "transported_weight": true
+          },
+          "title": "Transported weight by Destination zone"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "consignments",
+            "depots",
+            "zones"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "weight_grams",
+              "role": "measure",
+              "semantic_id": "transported_weight"
+            },
+            {
+              "table": "zones",
+              "column": "zone",
+              "role": "group",
+              "semantic_id": "destination_zone"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "consignment_id",
+              "to": "consignments",
+              "to_column": "consignment_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "consignments",
+              "from_column": "destination_depot_id",
+              "to": "depots",
+              "to_column": "depot_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "depots",
+              "from_column": "zone_id",
+              "to": "zones",
+              "to_column": "zone_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "aggregate",
+            "having"
+          ]
+        },
+        "explanation": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "title": "Transported weight by Destination zone",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d9a59c08d7883ce6",
+          "row_count": 4,
+          "elapsed_ms": 25.33,
+          "execution_time_ms": 25.33,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 23.18
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "d9a59c08d7883ce6",
+          "row_count": 4,
+          "elapsed_ms": 25.33,
+          "execution_time_ms": 25.33,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 23.18
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      }
+    },
+    {
+      "name": "BL17: visible table, CSV and SQL lineage match the actual response",
+      "status": "passed",
+      "duration_ms": 923,
+      "csv": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL17.csv",
+      "table_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL17-table.png",
+      "lineage_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL17-lineage.png"
+    },
+    {
+      "name": "BL17: bar chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 269,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL17-bar.png"
+    },
+    {
+      "name": "BL17: donut chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 315,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL17-donut.png"
+    },
+    {
+      "name": "Structured builder BL10: actual API, plan and oracle rows",
+      "status": "passed",
+      "duration_ms": 411,
+      "id": "BL10",
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "month": "2026-01",
+            "transported_weight": 611898.032
+          },
+          {
+            "month": "2026-02",
+            "transported_weight": 563067.402
+          },
+          {
+            "month": "2026-03",
+            "transported_weight": 632283.63
+          },
+          {
+            "month": "2026-04",
+            "transported_weight": 709506.827
+          },
+          {
+            "month": "2026-05",
+            "transported_weight": 698265.921
+          },
+          {
+            "month": "2026-06",
+            "transported_weight": 662887.648
+          },
+          {
+            "month": "2026-07",
+            "transported_weight": 680193.749
+          },
+          {
+            "month": "2026-08",
+            "transported_weight": 667920.149
+          },
+          {
+            "month": "2026-09",
+            "transported_weight": 217750.905
+          }
+        ],
+        "results": [
+          {
+            "month": "2026-01",
+            "transported_weight": 611898.032
+          },
+          {
+            "month": "2026-02",
+            "transported_weight": 563067.402
+          },
+          {
+            "month": "2026-03",
+            "transported_weight": 632283.63
+          },
+          {
+            "month": "2026-04",
+            "transported_weight": 709506.827
+          },
+          {
+            "month": "2026-05",
+            "transported_weight": 698265.921
+          },
+          {
+            "month": "2026-06",
+            "transported_weight": 662887.648
+          },
+          {
+            "month": "2026-07",
+            "transported_weight": 680193.749
+          },
+          {
+            "month": "2026-08",
+            "transported_weight": 667920.149
+          },
+          {
+            "month": "2026-09",
+            "transported_weight": 217750.905
+          }
+        ],
+        "columns": [
+          "month",
+          "transported_weight"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT substr(t0.\"departed_on\", 1, 7) AS \"month\", (COALESCE(SUM(t0.\"weight_grams\"), 0) / :scale_transported_weight) AS \"transported_weight\" FROM __facts t0 GROUP BY substr(t0.\"departed_on\", 1, 7)) SELECT \"month\", \"transported_weight\" FROM __grouped ORDER BY \"month\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_transported_weight": 1000
+        },
+        "chart": {
+          "type": "line",
+          "x": "month",
+          "y": "transported_weight",
+          "series": [
+            "transported_weight"
+          ],
+          "format": "number",
+          "formats": {
+            "transported_weight": "number"
+          },
+          "additive": {
+            "transported_weight": true
+          },
+          "title": "Transported weight by Month"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "weight_grams",
+              "role": "measure",
+              "semantic_id": "transported_weight"
+            },
+            {
+              "table": "shipment_legs",
+              "column": "departed_on",
+              "role": "group",
+              "semantic_id": "month"
+            },
+            {
+              "table": "shipment_legs",
+              "column": "departed_on",
+              "role": "date",
+              "semantic_id": "month"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "aggregate"
+          ]
+        },
+        "explanation": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "title": "Transported weight by Month",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "688784b15694b25c",
+          "row_count": 9,
+          "elapsed_ms": 2.49,
+          "execution_time_ms": 2.49,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.44
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "688784b15694b25c",
+          "row_count": 9,
+          "elapsed_ms": 2.49,
+          "execution_time_ms": 2.49,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.44
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      }
+    },
+    {
+      "name": "BL10: visible table, CSV and SQL lineage match the actual response",
+      "status": "passed",
+      "duration_ms": 824,
+      "csv": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL10.csv",
+      "table_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL10-table.png",
+      "lineage_screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL10-lineage.png"
+    },
+    {
+      "name": "BL10: line chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 271,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL10-line.png"
+    },
+    {
+      "name": "BL10: area chart renders actual structured results",
+      "status": "passed",
+      "duration_ms": 343,
+      "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/structured-BL10-area.png"
+    },
+    {
+      "name": "No uncaught browser errors or external browser requests",
+      "status": "passed",
+      "duration_ms": 20
+    }
+  ],
+  "query_requests": [
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": "month",
+          "filters": {},
+          "sort": "dimension_asc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "74780717d9b7f686",
+        "row_count": 12,
+        "elapsed_ms": 0.24,
+        "execution_time_ms": 0.24,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.14
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "80dce20d2acc42bf",
+        "row_count": 1,
+        "elapsed_ms": 0.2,
+        "execution_time_ms": 0.2,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.1
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "orders",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "61ff7157e2cf4bfc",
+        "row_count": 1,
+        "elapsed_ms": 0.19,
+        "execution_time_ms": 0.19,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.09
+      }
+    },
+    {
+      "phase": "startup",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "average_order_value",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "12b63d043d20a595",
+        "row_count": 1,
+        "elapsed_ms": 0.21,
+        "execution_time_ms": 0.21,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.14
+      }
+    },
+    {
+      "phase": "upload-configure",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "handling_charges"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "handling_charges",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "cf95bf73f26bace2",
+        "row_count": 1,
+        "elapsed_ms": 14.65,
+        "execution_time_ms": 14.65,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 14.49
+      }
+    },
+    {
+      "phase": "upload-configure",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "3cc465649d3a7574",
+        "row_count": 1,
+        "elapsed_ms": 16.15,
+        "execution_time_ms": 16.15,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 16
+      }
+    },
+    {
+      "phase": "upload-configure",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "7ad1a373c9909b96",
+        "row_count": 1,
+        "elapsed_ms": 12.72,
+        "execution_time_ms": 12.72,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 12.59
+      }
+    },
+    {
+      "phase": "upload-configure",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "688784b15694b25c",
+        "row_count": 9,
+        "elapsed_ms": 28.62,
+        "execution_time_ms": 28.62,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 28.07
+      }
+    },
+    {
+      "phase": "natural-language-BL01",
+      "http_status": 200,
+      "request": {
+        "question": "Our network planning sheet needs a current leg total. How many shipment legs are recorded?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "ee05379e10f4cff8",
+        "row_count": 1,
+        "elapsed_ms": 5725.33,
+        "execution_time_ms": 5725.33,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1843,
+        "completion_tokens": 83,
+        "total_tokens": 1926,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1843,
+        "output_tokens": 83,
+        "model": "aida-semantic",
+        "model_latency_ms": 5494.1,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 4.68
+      }
+    },
+    {
+      "phase": "natural-language-BL08",
+      "http_status": 200,
+      "request": {
+        "question": "Compare current service-class and carrier combinations using average transit minutes and leg count. Start with the shortest average, breaking ties alphabetically by service class and then carrier.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": false,
+      "meta": {
+        "model_calls": 1,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1858,
+        "completion_tokens": 116,
+        "total_tokens": 1974,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1858,
+        "output_tokens": 116,
+        "model": "aida-semantic",
+        "model_latency_ms": 7477.45,
+        "semantic_cache_hit": false,
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "engine": "hybrid",
+        "elapsed_ms": 7541.3
+      },
+      "error_type": "clarification_required"
+    },
+    {
+      "phase": "natural-language-BL17",
+      "http_status": 200,
+      "request": {
+        "question": "Which destination zones have more than 850,000 kilograms of current transported weight? Show each qualifying total, largest first.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "660c254dff035553",
+        "row_count": 0,
+        "elapsed_ms": 9217.24,
+        "execution_time_ms": 9217.24,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1854,
+        "completion_tokens": 141,
+        "total_tokens": 1995,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1854,
+        "output_tokens": 141,
+        "model": "aida-semantic",
+        "model_latency_ms": 9159.01,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 9.18
+      }
+    },
+    {
+      "phase": "natural-language-BL29",
+      "http_status": 200,
+      "request": {
+        "question": "Append archived legs to current legs, retaining overlapping rows. How many leg records and distinct consignments does that combined population contain?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "483c2f4df0eead5f",
+        "row_count": 1,
+        "elapsed_ms": 8041.72,
+        "execution_time_ms": 8041.72,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1852,
+        "completion_tokens": 88,
+        "total_tokens": 1940,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1852,
+        "output_tokens": 88,
+        "model": "aida-semantic",
+        "model_latency_ms": 7936.32,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 22.49
+      }
+    },
+    {
+      "phase": "natural-language-BL37",
+      "http_status": 200,
+      "request": {
+        "question": "For current legs belonging to Cancelled shipments, what are the average transit minutes and the leg count?",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "d50f01a49e4fd3be",
+        "row_count": 1,
+        "elapsed_ms": 7252.51,
+        "execution_time_ms": 7252.51,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1846,
+        "completion_tokens": 116,
+        "total_tokens": 1962,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1846,
+        "output_tokens": 116,
+        "model": "aida-semantic",
+        "model_latency_ms": 7202.14,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 5.9
+      }
+    },
+    {
+      "phase": "natural-language-BL42",
+      "http_status": 200,
+      "request": {
+        "question": "For each carrier, divide total handling charges by transported kilograms and rank carriers by that cost per kilogram.",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": false,
+      "meta": {
+        "model_calls": 1,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1847,
+        "completion_tokens": 128,
+        "total_tokens": 1975,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1847,
+        "output_tokens": 128,
+        "model": "aida-semantic",
+        "model_latency_ms": 7928.89,
+        "semantic_cache_hit": false,
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "engine": "hybrid",
+        "elapsed_ms": 7966.2
+      },
+      "error_type": "clarification_required"
+    },
+    {
+      "phase": "BL08",
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "4de75b449edcb224",
+        "row_count": 34,
+        "elapsed_ms": 18.17,
+        "execution_time_ms": 18.17,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 18.01
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": "month",
+          "filters": {},
+          "sort": "dimension_asc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "74780717d9b7f686",
+        "row_count": 12,
+        "elapsed_ms": 0.21,
+        "execution_time_ms": 0.21,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.12
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "orders",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "61ff7157e2cf4bfc",
+        "row_count": 1,
+        "elapsed_ms": 0.11,
+        "execution_time_ms": 0.11,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.06
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "revenue",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "80dce20d2acc42bf",
+        "row_count": 1,
+        "elapsed_ms": 0.13,
+        "execution_time_ms": 0.13,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.07
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "commerce",
+        "catalog_version": "8fd8b2c558d81f8f",
+        "plan": {
+          "metric": "average_order_value",
+          "dimension": null,
+          "filters": {},
+          "sort": "value_desc",
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "commerce",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2025-12-31",
+        "cache_hit": true,
+        "execution_id": "12b63d043d20a595",
+        "row_count": 1,
+        "elapsed_ms": 0.15,
+        "execution_time_ms": 0.15,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.08
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "3cc465649d3a7574",
+        "row_count": 1,
+        "elapsed_ms": 0.31,
+        "execution_time_ms": 0.31,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.15
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "688784b15694b25c",
+        "row_count": 9,
+        "elapsed_ms": 0.38,
+        "execution_time_ms": 0.38,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.18
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "handling_charges"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "handling_charges",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "cf95bf73f26bace2",
+        "row_count": 1,
+        "elapsed_ms": 0.23,
+        "execution_time_ms": 0.23,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.12
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "desc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "7ad1a373c9909b96",
+        "row_count": 1,
+        "elapsed_ms": 0.4,
+        "execution_time_ms": 0.4,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.16
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "4de75b449edcb224",
+        "row_count": 34,
+        "elapsed_ms": 0.41,
+        "execution_time_ms": 0.41,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.26
+      }
+    },
+    {
+      "phase": "dashboard",
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        }
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "4de75b449edcb224",
+        "row_count": 34,
+        "elapsed_ms": 0.71,
+        "execution_time_ms": 0.71,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.48
+      }
+    },
+    {
+      "phase": "BL17",
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "destination_zone"
+          ],
+          "filters": [],
+          "having": [
+            {
+              "metric": "transported_weight",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "transported_weight",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "d9a59c08d7883ce6",
+        "row_count": 4,
+        "elapsed_ms": 25.33,
+        "execution_time_ms": 25.33,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 23.18
+      }
+    },
+    {
+      "phase": "BL10",
+      "http_status": 200,
+      "request": {
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "transported_weight"
+          ],
+          "dimensions": [
+            "month"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "month",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "success": true,
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "688784b15694b25c",
+        "row_count": 9,
+        "elapsed_ms": 2.49,
+        "execution_time_ms": 2.49,
+        "interpretation_source": "visual_builder",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "database_time_ms": 0.44
+      }
+    }
+  ],
+  "browser_errors": [],
+  "external_requests": [],
+  "upload": {
+    "http_status": 200,
+    "url": "http://127.0.0.1:3000/api/v1/sources",
+    "inspected_table_names": [
+      "archive_shipment_legs",
+      "carriers",
+      "consignments",
+      "contact_directory",
+      "depots",
+      "exception_events",
+      "markets",
+      "operator_credentials",
+      "service_classes",
+      "shipment_legs",
+      "shippers",
+      "zones"
+    ]
+  },
+  "source": {
+    "id": "ceb2ebc8238c4a12838ede475ed8e892",
+    "catalog": {
+      "metrics": [
+        {
+          "id": "transported_weight",
+          "label": "Transported weight",
+          "description": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+          "format": "number",
+          "additive": true
+        },
+        {
+          "id": "handling_charges",
+          "label": "Handling charges",
+          "description": "Shipment-leg handling charges in USD, summing recorded leg charges and dividing cents by 100. Excludes consignment charges, service tariffs, carrier fees and exception fees. Null charges do not contribute.",
+          "format": "currency",
+          "additive": true
+        },
+        {
+          "id": "average_transit_minutes",
+          "label": "Average transit minutes",
+          "description": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time.",
+          "format": "number",
+          "additive": false
+        },
+        {
+          "id": "distinct_consignments",
+          "label": "Distinct consignments",
+          "description": "Number of distinct non-null consignment references represented by selected shipment legs, including references missing from the consignment table. Count separately within each group; grouped counts are not additive.",
+          "format": "number",
+          "additive": false
+        },
+        {
+          "id": "leg_count",
+          "label": "Leg count",
+          "description": "Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+          "format": "number",
+          "additive": true
+        }
+      ],
+      "dimensions": [
+        {
+          "id": "customer_market",
+          "label": "Customer market",
+          "type": "string",
+          "values": [
+            "Retail",
+            "Manufacturing",
+            "Healthcare",
+            "Technology",
+            "Public sector"
+          ]
+        },
+        {
+          "id": "destination_zone",
+          "label": "Destination zone",
+          "type": "string",
+          "values": [
+            "North",
+            "South",
+            "East",
+            "West",
+            "Central",
+            "Islands"
+          ]
+        },
+        {
+          "id": "service_class",
+          "label": "Service class",
+          "type": "string",
+          "values": [
+            "Standard",
+            "Express",
+            "Overnight",
+            "Freight"
+          ]
+        },
+        {
+          "id": "carrier",
+          "label": "Carrier",
+          "type": "string",
+          "values": [
+            "Arrow Parcel",
+            "Cedar Freight",
+            "Harbor Air",
+            "Maple Logistics",
+            "Polar Transit",
+            "Quartz Express"
+          ]
+        },
+        {
+          "id": "shipment_state",
+          "label": "Shipment state",
+          "type": "string",
+          "values": [
+            "Delivered",
+            "In transit",
+            "On hold",
+            "Cancelled",
+            "Returned"
+          ]
+        },
+        {
+          "id": "month",
+          "label": "Month",
+          "type": "string"
+        }
+      ],
+      "fields": [
+        {
+          "id": "leg_weight_grams",
+          "label": "Leg weight in grams",
+          "type": "number"
+        },
+        {
+          "id": "leg_handling_cents",
+          "label": "Leg handling charge in cents",
+          "type": "number"
+        },
+        {
+          "id": "leg_transit_minutes",
+          "label": "Leg transit minutes",
+          "type": "number"
+        },
+        {
+          "id": "route_distance_km",
+          "label": "Route distance in kilometers",
+          "type": "number"
+        },
+        {
+          "id": "package_count",
+          "label": "Packages on a leg",
+          "type": "number"
+        },
+        {
+          "id": "planned_transit_minutes",
+          "label": "Planned transit minutes",
+          "type": "number"
+        },
+        {
+          "id": "service_tariff_cents",
+          "label": "Service tariff in cents",
+          "type": "number"
+        },
+        {
+          "id": "consignment_charge_cents",
+          "label": "Consignment charge in cents",
+          "type": "number"
+        },
+        {
+          "id": "declared_value_cents",
+          "label": "Declared consignment value in cents",
+          "type": "number"
+        },
+        {
+          "id": "leg_state",
+          "label": "Leg state",
+          "type": "string",
+          "values": [
+            "Completed",
+            "In transit",
+            "Delayed",
+            "Cancelled"
+          ]
+        },
+        {
+          "id": "carrier_state",
+          "label": "Carrier state",
+          "type": "string",
+          "values": [
+            "Active",
+            "Suspended"
+          ]
+        }
+      ],
+      "filter_values": {
+        "customer_market": [
+          "Retail",
+          "Manufacturing",
+          "Healthcare",
+          "Technology",
+          "Public sector"
+        ],
+        "destination_zone": [
+          "North",
+          "South",
+          "East",
+          "West",
+          "Central",
+          "Islands"
+        ],
+        "service_class": [
+          "Standard",
+          "Express",
+          "Overnight",
+          "Freight"
+        ],
+        "carrier": [
+          "Arrow Parcel",
+          "Cedar Freight",
+          "Harbor Air",
+          "Maple Logistics",
+          "Polar Transit",
+          "Quartz Express"
+        ],
+        "shipment_state": [
+          "Delivered",
+          "In transit",
+          "On hold",
+          "Cancelled",
+          "Returned"
+        ],
+        "leg_state": [
+          "Completed",
+          "In transit",
+          "Delayed",
+          "Cancelled"
+        ],
+        "carrier_state": [
+          "Active",
+          "Suspended"
+        ]
+      },
+      "exists_relations": [
+        {
+          "id": "exceptions",
+          "label": "Shipment leg exceptions",
+          "fields": [
+            {
+              "id": "exception_reason",
+              "label": "Exception reason",
+              "type": "string",
+              "values": [
+                "Weather",
+                "Damage",
+                "Customs",
+                "Capacity",
+                "Address"
+              ]
+            },
+            {
+              "id": "exception_state",
+              "label": "Exception state",
+              "type": "string",
+              "values": [
+                "Open",
+                "Resolved",
+                "Waived"
+              ]
+            },
+            {
+              "id": "exception_severity",
+              "label": "Exception severity",
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "populations": [
+        {
+          "id": "primary",
+          "label": "Current records",
+          "description": "The primary fact table only."
+        },
+        {
+          "id": "all",
+          "label": "Current and archived records",
+          "description": "Combine aligned current and archive fact rows. UNION ALL keeps every row; UNION removes exact duplicate fact rows."
+        }
+      ],
+      "examples": [
+        "Show transported weight by customer market.",
+        "Show handling charges by destination zone for Express service.",
+        "Count shipment legs with a Weather exception."
+      ],
+      "dataset": {
+        "id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "name": "Blind synthetic logistics",
+        "synthetic": false,
+        "as_of": "2026-09-12",
+        "date_from": "2025-07-01",
+        "date_to": "2026-09-12",
+        "currency": "USD",
+        "catalog_version": "95e211813e24fb47"
+      },
+      "privacy": {
+        "aggregate_only": true,
+        "customer_data": true,
+        "description": "The local model receives approved semantic labels, never physical tables, customer rows, or query results."
+      },
+      "capabilities": {
+        "relational": true,
+        "max_rows": 100,
+        "query_timeout_seconds": 2,
+        "metrics_per_query": 3,
+        "groupings_per_query": 2,
+        "filters": "AND comparisons on approved fields, including IN; numeric aggregate HAVING; correlated EXISTS and NOT EXISTS; above-average grouped aggregates.",
+        "set_operations": [
+          "union_all",
+          "union"
+        ],
+        "relative_dates": "Dates use 2026-09-12 as the reference."
+      }
+    },
+    "retained_in_live_backend": true
+  },
+  "dashboard": {
+    "stored_definition": {
+      "id": "35d12228-9987-4f53-9d93-7e1b014ecce1",
+      "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+      "catalog_version": "95e211813e24fb47",
+      "title": "Average transit minutes and Leg count by Service class and Carrier",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "average_transit_minutes",
+          "leg_count"
+        ],
+        "dimensions": [
+          "service_class",
+          "carrier"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "average_transit_minutes",
+          "direction": "asc"
+        },
+        "limit": 100
+      },
+      "chartType": "scatter"
+    },
+    "refresh_response": {
+      "http_status": 200,
+      "request": {
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+        "catalog_version": "95e211813e24fb47",
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        }
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "results": [
+          {
+            "service_class": "Overnight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 493.1528384279476,
+            "leg_count": 245
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 500.327731092437,
+            "leg_count": 254
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 506.36238532110093,
+            "leg_count": 236
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 511.1446808510638,
+            "leg_count": 252
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 523.7,
+            "leg_count": 267
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 528.0936329588015,
+            "leg_count": 291
+          },
+          {
+            "service_class": "Overnight",
+            "carrier": null,
+            "average_transit_minutes": 565.3076923076923,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 767.4244306418219,
+            "leg_count": 530
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 775.7338877338877,
+            "leg_count": 512
+          },
+          {
+            "service_class": null,
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 779,
+            "leg_count": 12
+          },
+          {
+            "service_class": "Express",
+            "carrier": null,
+            "average_transit_minutes": 780,
+            "leg_count": 28
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 785.6751592356688,
+            "leg_count": 501
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 787.1259842519685,
+            "leg_count": 539
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 793.0564853556485,
+            "leg_count": 512
+          },
+          {
+            "service_class": "Express",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 804.2780082987551,
+            "leg_count": 516
+          },
+          {
+            "service_class": null,
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 953.8,
+            "leg_count": 25
+          },
+          {
+            "service_class": null,
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1175,
+            "leg_count": 14
+          },
+          {
+            "service_class": null,
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1358.75,
+            "leg_count": 13
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 1381.0072551390567,
+            "leg_count": 885
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 1393.3952618453866,
+            "leg_count": 869
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1394.9152970922883,
+            "leg_count": 849
+          },
+          {
+            "service_class": "Standard",
+            "carrier": null,
+            "average_transit_minutes": 1400.4375,
+            "leg_count": 34
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 1410.885101010101,
+            "leg_count": 852
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 1411.9739336492892,
+            "leg_count": 902
+          },
+          {
+            "service_class": null,
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 1432.25,
+            "leg_count": 17
+          },
+          {
+            "service_class": "Standard",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 1433.394829612221,
+            "leg_count": 913
+          },
+          {
+            "service_class": null,
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2054.4,
+            "leg_count": 11
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Cedar Freight",
+            "average_transit_minutes": 2473.6190476190477,
+            "leg_count": 320
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Harbor Air",
+            "average_transit_minutes": 2482.972049689441,
+            "leg_count": 344
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Maple Logistics",
+            "average_transit_minutes": 2500.743859649123,
+            "leg_count": 308
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Arrow Parcel",
+            "average_transit_minutes": 2533.8079470198677,
+            "leg_count": 321
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Polar Transit",
+            "average_transit_minutes": 2567.4384057971015,
+            "leg_count": 303
+          },
+          {
+            "service_class": "Freight",
+            "carrier": "Quartz Express",
+            "average_transit_minutes": 2636.4007352941176,
+            "leg_count": 297
+          },
+          {
+            "service_class": "Freight",
+            "carrier": null,
+            "average_transit_minutes": 2854.6428571428573,
+            "leg_count": 15
+          }
+        ],
+        "columns": [
+          "service_class",
+          "carrier",
+          "average_transit_minutes",
+          "leg_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "dimensions": [
+            "service_class",
+            "carrier"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "average_transit_minutes",
+            "direction": "asc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"leg_id\", \"consignment_id\", \"service_class_id\", \"carrier_id\", \"departed_on\", \"weight_grams\", \"charge_cents\", \"transit_minutes\", \"distance_km\", \"package_count\", \"planned_transit_minutes\", \"status\" FROM \"shipment_legs\"), __grouped AS (SELECT t6.\"service_class\" AS \"service_class\", t7.\"carrier\" AS \"carrier\", AVG(t0.\"transit_minutes\") AS \"average_transit_minutes\", COALESCE(COUNT(1), 0) AS \"leg_count\" FROM __facts t0 LEFT JOIN \"carriers\" t7 ON t0.\"carrier_id\" COLLATE BINARY = t7.\"carrier_id\" COLLATE BINARY LEFT JOIN \"service_classes\" t6 ON t0.\"service_class_id\" COLLATE BINARY = t6.\"service_class_id\" COLLATE BINARY GROUP BY t6.\"service_class\", t7.\"carrier\") SELECT \"service_class\", \"carrier\", \"average_transit_minutes\", \"leg_count\" FROM __grouped ORDER BY \"average_transit_minutes\" ASC, \"service_class\" ASC, \"carrier\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "bar",
+          "x": "service_class",
+          "y": "average_transit_minutes",
+          "series": [
+            "average_transit_minutes",
+            "leg_count"
+          ],
+          "format": "number",
+          "formats": {
+            "average_transit_minutes": "number",
+            "leg_count": "number"
+          },
+          "additive": {
+            "average_transit_minutes": false,
+            "leg_count": true
+          },
+          "title": "Average transit minutes, Leg count by Service class and Carrier"
+        },
+        "lineage": {
+          "tables": [
+            "shipment_legs",
+            "carriers",
+            "service_classes"
+          ],
+          "columns": [
+            {
+              "table": "shipment_legs",
+              "column": "transit_minutes",
+              "role": "measure",
+              "semantic_id": "average_transit_minutes"
+            },
+            {
+              "table": "service_classes",
+              "column": "service_class",
+              "role": "group",
+              "semantic_id": "service_class"
+            },
+            {
+              "table": "carriers",
+              "column": "carrier",
+              "role": "group",
+              "semantic_id": "carrier"
+            }
+          ],
+          "joins": [
+            {
+              "from": "shipment_legs",
+              "from_column": "carrier_id",
+              "to": "carriers",
+              "to_column": "carrier_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "shipment_legs",
+              "from_column": "service_class_id",
+              "to": "service_classes",
+              "to_column": "service_class_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "join",
+            "aggregate"
+          ]
+        },
+        "explanation": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time. Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "title": "Average transit minutes, Leg count by Service class and Carrier",
+        "meta": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 0.41,
+          "execution_time_ms": 0.41,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.26
+        },
+        "metadata": {
+          "engine": "hybrid",
+          "source_id": "ceb2ebc8238c4a12838ede475ed8e892",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": false,
+          "as_of": "2026-09-12",
+          "cache_hit": true,
+          "execution_id": "4de75b449edcb224",
+          "row_count": 34,
+          "elapsed_ms": 0.41,
+          "execution_time_ms": 0.41,
+          "interpretation_source": "visual_builder",
+          "interpretation_cache_hit": false,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "external_model_calls": 0,
+          "model_api_cost_usd": 0,
+          "database_time_ms": 0.26
+        },
+        "source_id": "ceb2ebc8238c4a12838ede475ed8e892"
+      }
+    },
+    "screenshot": "artifacts/e2e-blind/2026-09-12T14-27-15-089Z/dashboard-refreshed.png"
+  },
+  "status": "completed_with_failures",
+  "frozen_evidence_unchanged": true,
+  "finished_at": "2026-09-12T14:28:14.400Z",
+  "secondary_summary": {
+    "natural_language_cases": 6,
+    "natural_language_correct": 4,
+    "categories": {
+      "correct_answer": 3,
+      "false_refusal": 1,
+      "wrong_accepted_meaning": 1,
+      "correct_refusal": 1
+    },
+    "structured_cases": 3,
+    "structured_correct": 3,
+    "recorded_model_calls": 6,
+    "first_50_score_recomputed": false
+  }
+}

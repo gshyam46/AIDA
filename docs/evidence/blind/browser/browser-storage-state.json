@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:3000",
+      "localStorage": [
+        {
+          "name": "aida:dashboard:v2",
+          "value": "[{\"id\":\"35d12228-9987-4f53-9d93-7e1b014ecce1\",\"source_id\":\"ceb2ebc8238c4a12838ede475ed8e892\",\"catalog_version\":\"95e211813e24fb47\",\"title\":\"Average transit minutes and Leg count by Service class and Carrier\",\"plan\":{\"version\":2,\"metrics\":[\"average_transit_minutes\",\"leg_count\"],\"dimensions\":[\"service_class\",\"carrier\"],\"filters\":[],\"having\":[],\"population\":\"primary\",\"set_operation\":\"union_all\",\"exists\":null,\"comparison\":null,\"date_from\":null,\"date_to\":null,\"sort\":{\"field\":\"average_transit_minutes\",\"direction\":\"asc\"},\"limit\":100},\"chartType\":\"scatter\"}]"
+        }
+      ]
+    }
+  ]
+}

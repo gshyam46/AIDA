@@ -1,0 +1,1418 @@
+{
+  "generated_at": "2026-09-12T09:35:43.381793+00:00",
+  "evaluation": "contract7-grouping-scope",
+  "semantic_contract_version": "7",
+  "system_prompt_sha256": "9dd8aab103c0b66cf40d1f72e94e1d06525ace9237a1eb127d2851c5a33d328e",
+  "parser_source_sha256": "12dd02e15001032a38d268464d6574d4bf93ee0105d8e97df9faa3b341c70f10",
+  "scope": "Fixed demo regression, not a general language accuracy guarantee. One local model call per uncached eligible question; no retries or expected-plan injection.",
+  "configuration": {
+    "model": "aida-semantic",
+    "endpoint": "http://127.0.0.1:8081/v1/chat/completions",
+    "temperature": 0,
+    "seed": 42,
+    "max_tokens": 768
+  },
+  "cases": [
+    {
+      "id": "warehouse_union_distinct",
+      "source_id": "warehouse",
+      "question": "Order lines including current and archived records with exact duplicates removed",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "line_count"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "population": "all",
+        "set_operation": "union",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "line_count",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": true,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "line_count"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "population": "all",
+        "set_operation": "union",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "line_count",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m4"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "dimensions": [],
+        "population": "all",
+        "set_operation": "union",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1471,
+        "output_tokens": 87,
+        "prompt_tokens": 1471,
+        "completion_tokens": 87,
+        "total_tokens": 1558,
+        "model": "aida-semantic",
+        "model_latency_ms": 4541.24,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "line_count": 2000
+          }
+        ],
+        "results": [
+          {
+            "line_count": 2000
+          }
+        ],
+        "columns": [
+          "line_count"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "line_count"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "all",
+          "set_operation": "union",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "line_count",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\" UNION SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"archived_order_items\"), __grouped AS (SELECT COALESCE(COUNT(1), 0) AS \"line_count\" FROM __facts t0) SELECT \"line_count\" FROM __grouped ORDER BY \"line_count\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "line_count",
+          "series": [
+            "line_count"
+          ],
+          "format": "number",
+          "formats": {
+            "line_count": "number"
+          },
+          "additive": {
+            "line_count": true
+          },
+          "title": "Order lines"
+        },
+        "lineage": {
+          "tables": [
+            "order_items",
+            "archived_order_items"
+          ],
+          "columns": [],
+          "joins": [],
+          "operations": [
+            "aggregate",
+            "union"
+          ]
+        },
+        "explanation": "Number of selected order-line records, including duplicate rows when UNION ALL is requested. Includes current and archived fact rows; exact duplicate rows are removed.",
+        "title": "Order lines",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "1ef61633c76f94aa",
+          "row_count": 1,
+          "elapsed_ms": 1.49,
+          "execution_time_ms": 1.49
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "1ef61633c76f94aa",
+          "row_count": 1,
+          "elapsed_ms": 1.49,
+          "execution_time_ms": 1.49
+        }
+      },
+      "oracle_sql": "WITH all_lines AS (SELECT line_id,order_id,product_id,quantity,line_total_cents FROM order_items UNION SELECT line_id,order_id,product_id,quantity,line_total_cents FROM archived_order_items) SELECT COUNT(1) AS line_count FROM all_lines",
+      "expected_rows": [
+        {
+          "line_count": 2000
+        }
+      ],
+      "plan_matches": true,
+      "rows_match": true,
+      "schema_sha256": "e01fe12ebcabfc9473132a733bf5d8a2d7f55eb7b4ff7df6b74730e065ed800d",
+      "user_prompt_sha256": "fc9ec2ec898805031e3ce284789b85cadf0b38f1d527fdc79a438ef8d34adeb2",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m4\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": null,\n  \"comparison\": null,\n  \"dimensions\": [\n    \t],\n  \"population\": \"all\",\n  \"set_operation\": \"union\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    },
+    {
+      "id": "billing_join_multi_metric",
+      "source_id": "billing",
+      "question": "Billed amount and seats by account segment",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "billed_amount",
+          "seats"
+        ],
+        "dimensions": [
+          "segment"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "billed_amount",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": true,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "billed_amount",
+          "seats"
+        ],
+        "dimensions": [
+          "segment"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "population": "primary",
+        "set_operation": "union_all",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "billed_amount",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m0",
+          "m1"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "dimensions": [
+          "d0"
+        ],
+        "population": "primary",
+        "set_operation": "union_all",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1460,
+        "output_tokens": 95,
+        "prompt_tokens": 1460,
+        "completion_tokens": 95,
+        "total_tokens": 1555,
+        "model": "aida-semantic",
+        "model_latency_ms": 6343.29,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "segment": "Startup",
+            "billed_amount": 555435.0,
+            "seats": 7770
+          },
+          {
+            "segment": "Enterprise",
+            "billed_amount": 361140.0,
+            "seats": 5976
+          },
+          {
+            "segment": "Growth",
+            "billed_amount": 110085.0,
+            "seats": 3795
+          },
+          {
+            "segment": null,
+            "billed_amount": 8040.0,
+            "seats": 139
+          }
+        ],
+        "results": [
+          {
+            "segment": "Startup",
+            "billed_amount": 555435.0,
+            "seats": 7770
+          },
+          {
+            "segment": "Enterprise",
+            "billed_amount": 361140.0,
+            "seats": 5976
+          },
+          {
+            "segment": "Growth",
+            "billed_amount": 110085.0,
+            "seats": 3795
+          },
+          {
+            "segment": null,
+            "billed_amount": 8040.0,
+            "seats": 139
+          }
+        ],
+        "columns": [
+          "segment",
+          "billed_amount",
+          "seats"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "billed_amount",
+            "seats"
+          ],
+          "dimensions": [
+            "segment"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "billed_amount",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"entry_id\", \"invoice_id\", \"subscription_id\", \"seat_quantity\", \"amount_cents\" FROM \"invoice_lines\"), __grouped AS (SELECT t2.\"segment\" AS \"segment\", ROUND((COALESCE(SUM(t0.\"amount_cents\"), 0) / :scale_billed_amount), 2) AS \"billed_amount\", COALESCE(SUM(t0.\"seat_quantity\"), 0) AS \"seats\" FROM __facts t0 LEFT JOIN \"invoices\" t1 ON t0.\"invoice_id\" COLLATE BINARY = t1.\"invoice_id\" COLLATE BINARY LEFT JOIN \"accounts\" t2 ON t1.\"account_id\" COLLATE BINARY = t2.\"account_id\" COLLATE BINARY GROUP BY t2.\"segment\") SELECT \"segment\", \"billed_amount\", \"seats\" FROM __grouped ORDER BY \"billed_amount\" DESC, \"segment\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_billed_amount": 100.0
+        },
+        "chart": {
+          "type": "bar",
+          "x": "segment",
+          "y": "billed_amount",
+          "series": [
+            "billed_amount",
+            "seats"
+          ],
+          "format": "currency",
+          "formats": {
+            "billed_amount": "currency",
+            "seats": "number"
+          },
+          "additive": {
+            "billed_amount": true,
+            "seats": true
+          },
+          "title": "Billed amount, Seats by Account segment"
+        },
+        "lineage": {
+          "tables": [
+            "invoice_lines",
+            "invoices",
+            "accounts"
+          ],
+          "columns": [
+            {
+              "table": "invoice_lines",
+              "column": "amount_cents",
+              "role": "measure",
+              "semantic_id": "billed_amount"
+            },
+            {
+              "table": "invoice_lines",
+              "column": "seat_quantity",
+              "role": "measure",
+              "semantic_id": "seats"
+            },
+            {
+              "table": "accounts",
+              "column": "segment",
+              "role": "group",
+              "semantic_id": "segment"
+            }
+          ],
+          "joins": [
+            {
+              "from": "invoice_lines",
+              "from_column": "invoice_id",
+              "to": "invoices",
+              "to_column": "invoice_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "invoices",
+              "from_column": "account_id",
+              "to": "accounts",
+              "to_column": "account_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "aggregate",
+            "join"
+          ]
+        },
+        "explanation": "Sum of invoice-line amounts in dollars before credits, across every invoice status unless filtered. Sum of billed seat quantities on invoice lines.",
+        "title": "Billed amount, Seats by Account segment",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "billing",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "124461790942ce94",
+          "row_count": 4,
+          "elapsed_ms": 3.33,
+          "execution_time_ms": 3.33
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "billing",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "124461790942ce94",
+          "row_count": 4,
+          "elapsed_ms": 3.33,
+          "execution_time_ms": 3.33
+        }
+      },
+      "oracle_sql": "SELECT a.segment,ROUND(COALESCE(SUM(li.amount_cents),0)/100.0,2) AS billed_amount,COALESCE(SUM(li.seat_quantity),0) AS seats FROM invoice_lines li LEFT JOIN invoices i ON li.invoice_id=i.invoice_id LEFT JOIN accounts a ON i.account_id=a.account_id GROUP BY a.segment ORDER BY billed_amount DESC,segment ASC LIMIT 100",
+      "expected_rows": [
+        {
+          "segment": "Startup",
+          "billed_amount": 555435.0,
+          "seats": 7770
+        },
+        {
+          "segment": "Enterprise",
+          "billed_amount": 361140.0,
+          "seats": 5976
+        },
+        {
+          "segment": "Growth",
+          "billed_amount": 110085.0,
+          "seats": 3795
+        },
+        {
+          "segment": null,
+          "billed_amount": 8040.0,
+          "seats": 139
+        }
+      ],
+      "plan_matches": true,
+      "rows_match": true,
+      "schema_sha256": "82442c3609579819d90562ff8e54123c57f01a4ec09fd7545579cbe23c635dcb",
+      "user_prompt_sha256": "9c5644d7a9e82529aa91bd59a4d23de849b282680c86cb7083ef73ca3f45457d",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m0\",\n    \"m1\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": null,\n  \"comparison\": null,\n  \"dimensions\": [\n    \"d0\"\n  ],\n  \"population\": \"primary\",\n  \"set_operation\": \"union_all\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    },
+    {
+      "id": "billing_union_distinct",
+      "source_id": "billing",
+      "question": "Billing lines including current and archived records with exact duplicates removed",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "billing_lines"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "population": "all",
+        "set_operation": "union",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "billing_lines",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": false,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "billing_lines"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "exists": {
+          "relation": "credits",
+          "negate": false,
+          "filters": []
+        },
+        "comparison": null,
+        "population": "all",
+        "set_operation": "union",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "billing_lines",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m4"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": {
+          "relation": "r0",
+          "negate": false,
+          "filters": []
+        },
+        "comparison": null,
+        "dimensions": [],
+        "population": "all",
+        "set_operation": "union",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1463,
+        "output_tokens": 103,
+        "prompt_tokens": 1463,
+        "completion_tokens": 103,
+        "total_tokens": 1566,
+        "model": "aida-semantic",
+        "model_latency_ms": 5388.28,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "billing_lines": 163
+          }
+        ],
+        "results": [
+          {
+            "billing_lines": 163
+          }
+        ],
+        "columns": [
+          "billing_lines"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "billing_lines"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "all",
+          "set_operation": "union",
+          "exists": {
+            "relation": "credits",
+            "negate": false,
+            "filters": []
+          },
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "billing_lines",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"entry_id\", \"invoice_id\", \"subscription_id\", \"seat_quantity\", \"amount_cents\" FROM \"invoice_lines\" UNION SELECT \"entry_id\", \"invoice_id\", \"subscription_id\", \"seat_quantity\", \"amount_cents\" FROM \"archived_invoice_lines\"), __grouped AS (SELECT COALESCE(COUNT(1), 0) AS \"billing_lines\" FROM __facts t0 WHERE EXISTS (SELECT 1 FROM \"credits\" e0 WHERE e0.\"entry_id\" COLLATE BINARY = t0.\"entry_id\" COLLATE BINARY)) SELECT \"billing_lines\" FROM __grouped ORDER BY \"billing_lines\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "billing_lines",
+          "series": [
+            "billing_lines"
+          ],
+          "format": "number",
+          "formats": {
+            "billing_lines": "number"
+          },
+          "additive": {
+            "billing_lines": true
+          },
+          "title": "Billing lines"
+        },
+        "lineage": {
+          "tables": [
+            "invoice_lines",
+            "archived_invoice_lines",
+            "credits"
+          ],
+          "columns": [
+            {
+              "table": "invoice_lines",
+              "column": "entry_id",
+              "role": "related_key",
+              "semantic_id": "credits"
+            },
+            {
+              "table": "credits",
+              "column": "entry_id",
+              "role": "related_key",
+              "semantic_id": "credits"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "aggregate",
+            "exists",
+            "union"
+          ]
+        },
+        "explanation": "Number of selected invoice-line records. Includes current and archived fact rows; exact duplicate rows are removed.",
+        "title": "Billing lines",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "billing",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "27d3e73f02de9402",
+          "row_count": 1,
+          "elapsed_ms": 3.07,
+          "execution_time_ms": 3.07
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "billing",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "27d3e73f02de9402",
+          "row_count": 1,
+          "elapsed_ms": 3.07,
+          "execution_time_ms": 3.07
+        }
+      },
+      "oracle_sql": "WITH all_lines AS (SELECT entry_id,invoice_id,subscription_id,seat_quantity,amount_cents FROM invoice_lines UNION SELECT entry_id,invoice_id,subscription_id,seat_quantity,amount_cents FROM archived_invoice_lines) SELECT COUNT(1) AS billing_lines FROM all_lines",
+      "expected_rows": [
+        {
+          "billing_lines": 1800
+        }
+      ],
+      "plan_matches": false,
+      "rows_match": false,
+      "schema_sha256": "175d1e2df4edb381d889e42e204ba931e8cf6b009e9ab64977125c9147c9ce29",
+      "user_prompt_sha256": "e67455e9fd0542382b44661dba97f1a8655d2f9c722be6d11253fda3895099f4",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m4\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": {\n    \"relation\": \"r0\",\n    \"negate\": false,\n    \"filters\": []\n  },\n  \"comparison\": null,\n  \"dimensions\": [],\n  \"population\": \"all\",\n  \"set_operation\": \"union\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    },
+    {
+      "id": "scope_warehouse_total",
+      "source_id": "warehouse",
+      "question": "What is total revenue?",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": true,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "population": "primary",
+        "set_operation": "union_all",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m0"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "dimensions": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1465,
+        "output_tokens": 83,
+        "prompt_tokens": 1465,
+        "completion_tokens": 83,
+        "total_tokens": 1548,
+        "model": "aida-semantic",
+        "model_latency_ms": 7160.36,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "revenue": 257369.66
+          }
+        ],
+        "results": [
+          {
+            "revenue": 257369.66
+          }
+        ],
+        "columns": [
+          "revenue"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "revenue"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "revenue",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0) SELECT \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_revenue": 100.0
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "revenue",
+          "series": [
+            "revenue"
+          ],
+          "format": "currency",
+          "formats": {
+            "revenue": "currency"
+          },
+          "additive": {
+            "revenue": true
+          },
+          "title": "Revenue"
+        },
+        "lineage": {
+          "tables": [
+            "order_items"
+          ],
+          "columns": [
+            {
+              "table": "order_items",
+              "column": "line_total_cents",
+              "role": "measure",
+              "semantic_id": "revenue"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "aggregate"
+          ]
+        },
+        "explanation": "Sum of order-line totals in dollars, before refunds, across every order status unless filtered.",
+        "title": "Revenue",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "922d7ed132dd30c3",
+          "row_count": 1,
+          "elapsed_ms": 2.08,
+          "execution_time_ms": 2.08
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "922d7ed132dd30c3",
+          "row_count": 1,
+          "elapsed_ms": 2.08,
+          "execution_time_ms": 2.08
+        }
+      },
+      "oracle_sql": "SELECT ROUND(COALESCE(SUM(line_total_cents),0)/100.0,2) AS revenue FROM order_items",
+      "expected_rows": [
+        {
+          "revenue": 257369.66
+        }
+      ],
+      "plan_matches": true,
+      "rows_match": true,
+      "schema_sha256": "85493cc0d62959a093cf6519eb69607ba904a29844a653f53932dd9bbc5710d0",
+      "user_prompt_sha256": "214d15fa4e7694fe07cdd726de99e3dee1795fdf805599b9421c28090d8127e2",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m0\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": null,\n  \"comparison\": null,\n  \"dimensions\": [],\n  \"population\": \"primary\",\n  \"set_operation\": \"union_all\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    },
+    {
+      "id": "scope_chinook_total",
+      "source_id": "chinook",
+      "question": "How many units have been sold?",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "units_sold"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "units_sold",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": true,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "units_sold"
+        ],
+        "dimensions": [],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "population": "primary",
+        "set_operation": "union_all",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "units_sold",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m0"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "dimensions": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1335,
+        "output_tokens": 83,
+        "prompt_tokens": 1335,
+        "completion_tokens": 83,
+        "total_tokens": 1418,
+        "model": "aida-semantic",
+        "model_latency_ms": 7371.66,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "units_sold": 2240
+          }
+        ],
+        "results": [
+          {
+            "units_sold": 2240
+          }
+        ],
+        "columns": [
+          "units_sold"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "units_sold"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "units_sold",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"InvoiceLineId\", \"InvoiceId\", \"TrackId\", \"UnitPrice\", \"Quantity\" FROM \"InvoiceLine\"), __grouped AS (SELECT COALESCE(SUM(t0.\"Quantity\"), 0) AS \"units_sold\" FROM __facts t0) SELECT \"units_sold\" FROM __grouped ORDER BY \"units_sold\" DESC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100
+        },
+        "chart": {
+          "type": "stat",
+          "x": null,
+          "y": "units_sold",
+          "series": [
+            "units_sold"
+          ],
+          "format": "number",
+          "formats": {
+            "units_sold": "number"
+          },
+          "additive": {
+            "units_sold": true
+          },
+          "title": "Units sold"
+        },
+        "lineage": {
+          "tables": [
+            "InvoiceLine"
+          ],
+          "columns": [
+            {
+              "table": "InvoiceLine",
+              "column": "Quantity",
+              "role": "measure",
+              "semantic_id": "units_sold"
+            }
+          ],
+          "joins": [],
+          "operations": [
+            "aggregate"
+          ]
+        },
+        "explanation": "Sum of purchased quantities at invoice-line grain.",
+        "title": "Units sold",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "chinook",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2013-12-31",
+          "cache_hit": false,
+          "execution_id": "769bc235ef9da67e",
+          "row_count": 1,
+          "elapsed_ms": 3.52,
+          "execution_time_ms": 3.52
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "chinook",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2013-12-31",
+          "cache_hit": false,
+          "execution_id": "769bc235ef9da67e",
+          "row_count": 1,
+          "elapsed_ms": 3.52,
+          "execution_time_ms": 3.52
+        }
+      },
+      "oracle_sql": "SELECT COALESCE(SUM(Quantity),0) AS units_sold FROM InvoiceLine",
+      "expected_rows": [
+        {
+          "units_sold": 2240
+        }
+      ],
+      "plan_matches": true,
+      "rows_match": true,
+      "schema_sha256": "22654ba4dbebb805c4e7e1114649e4c644b8a3f856e919ca434f97fbc9896699",
+      "user_prompt_sha256": "fb935cf4a22777ac9975ae7bc40542a934790c587368d82f95db35d05ec19dda",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m0\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": null,\n  \"comparison\": null,\n  \"dimensions\": [],\n  \"population\": \"primary\",\n  \"set_operation\": \"union_all\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    },
+    {
+      "id": "scope_warehouse_geography",
+      "source_id": "warehouse",
+      "question": "Break down revenue geographically.",
+      "expected_plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "passed": true,
+      "actual_plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "population": "primary",
+        "set_operation": "union_all",
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "ir": {
+        "metrics": [
+          "m0"
+        ],
+        "filters": [],
+        "having": [],
+        "exists": null,
+        "comparison": null,
+        "dimensions": [
+          "d0"
+        ],
+        "population": "primary",
+        "set_operation": "union_all",
+        "time_expression": null,
+        "sort": null,
+        "limit": null,
+        "unresolved": []
+      },
+      "telemetry": {
+        "model_calls": 1,
+        "input_tokens": 1466,
+        "output_tokens": 90,
+        "prompt_tokens": 1466,
+        "completion_tokens": 90,
+        "total_tokens": 1556,
+        "model": "aida-semantic",
+        "model_latency_ms": 9594.99,
+        "semantic_cache_hit": false,
+        "interpretation_cache_hit": false,
+        "interpretation_source": "local_model",
+        "estimated_model_cost_usd": 0,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false
+      },
+      "result": {
+        "success": true,
+        "data": [
+          {
+            "region": "North",
+            "revenue": 113038.29
+          },
+          {
+            "region": "West",
+            "revenue": 71517.99
+          },
+          {
+            "region": "East",
+            "revenue": 52581.24
+          },
+          {
+            "region": "South",
+            "revenue": 17888.1
+          },
+          {
+            "region": null,
+            "revenue": 2344.04
+          }
+        ],
+        "results": [
+          {
+            "region": "North",
+            "revenue": 113038.29
+          },
+          {
+            "region": "West",
+            "revenue": 71517.99
+          },
+          {
+            "region": "East",
+            "revenue": 52581.24
+          },
+          {
+            "region": "South",
+            "revenue": 17888.1
+          },
+          {
+            "region": null,
+            "revenue": 2344.04
+          }
+        ],
+        "columns": [
+          "region",
+          "revenue"
+        ],
+        "plan": {
+          "version": 2,
+          "metrics": [
+            "revenue"
+          ],
+          "dimensions": [
+            "region"
+          ],
+          "filters": [],
+          "having": [],
+          "population": "primary",
+          "set_operation": "union_all",
+          "exists": null,
+          "comparison": null,
+          "date_from": null,
+          "date_to": null,
+          "sort": {
+            "field": "revenue",
+            "direction": "desc"
+          },
+          "limit": 100
+        },
+        "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t3.\"region_label\" AS \"region\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY LEFT JOIN \"customers\" t2 ON t1.\"customer_id\" COLLATE BINARY = t2.\"customer_id\" COLLATE BINARY LEFT JOIN \"regions\" t3 ON t2.\"region_id\" COLLATE BINARY = t3.\"region_id\" COLLATE BINARY GROUP BY t3.\"region_label\") SELECT \"region\", \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC, \"region\" ASC LIMIT :result_limit",
+        "parameters": {
+          "result_limit": 100,
+          "scale_revenue": 100.0
+        },
+        "chart": {
+          "type": "bar",
+          "x": "region",
+          "y": "revenue",
+          "series": [
+            "revenue"
+          ],
+          "format": "currency",
+          "formats": {
+            "revenue": "currency"
+          },
+          "additive": {
+            "revenue": true
+          },
+          "title": "Revenue by Region"
+        },
+        "lineage": {
+          "tables": [
+            "order_items",
+            "orders",
+            "customers",
+            "regions"
+          ],
+          "columns": [
+            {
+              "table": "order_items",
+              "column": "line_total_cents",
+              "role": "measure",
+              "semantic_id": "revenue"
+            },
+            {
+              "table": "regions",
+              "column": "region_label",
+              "role": "group",
+              "semantic_id": "region"
+            }
+          ],
+          "joins": [
+            {
+              "from": "order_items",
+              "from_column": "order_id",
+              "to": "orders",
+              "to_column": "order_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "orders",
+              "from_column": "customer_id",
+              "to": "customers",
+              "to_column": "customer_id",
+              "kind": "many_to_one"
+            },
+            {
+              "from": "customers",
+              "from_column": "region_id",
+              "to": "regions",
+              "to_column": "region_id",
+              "kind": "many_to_one"
+            }
+          ],
+          "operations": [
+            "aggregate",
+            "join"
+          ]
+        },
+        "explanation": "Sum of order-line totals in dollars, before refunds, across every order status unless filtered.",
+        "title": "Revenue by Region",
+        "meta": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "1b02cdbfe043352c",
+          "row_count": 5,
+          "elapsed_ms": 16.07,
+          "execution_time_ms": 16.07
+        },
+        "metadata": {
+          "engine": "deterministic_relational",
+          "source_id": "warehouse",
+          "model_calls": 0,
+          "estimated_cost_usd": 0,
+          "estimated_model_cost_usd": 0,
+          "synthetic": true,
+          "as_of": "2026-09-12",
+          "cache_hit": false,
+          "execution_id": "1b02cdbfe043352c",
+          "row_count": 5,
+          "elapsed_ms": 16.07,
+          "execution_time_ms": 16.07
+        }
+      },
+      "oracle_sql": "SELECT r.region_label AS region,ROUND(COALESCE(SUM(li.line_total_cents),0)/100.0,2) AS revenue FROM order_items li LEFT JOIN orders o ON li.order_id=o.order_id LEFT JOIN customers c ON o.customer_id=c.customer_id LEFT JOIN regions r ON c.region_id=r.region_id GROUP BY r.region_label ORDER BY revenue DESC,region ASC LIMIT 100",
+      "expected_rows": [
+        {
+          "region": "North",
+          "revenue": 113038.29
+        },
+        {
+          "region": "West",
+          "revenue": 71517.99
+        },
+        {
+          "region": "East",
+          "revenue": 52581.24
+        },
+        {
+          "region": "South",
+          "revenue": 17888.1
+        },
+        {
+          "region": null,
+          "revenue": 2344.04
+        }
+      ],
+      "plan_matches": true,
+      "rows_match": true,
+      "schema_sha256": "3e2f6c0771362bcc5fa341a28c7b87f4e3e528e25f8650d3e5e2815667fce611",
+      "user_prompt_sha256": "13a5b5571d4c16cbf7cf401525444a4b4ada93dd9bddf6faf7d23411c25491fa",
+      "raw_model_content": "{\n  \"metrics\": [\n    \"m0\"\n  ],\n  \"filters\": [],\n  \"having\": [],\n  \"exists\": null,\n  \"comparison\": null,\n  \"dimensions\": [\n    \"d0\"\n  ],\n  \"population\": \"primary\",\n  \"set_operation\": \"union_all\",\n  \"time_expression\": null,\n  \"sort\": null,\n  \"limit\": null,\n  \"unresolved\": []\n}"
+    }
+  ],
+  "verification": {
+    "exact_repeat": {
+      "same_plan": true,
+      "model_calls": 0
+    },
+    "direct_plan": {
+      "same_rows": true,
+      "model_calls": 0,
+      "telemetry": {
+        "engine": "deterministic_relational",
+        "source_id": "warehouse",
+        "model_calls": 0,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": true,
+        "execution_id": "1ef61633c76f94aa",
+        "row_count": 1,
+        "elapsed_ms": 0.35,
+        "execution_time_ms": 0.35
+      }
+    }
+  },
+  "summary": {
+    "cases": 6,
+    "passed": 5,
+    "model_calls": 6,
+    "prompt_tokens": 8660,
+    "completion_tokens": 541,
+    "median_model_latency_ms": 6751.825,
+    "elapsed_seconds": 40.52
+  }
+}

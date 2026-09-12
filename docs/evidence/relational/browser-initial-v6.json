@@ -1,0 +1,1148 @@
+{
+  "started_at": "2026-09-12T09:30:09.715Z",
+  "base_url": "http://127.0.0.1:3000",
+  "real_model": true,
+  "cases": [
+    {
+      "id": "warehouse_join_multi_metric",
+      "source_id": "warehouse",
+      "question": "Revenue and units by region",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue",
+          "units"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "region": "North",
+          "revenue": 113038.29,
+          "units": 2226
+        },
+        {
+          "region": "West",
+          "revenue": 71517.99,
+          "units": 1590
+        },
+        {
+          "region": "East",
+          "revenue": 52581.24,
+          "units": 1113
+        },
+        {
+          "region": "South",
+          "revenue": 17888.1,
+          "units": 477
+        },
+        {
+          "region": null,
+          "revenue": 2344.04,
+          "units": 38
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t3.\"region_label\" AS \"region\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\", COALESCE(SUM(t0.\"quantity\"), 0) AS \"units\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY LEFT JOIN \"customers\" t2 ON t1.\"customer_id\" COLLATE BINARY = t2.\"customer_id\" COLLATE BINARY LEFT JOIN \"regions\" t3 ON t2.\"region_id\" COLLATE BINARY = t3.\"region_id\" COLLATE BINARY GROUP BY t3.\"region_label\") SELECT \"region\", \"revenue\", \"units\" FROM __grouped ORDER BY \"revenue\" DESC, \"region\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "orders",
+          "customers",
+          "regions"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "order_items",
+            "column": "quantity",
+            "role": "measure",
+            "semantic_id": "units"
+          },
+          {
+            "table": "regions",
+            "column": "region_label",
+            "role": "group",
+            "semantic_id": "region"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "order_id",
+            "to": "orders",
+            "to_column": "order_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "orders",
+            "from_column": "customer_id",
+            "to": "customers",
+            "to_column": "customer_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "customers",
+            "from_column": "region_id",
+            "to": "regions",
+            "to_column": "region_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "join"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "d13637ff0533b2ac",
+        "row_count": 5,
+        "elapsed_ms": 7128.1,
+        "execution_time_ms": 7128.1,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1465,
+        "completion_tokens": 95,
+        "total_tokens": 1560,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1465,
+        "output_tokens": 95,
+        "model": "aida-semantic",
+        "model_latency_ms": 7111.24,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 6.49
+      }
+    },
+    {
+      "id": "warehouse_two_join_paths",
+      "source_id": "warehouse",
+      "question": "Revenue by region and category for completed orders",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "region",
+          "category"
+        ],
+        "filters": [
+          {
+            "field": "order_status",
+            "op": "eq",
+            "value": "Completed"
+          }
+        ],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "region": "North",
+          "category": "Electronics",
+          "revenue": 17589.24
+        },
+        {
+          "region": "East",
+          "category": "Office",
+          "revenue": 13899.9
+        },
+        {
+          "region": "North",
+          "category": "Home",
+          "revenue": 11295
+        },
+        {
+          "region": "North",
+          "category": "Outdoor",
+          "revenue": 10993.48
+        },
+        {
+          "region": "East",
+          "category": "Electronics",
+          "revenue": 9026.52
+        },
+        {
+          "region": "West",
+          "category": "Home",
+          "revenue": 8040.76
+        },
+        {
+          "region": "West",
+          "category": "Outdoor",
+          "revenue": 4175.44
+        },
+        {
+          "region": "West",
+          "category": "Office",
+          "revenue": 2503.76
+        },
+        {
+          "region": "North",
+          "category": "Office",
+          "revenue": 2407.72
+        },
+        {
+          "region": "South",
+          "category": "Home",
+          "revenue": 2038.25
+        },
+        {
+          "region": "East",
+          "category": null,
+          "revenue": 561.77
+        },
+        {
+          "region": "North",
+          "category": null,
+          "revenue": 428.91
+        },
+        {
+          "region": null,
+          "category": "Electronics",
+          "revenue": 402.93
+        },
+        {
+          "region": null,
+          "category": "Home",
+          "revenue": 275.1
+        },
+        {
+          "region": "West",
+          "category": null,
+          "revenue": 202.19
+        },
+        {
+          "region": null,
+          "category": "Outdoor",
+          "revenue": 171.49
+        },
+        {
+          "region": null,
+          "category": "Office",
+          "revenue": 78.64
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t3.\"region_label\" AS \"region\", t5.\"category_label\" AS \"category\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY LEFT JOIN \"products\" t4 ON t0.\"product_id\" COLLATE BINARY = t4.\"product_id\" COLLATE BINARY LEFT JOIN \"customers\" t2 ON t1.\"customer_id\" COLLATE BINARY = t2.\"customer_id\" COLLATE BINARY LEFT JOIN \"categories\" t5 ON t4.\"category_id\" COLLATE BINARY = t5.\"category_id\" COLLATE BINARY LEFT JOIN \"regions\" t3 ON t2.\"region_id\" COLLATE BINARY = t3.\"region_id\" COLLATE BINARY WHERE t1.\"status\" = :filter_0 GROUP BY t3.\"region_label\", t5.\"category_label\") SELECT \"region\", \"category\", \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC, \"region\" ASC, \"category\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100,
+        "filter_0": "Completed"
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "orders",
+          "products",
+          "customers",
+          "categories",
+          "regions"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "regions",
+            "column": "region_label",
+            "role": "group",
+            "semantic_id": "region"
+          },
+          {
+            "table": "categories",
+            "column": "category_label",
+            "role": "group",
+            "semantic_id": "category"
+          },
+          {
+            "table": "orders",
+            "column": "status",
+            "role": "filter",
+            "semantic_id": "order_status"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "order_id",
+            "to": "orders",
+            "to_column": "order_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "order_items",
+            "from_column": "product_id",
+            "to": "products",
+            "to_column": "product_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "orders",
+            "from_column": "customer_id",
+            "to": "customers",
+            "to_column": "customer_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "products",
+            "from_column": "category_id",
+            "to": "categories",
+            "to_column": "category_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "customers",
+            "from_column": "region_id",
+            "to": "regions",
+            "to_column": "region_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "where",
+          "join"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "1b61b1bd1ceafcb8",
+        "row_count": 17,
+        "elapsed_ms": 7437.87,
+        "execution_time_ms": 7437.87,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1468,
+        "completion_tokens": 149,
+        "total_tokens": 1617,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1468,
+        "output_tokens": 149,
+        "model": "aida-semantic",
+        "model_latency_ms": 7389.7,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 43.92
+      }
+    },
+    {
+      "id": "warehouse_having",
+      "source_id": "warehouse",
+      "question": "Categories with revenue above 30000",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "category"
+        ],
+        "filters": [],
+        "having": [
+          {
+            "metric": "revenue",
+            "op": "gt",
+            "value": 30000
+          }
+        ],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "category": "Office",
+          "revenue": 70683.65
+        },
+        {
+          "category": "Home",
+          "revenue": 62921.15
+        },
+        {
+          "category": "Electronics",
+          "revenue": 62562.52
+        },
+        {
+          "category": "Outdoor",
+          "revenue": 58232.87
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t5.\"category_label\" AS \"category\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"products\" t4 ON t0.\"product_id\" COLLATE BINARY = t4.\"product_id\" COLLATE BINARY LEFT JOIN \"categories\" t5 ON t4.\"category_id\" COLLATE BINARY = t5.\"category_id\" COLLATE BINARY GROUP BY t5.\"category_label\" HAVING ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) > :having_0) SELECT \"category\", \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC, \"category\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100,
+        "having_0": 30000
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "products",
+          "categories"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "categories",
+            "column": "category_label",
+            "role": "group",
+            "semantic_id": "category"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "product_id",
+            "to": "products",
+            "to_column": "product_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "products",
+            "from_column": "category_id",
+            "to": "categories",
+            "to_column": "category_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "join",
+          "having"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "18eac5a298eaf547",
+        "row_count": 4,
+        "elapsed_ms": 6498.93,
+        "execution_time_ms": 6498.93,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1470,
+        "completion_tokens": 128,
+        "total_tokens": 1598,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1470,
+        "output_tokens": 128,
+        "model": "aida-semantic",
+        "model_latency_ms": 6495.49,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 2.11
+      }
+    },
+    {
+      "id": "warehouse_exists",
+      "source_id": "warehouse",
+      "question": "Revenue by category for lines with damaged returns",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "category"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": {
+          "relation": "returns",
+          "negate": false,
+          "filters": [
+            {
+              "field": "return_reason",
+              "op": "eq",
+              "value": "Damaged"
+            }
+          ]
+        },
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "category": "Electronics",
+          "revenue": 6834.8
+        },
+        {
+          "category": "Outdoor",
+          "revenue": 6789.6
+        },
+        {
+          "category": "Home",
+          "revenue": 5790.94
+        },
+        {
+          "category": "Office",
+          "revenue": 5764.23
+        },
+        {
+          "category": null,
+          "revenue": 153.81
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t5.\"category_label\" AS \"category\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"products\" t4 ON t0.\"product_id\" COLLATE BINARY = t4.\"product_id\" COLLATE BINARY LEFT JOIN \"categories\" t5 ON t4.\"category_id\" COLLATE BINARY = t5.\"category_id\" COLLATE BINARY WHERE EXISTS (SELECT 1 FROM \"returns\" e0 WHERE e0.\"line_id\" COLLATE BINARY = t0.\"line_id\" COLLATE BINARY AND e0.\"reason\" = :related_0) GROUP BY t5.\"category_label\") SELECT \"category\", \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC, \"category\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100,
+        "related_0": "Damaged"
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "products",
+          "categories",
+          "returns"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "categories",
+            "column": "category_label",
+            "role": "group",
+            "semantic_id": "category"
+          },
+          {
+            "table": "order_items",
+            "column": "line_id",
+            "role": "related_key",
+            "semantic_id": "returns"
+          },
+          {
+            "table": "returns",
+            "column": "reason",
+            "role": "related_filter",
+            "semantic_id": "return_reason"
+          },
+          {
+            "table": "returns",
+            "column": "line_id",
+            "role": "related_key",
+            "semantic_id": "returns"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "product_id",
+            "to": "products",
+            "to_column": "product_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "products",
+            "from_column": "category_id",
+            "to": "categories",
+            "to_column": "category_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "exists",
+          "join"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "0c736bb3d6cfd43c",
+        "row_count": 5,
+        "elapsed_ms": 8381.66,
+        "execution_time_ms": 8381.66,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1468,
+        "completion_tokens": 146,
+        "total_tokens": 1614,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1468,
+        "output_tokens": 146,
+        "model": "aida-semantic",
+        "model_latency_ms": 8372.08,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 6.28
+      }
+    },
+    {
+      "id": "warehouse_not_exists",
+      "source_id": "warehouse",
+      "question": "Revenue by region for lines without returns",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": {
+          "relation": "returns",
+          "negate": true,
+          "filters": []
+        },
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "region": "North",
+          "revenue": 96352.5
+        },
+        {
+          "region": "West",
+          "revenue": 61574.08
+        },
+        {
+          "region": "East",
+          "revenue": 46097.44
+        },
+        {
+          "region": "South",
+          "revenue": 15250.66
+        },
+        {
+          "region": null,
+          "revenue": 1631.41
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t3.\"region_label\" AS \"region\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY LEFT JOIN \"customers\" t2 ON t1.\"customer_id\" COLLATE BINARY = t2.\"customer_id\" COLLATE BINARY LEFT JOIN \"regions\" t3 ON t2.\"region_id\" COLLATE BINARY = t3.\"region_id\" COLLATE BINARY WHERE NOT EXISTS (SELECT 1 FROM \"returns\" e0 WHERE e0.\"line_id\" COLLATE BINARY = t0.\"line_id\" COLLATE BINARY) GROUP BY t3.\"region_label\") SELECT \"region\", \"revenue\" FROM __grouped ORDER BY \"revenue\" DESC, \"region\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "orders",
+          "customers",
+          "regions",
+          "returns"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "regions",
+            "column": "region_label",
+            "role": "group",
+            "semantic_id": "region"
+          },
+          {
+            "table": "order_items",
+            "column": "line_id",
+            "role": "related_key",
+            "semantic_id": "returns"
+          },
+          {
+            "table": "returns",
+            "column": "line_id",
+            "role": "related_key",
+            "semantic_id": "returns"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "order_id",
+            "to": "orders",
+            "to_column": "order_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "orders",
+            "from_column": "customer_id",
+            "to": "customers",
+            "to_column": "customer_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "customers",
+            "from_column": "region_id",
+            "to": "regions",
+            "to_column": "region_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "not_exists",
+          "join"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "270421bc0ef071c7",
+        "row_count": 5,
+        "elapsed_ms": 6323.51,
+        "execution_time_ms": 6323.51,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1467,
+        "completion_tokens": 115,
+        "total_tokens": 1582,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1467,
+        "output_tokens": 115,
+        "model": "aida-semantic",
+        "model_latency_ms": 6317.43,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 3.79
+      }
+    },
+    {
+      "id": "warehouse_above_average",
+      "source_id": "warehouse",
+      "question": "Regions with above-average revenue",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "region"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "primary",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": {
+          "kind": "above_average",
+          "metric": "revenue"
+        },
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "revenue",
+          "direction": "desc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "region": "North",
+          "revenue": 113038.29
+        },
+        {
+          "region": "West",
+          "revenue": 71517.99
+        },
+        {
+          "region": "East",
+          "revenue": 52581.24
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\"), __grouped AS (SELECT t3.\"region_label\" AS \"region\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY LEFT JOIN \"customers\" t2 ON t1.\"customer_id\" COLLATE BINARY = t2.\"customer_id\" COLLATE BINARY LEFT JOIN \"regions\" t3 ON t2.\"region_id\" COLLATE BINARY = t3.\"region_id\" COLLATE BINARY GROUP BY t3.\"region_label\") SELECT \"region\", \"revenue\" FROM __grouped WHERE \"revenue\" > (SELECT AVG(\"revenue\") FROM __grouped) ORDER BY \"revenue\" DESC, \"region\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "orders",
+          "customers",
+          "regions"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "regions",
+            "column": "region_label",
+            "role": "group",
+            "semantic_id": "region"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "order_id",
+            "to": "orders",
+            "to_column": "order_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "orders",
+            "from_column": "customer_id",
+            "to": "customers",
+            "to_column": "customer_id",
+            "kind": "many_to_one"
+          },
+          {
+            "from": "customers",
+            "from_column": "region_id",
+            "to": "regions",
+            "to_column": "region_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "join",
+          "above_average"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "11313793df8ec77b",
+        "row_count": 3,
+        "elapsed_ms": 5363.08,
+        "execution_time_ms": 5363.08,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1465,
+        "completion_tokens": 111,
+        "total_tokens": 1576,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1465,
+        "output_tokens": 111,
+        "model": "aida-semantic",
+        "model_latency_ms": 5354.76,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 3.68
+      }
+    },
+    {
+      "id": "warehouse_union_all",
+      "source_id": "warehouse",
+      "question": "Revenue by month including current and archived records",
+      "status": "passed",
+      "plan": {
+        "version": 2,
+        "metrics": [
+          "revenue"
+        ],
+        "dimensions": [
+          "month"
+        ],
+        "filters": [],
+        "having": [],
+        "population": "all",
+        "set_operation": "union_all",
+        "exists": null,
+        "comparison": null,
+        "date_from": null,
+        "date_to": null,
+        "sort": {
+          "field": "month",
+          "direction": "asc"
+        },
+        "limit": 100
+      },
+      "data": [
+        {
+          "month": "2025-01",
+          "revenue": 1552.9
+        },
+        {
+          "month": "2025-02",
+          "revenue": 14097.4
+        },
+        {
+          "month": "2025-03",
+          "revenue": 7995.25
+        },
+        {
+          "month": "2025-04",
+          "revenue": 8263.56
+        },
+        {
+          "month": "2025-05",
+          "revenue": 3033.02
+        },
+        {
+          "month": "2025-06",
+          "revenue": 14437.61
+        },
+        {
+          "month": "2025-07",
+          "revenue": 10039.04
+        },
+        {
+          "month": "2025-08",
+          "revenue": 5137.11
+        },
+        {
+          "month": "2026-01",
+          "revenue": 6611.06
+        },
+        {
+          "month": "2026-02",
+          "revenue": 56901.22
+        },
+        {
+          "month": "2026-03",
+          "revenue": 32689.79
+        },
+        {
+          "month": "2026-04",
+          "revenue": 32281.48
+        },
+        {
+          "month": "2026-05",
+          "revenue": 11551.94
+        },
+        {
+          "month": "2026-06",
+          "revenue": 57661.23
+        },
+        {
+          "month": "2026-07",
+          "revenue": 40073.16
+        },
+        {
+          "month": "2026-08",
+          "revenue": 21042.39
+        }
+      ],
+      "sql": "WITH __facts AS (SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"order_items\" UNION ALL SELECT \"line_id\", \"order_id\", \"product_id\", \"quantity\", \"line_total_cents\" FROM \"archived_order_items\"), __grouped AS (SELECT substr(t1.\"ordered_on\", 1, 7) AS \"month\", ROUND((COALESCE(SUM(t0.\"line_total_cents\"), 0) / :scale_revenue), 2) AS \"revenue\" FROM __facts t0 LEFT JOIN \"orders\" t1 ON t0.\"order_id\" COLLATE BINARY = t1.\"order_id\" COLLATE BINARY GROUP BY substr(t1.\"ordered_on\", 1, 7)) SELECT \"month\", \"revenue\" FROM __grouped ORDER BY \"month\" ASC LIMIT :result_limit",
+      "parameters": {
+        "result_limit": 100,
+        "scale_revenue": 100
+      },
+      "lineage": {
+        "tables": [
+          "order_items",
+          "archived_order_items",
+          "orders"
+        ],
+        "columns": [
+          {
+            "table": "order_items",
+            "column": "line_total_cents",
+            "role": "measure",
+            "semantic_id": "revenue"
+          },
+          {
+            "table": "orders",
+            "column": "ordered_on",
+            "role": "group",
+            "semantic_id": "month"
+          },
+          {
+            "table": "orders",
+            "column": "ordered_on",
+            "role": "date",
+            "semantic_id": "month"
+          }
+        ],
+        "joins": [
+          {
+            "from": "order_items",
+            "from_column": "order_id",
+            "to": "orders",
+            "to_column": "order_id",
+            "kind": "many_to_one"
+          }
+        ],
+        "operations": [
+          "aggregate",
+          "union_all",
+          "join"
+        ]
+      },
+      "meta": {
+        "engine": "hybrid",
+        "source_id": "warehouse",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-09-12",
+        "cache_hit": false,
+        "execution_id": "fdf7caffc43f9ae1",
+        "row_count": 16,
+        "elapsed_ms": 4567.83,
+        "execution_time_ms": 4567.83,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 1468,
+        "completion_tokens": 90,
+        "total_tokens": 1558,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 1468,
+        "output_tokens": 90,
+        "model": "aida-semantic",
+        "model_latency_ms": 4553.76,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 11.19
+      }
+    },
+    {
+      "id": "warehouse_union_distinct",
+      "question": "Order lines including current and archived records with exact duplicates removed",
+      "status": "failed",
+      "error": "Interpreted plan mismatch for warehouse_union_distinct\n+ actual - expected\n\n  {\n    comparison: null,\n    date_from: null,\n    date_to: null,\n+   dimensions: [\n+     'region'\n+   ],\n-   dimensions: [],\n    exists: null,\n    filters: [],\n    having: [],\n    limit: 100,\n    metrics: [\n"
+    }
+  ],
+  "refusals": [],
+  "steps": [
+    {
+      "name": "Every complex language case matches its independent SQL in the real browser",
+      "status": "failed",
+      "duration_ms": 52132,
+      "error": "Interpreted plan mismatch for warehouse_union_distinct\n+ actual - expected\n\n  {\n    comparison: null,\n    date_from: null,\n    date_to: null,\n+   dimensions: [\n+     'region'\n+   ],\n-   dimensions: [],\n    exists: null,\n    filters: [],\n    having: [],\n    limit: 100,\n    metrics: [\n"
+    }
+  ],
+  "browser_errors": [],
+  "external_requests": [],
+  "status": "failed",
+  "error": "AssertionError [ERR_ASSERTION]: Interpreted plan mismatch for warehouse_union_distinct\n+ actual - expected\n\n  {\n    comparison: null,\n    date_from: null,\n    date_to: null,\n+   dimensions: [\n+     'region'\n+   ],\n-   dimensions: [],\n    exists: null,\n    filters: [],\n    having: [],\n    limit: 100,\n    metrics: [\n\n    at checkCase (C:\\Shyam\\projects\\AIDA\\scripts\\e2e-relational.cjs:60:10)\n    at async C:\\Shyam\\projects\\AIDA\\scripts\\e2e-relational.cjs:93:20\n    at async step (C:\\Shyam\\projects\\AIDA\\scripts\\e2e-relational.cjs:21:23)\n    at async main (C:\\Shyam\\projects\\AIDA\\scripts\\e2e-relational.cjs:89:5)",
+  "finished_at": "2026-09-12T09:31:05.950Z"
+}

@@ -1,0 +1,17 @@
+{
+    "captured_at":  "2026-09-12T14:09:55.6737521Z",
+    "command":  "\"C:\\Shyam\\projects\\AIDA\\.runtime\\llama\\llama-server.exe\" -m \"C:\\Shyam\\projects\\AIDA\\.runtime\\Qwen3-4B-Instruct-2507-Q4_K_M.gguf\" --alias aida-semantic --host 127.0.0.1 --port 8081 -c 4096 -np 1 -t 4 -ngl all --cache-ram 0 --no-webui --no-slots --log-disable ",
+    "private_bytes":  3764363264,
+    "working_set_bytes":  1290240,
+    "health":  {
+                   "status":  "ok"
+               },
+    "os":  {
+               "Caption":  "Microsoft Windows 11 Pro",
+               "TotalVisibleMemorySize":  16357072,
+               "FreePhysicalMemory":  727608
+           },
+    "processor":  {
+                      "Name":  "Intel(R) Core(TM) Ultra 7 266V"
+                  }
+}

@@ -1,0 +1,1255 @@
+{
+  "source": "artifacts\\blind\\first-run.json",
+  "source_sha256": "02beb622af159e942b177af31ceb1515778f472918837c6ed2e817ec8c48479e",
+  "first_pass_sha256": "fd31e03b8073a8a49f20631b6e17bc86d4387c6c0afd19f62f3a73b6b7d9c3d6",
+  "frozen_files_verified": true,
+  "preflight": {
+    "correct": 40,
+    "total": 40,
+    "lineage_passes": 40,
+    "database": {
+      "n": 40,
+      "median_ms": 4.96,
+      "p95_ms": 11.29,
+      "max_ms": 19.68
+    }
+  },
+  "phases": {
+    "cases": {
+      "cases": 50,
+      "categories": {
+        "correct_answer": 19,
+        "false_refusal": 13,
+        "wrong_accepted_meaning": 8,
+        "correct_refusal": 4,
+        "unsafe_acceptance": 6
+      },
+      "correct": 23,
+      "supported_cases": 40,
+      "correct_supported": 19,
+      "supported_accuracy": 0.475,
+      "refusal_cases": 10,
+      "correct_refusals": 4,
+      "accepted_answers": 33,
+      "accepted_answer_precision": 0.5757575757575758,
+      "lineage_failures_on_accepted_answers": 2,
+      "actual_model_calls": 49,
+      "max_calls_per_case": 1,
+      "prompt_tokens": 90730,
+      "completion_tokens": 6015,
+      "median_model_ms": 6064.93,
+      "p95_model_ms": 10235.97,
+      "max_model_ms": 18686.08,
+      "privacy_audit_failures": 0,
+      "hosted_model_api_charges_usd": 0,
+      "cost_scope": "Actual local model calls/tokens; hardware and electricity are not measured.",
+      "api": {
+        "n": 50,
+        "median_ms": 6095.4400000000005,
+        "p95_ms": 10278.32,
+        "max_ms": 18719.32
+      },
+      "transport": {
+        "n": 49,
+        "median_ms": 6062.21,
+        "p95_ms": 10234.15,
+        "max_ms": 18682.68
+      },
+      "successful_database": {
+        "n": 33,
+        "median_ms": 5.14,
+        "p95_ms": 9.89,
+        "max_ms": 37.28
+      },
+      "zero_model_call_cases": [
+        "BL41"
+      ]
+    },
+    "cached_replays": {
+      "cases": 10,
+      "categories": {
+        "correct_answer": 6,
+        "wrong_accepted_meaning": 3,
+        "false_refusal": 1
+      },
+      "correct": 6,
+      "supported_cases": 10,
+      "correct_supported": 6,
+      "supported_accuracy": 0.6,
+      "refusal_cases": 0,
+      "correct_refusals": 0,
+      "accepted_answers": 9,
+      "accepted_answer_precision": 0.6666666666666666,
+      "lineage_failures_on_accepted_answers": 2,
+      "actual_model_calls": 1,
+      "max_calls_per_case": 1,
+      "prompt_tokens": 1859,
+      "completion_tokens": 358,
+      "median_model_ms": 18327.14,
+      "p95_model_ms": 18327.14,
+      "max_model_ms": 18327.14,
+      "privacy_audit_failures": 0,
+      "hosted_model_api_charges_usd": 0,
+      "cost_scope": "Actual local model calls/tokens; hardware and electricity are not measured.",
+      "api": {
+        "n": 10,
+        "median_ms": 2.1950000000000003,
+        "p95_ms": 18356.32,
+        "max_ms": 18356.32
+      },
+      "transport": {
+        "n": 1,
+        "median_ms": 18324.4,
+        "p95_ms": 18324.4,
+        "max_ms": 18324.4
+      },
+      "successful_database": {
+        "n": 9,
+        "median_ms": 0.06,
+        "p95_ms": 0.19,
+        "max_ms": 0.19
+      },
+      "zero_model_call_cases": [
+        "BL01",
+        "BL05",
+        "BL09",
+        "BL13",
+        "BL17",
+        "BL21",
+        "BL29",
+        "BL33",
+        "BL37"
+      ],
+      "same_as_first": 10,
+      "changed_cases": []
+    },
+    "uncached_repeats": {
+      "cases": 10,
+      "categories": {
+        "correct_answer": 6,
+        "wrong_accepted_meaning": 3,
+        "false_refusal": 1
+      },
+      "correct": 6,
+      "supported_cases": 10,
+      "correct_supported": 6,
+      "supported_accuracy": 0.6,
+      "refusal_cases": 0,
+      "correct_refusals": 0,
+      "accepted_answers": 9,
+      "accepted_answer_precision": 0.6666666666666666,
+      "lineage_failures_on_accepted_answers": 2,
+      "actual_model_calls": 10,
+      "max_calls_per_case": 1,
+      "prompt_tokens": 18476,
+      "completion_tokens": 1324,
+      "median_model_ms": 7448.275000000001,
+      "p95_model_ms": 25345.02,
+      "max_model_ms": 25345.02,
+      "privacy_audit_failures": 0,
+      "hosted_model_api_charges_usd": 0,
+      "cost_scope": "Actual local model calls/tokens; hardware and electricity are not measured.",
+      "api": {
+        "n": 10,
+        "median_ms": 7490.375,
+        "p95_ms": 25371.7,
+        "max_ms": 25371.7
+      },
+      "transport": {
+        "n": 10,
+        "median_ms": 7446.7,
+        "p95_ms": 25341.83,
+        "max_ms": 25341.83
+      },
+      "successful_database": {
+        "n": 9,
+        "median_ms": 0.15,
+        "p95_ms": 0.19,
+        "max_ms": 0.19
+      },
+      "zero_model_call_cases": [],
+      "same_as_first": 10,
+      "changed_cases": []
+    }
+  },
+  "readiness": {
+    "no_wrong_accepted_meaning": false,
+    "no_execution_mismatch": true,
+    "no_unsafe_acceptance": false,
+    "supported_accuracy_at_least_90_percent": false,
+    "one_model_call_maximum": true,
+    "privacy_payload_audit_passed": true,
+    "model_p95_within_15_seconds": true
+  },
+  "all_phases": {
+    "actual_model_calls": 60,
+    "destinations": [
+      "http://127.0.0.1:8081/v1/chat/completions"
+    ],
+    "privacy_audit_failures": 0,
+    "modified_requests": 0,
+    "canaries_per_request": [
+      72
+    ],
+    "prompt_tokens": 111065,
+    "completion_tokens": 7697
+  },
+  "cases": [
+    {
+      "id": "BL01",
+      "question": "Our network planning sheet needs a current leg total. How many shipment legs are recorded?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL02",
+      "question": "Some consignments travel on several legs. How many different consignments are represented in the current leg records?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL03",
+      "question": "For the current network activity, what is the total transported weight in kilograms?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL04",
+      "question": "How much has the current leg activity incurred in handling charges, expressed in US dollars?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL05",
+      "question": "What is the average recorded transit time, in minutes per leg, across the current records?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL06",
+      "question": "Prepare a customer-market breakdown of current handling charges and transported kilograms, with the largest charge total first.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 6,
+      "expected_rows": 6
+    },
+    {
+      "id": "BL07",
+      "question": "For each customer market and destination zone together, report current handling charges and the number of distinct consignments; put the largest charges first.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "consignments",
+          "depots",
+          "markets",
+          "shipment_legs",
+          "shippers",
+          "zones"
+        ],
+        "missing_columns": [
+          "shipment_legs.charge_cents",
+          "shipment_legs.consignment_id",
+          "markets.market",
+          "zones.zone"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 42
+    },
+    {
+      "id": "BL08",
+      "question": "Compare current service-class and carrier combinations using average transit minutes and leg count. Start with the shortest average, breaking ties alphabetically by service class and then carrier.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "carriers",
+          "service_classes",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.transit_minutes",
+          "service_classes.service_class",
+          "carriers.carrier"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 34
+    },
+    {
+      "id": "BL09",
+      "question": "How are current legs distributed across shipment states? Keep unassigned states as a group and list the state labels alphabetically.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 6,
+      "expected_rows": 6
+    },
+    {
+      "id": "BL10",
+      "question": "Give me the current transported kilograms month by month, starting with the earliest departure month.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 9,
+      "expected_rows": 9
+    },
+    {
+      "id": "BL11",
+      "question": "For current legs whose service tariff is more than 1,800 cents, what are the average transit minutes and total handling charges?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL12",
+      "question": "Count the current legs whose whole-consignment charge is at least 20,000 cents but whose own handling charge is below 5,000 cents, and give their total handling charges in dollars.",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "metrics": {
+          "expected": [
+            "handling_charges",
+            "leg_count"
+          ],
+          "actual": [
+            "handling_charges"
+          ]
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL13",
+      "question": "In the Retail customer market, how many current legs carry exactly four packages?",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "dimensions": {
+          "expected": [],
+          "actual": [
+            "customer_market"
+          ]
+        },
+        "filters": {
+          "expected": [
+            {
+              "field": "customer_market",
+              "op": "eq",
+              "value": "Retail"
+            },
+            {
+              "field": "package_count",
+              "op": "eq",
+              "value": 4
+            }
+          ],
+          "actual": [
+            {
+              "field": "customer_market",
+              "op": "eq",
+              "value": "Retail"
+            }
+          ]
+        },
+        "metrics": {
+          "expected": [
+            "leg_count"
+          ],
+          "actual": [
+            "transported_weight"
+          ]
+        }
+      },
+      "lineage": {
+        "passed": false,
+        "missing_tables": [],
+        "missing_columns": [
+          "shipment_legs.package_count"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL14",
+      "question": "What are the current transported weight and handling charges for Express or Overnight legs going to North or West destination zones, when route distance is at least 1,000 kilometers?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL15",
+      "question": "For current legs marked Delayed whose shipment state is Delivered, show the leg count and average transit minutes.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "Cannot resolve 'marked Delayed whose shipment state is Delivered' within the approved relational catalog.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "consignments",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.status",
+          "consignments.status",
+          "shipment_legs.transit_minutes"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL16",
+      "question": "For active carriers, count current legs in every service class except Freight, split by carrier and listed alphabetically.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "carriers",
+          "service_classes",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "carriers.status",
+          "carriers.carrier",
+          "service_classes.service_class"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 5
+    },
+    {
+      "id": "BL17",
+      "question": "Which destination zones have more than 850,000 kilograms of current transported weight? Show each qualifying total, largest first.",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "filters": {
+          "expected": [],
+          "actual": [
+            {
+              "field": "leg_handling_cents",
+              "op": "gt",
+              "value": 850000.0
+            }
+          ]
+        },
+        "having": {
+          "expected": [
+            {
+              "metric": "transported_weight",
+              "op": "gt",
+              "value": 850000
+            }
+          ],
+          "actual": []
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 4
+    },
+    {
+      "id": "BL18",
+      "question": "Only consider current legs with a service tariff above 1,000 cents. Among their carriers, show those whose total handling charges exceed $73,000, highest total first.",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "metrics": {
+          "expected": [
+            "handling_charges"
+          ],
+          "actual": [
+            "handling_charges",
+            "transported_weight"
+          ]
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 3,
+      "expected_rows": 3
+    },
+    {
+      "id": "BL19",
+      "question": "List service classes represented by at least 2,000 distinct consignments in current legs, showing those distinct counts from highest to lowest.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted or reversed an explicit numeric threshold.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "service_classes",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.consignment_id",
+          "service_classes.service_class"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 2
+    },
+    {
+      "id": "BL20",
+      "question": "How many current legs have at least one shipment-leg exception recorded?",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model did not preserve the requested ranking direction.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "exception_events",
+          "shipment_legs"
+        ],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL21",
+      "question": "For current legs with no recorded exceptions at all, give the transported weight and handling-charge totals.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL22",
+      "question": "How much handling charge did current legs incur when they had a Damage exception of severity at least 3? Also count those legs once each.",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "filters": {
+          "expected": [],
+          "actual": [
+            {
+              "field": "leg_handling_cents",
+              "op": "eq",
+              "value": 3.0
+            },
+            {
+              "field": "leg_handling_cents",
+              "op": "gte",
+              "value": 3.0
+            }
+          ]
+        },
+        "metrics": {
+          "expected": [
+            "handling_charges",
+            "leg_count"
+          ],
+          "actual": [
+            "handling_charges"
+          ]
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL23",
+      "question": "Count current legs for which no exception has been marked Resolved; legs without any exception should count too.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL24",
+      "question": "Give the current leg count and transported kilograms after excluding any leg with an Open Weather exception. Other exceptions may remain.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model did not preserve the entire date constraint.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "exception_events",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.weight_grams",
+          "exception_events.reason",
+          "exception_events.status"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL25",
+      "question": "For active carriers, compare average transit minutes and leg counts among current legs with a Weather or Customs exception of severity at least 4. Put the longest average first.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model did not preserve the above-average comparison.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "carriers",
+          "exception_events",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "carriers.status",
+          "carriers.carrier",
+          "shipment_legs.transit_minutes",
+          "exception_events.reason",
+          "exception_events.severity"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 5
+    },
+    {
+      "id": "BL26",
+      "question": "Which customer markets have current handling-charge totals above the average of all customer-market totals? Show their totals, highest first.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 5,
+      "expected_rows": 5
+    },
+    {
+      "id": "BL27",
+      "question": "Considering only current Express legs, show the two destination zones with the largest transported weights among zones above the average zone total for those Express legs.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 2,
+      "expected_rows": 2
+    },
+    {
+      "id": "BL28",
+      "question": "Among current service-class and carrier pairs, show the four largest leg counts that exceed the average count across all pairs. Break count ties by service class, then carrier, alphabetically.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "carriers",
+          "service_classes",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "service_classes.service_class",
+          "carriers.carrier"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 4
+    },
+    {
+      "id": "BL29",
+      "question": "Append archived legs to current legs, retaining overlapping rows. How many leg records and distinct consignments does that combined population contain?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL30",
+      "question": "Combine current and archived legs but remove rows duplicated exactly across every approved leg column. Report the leg count and distinct consignment count.",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "set_operation": {
+          "expected": "union",
+          "actual": "union_all"
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL31",
+      "question": "Using current and archived legs with every overlap retained, show the five customer-market and destination-zone pairs with the largest handling-charge totals.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model did not preserve the requested current/archive population.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "archive_shipment_legs",
+          "consignments",
+          "depots",
+          "markets",
+          "shipment_legs",
+          "shippers",
+          "zones"
+        ],
+        "missing_columns": [
+          "shipment_legs.charge_cents",
+          "markets.market",
+          "zones.zone"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 5
+    },
+    {
+      "id": "BL32",
+      "question": "Make a departure-month series of transported kilograms across current and archived legs, dropping only exact duplicate leg rows. Start with the oldest month.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "archive_shipment_legs",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.departed_on",
+          "shipment_legs.weight_grams"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 15
+    },
+    {
+      "id": "BL33",
+      "question": "For last calendar month, what were the current handling charges and leg count?",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "date_from": {
+          "expected": "2026-08-01",
+          "actual": null
+        },
+        "date_to": {
+          "expected": "2026-08-31",
+          "actual": null
+        }
+      },
+      "lineage": {
+        "passed": false,
+        "missing_tables": [],
+        "missing_columns": [
+          "shipment_legs.departed_on"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL34",
+      "question": "For this month through the catalog reference date, give the transported weight and average transit minutes of current legs.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "shipment_legs.departed_on",
+          "shipment_legs.weight_grams",
+          "shipment_legs.transit_minutes"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL35",
+      "question": "How many current legs departed on 2026-09-12 itself?",
+      "expected": "answer",
+      "category": "wrong_accepted_meaning",
+      "error": null,
+      "semantic_differences": {
+        "metrics": {
+          "expected": [
+            "leg_count"
+          ],
+          "actual": [
+            "transported_weight"
+          ]
+        }
+      },
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL36",
+      "question": "From 2026-06-01 through 2026-08-31 inclusive, show average transit minutes for current legs by departure month, in calendar order.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 3,
+      "expected_rows": 3
+    },
+    {
+      "id": "BL37",
+      "question": "For current legs belonging to Cancelled shipments, what are the average transit minutes and the leg count?",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL38",
+      "question": "Which three carrier groups have the fewest current legs? Show the counts from smallest to largest, including an unassigned carrier group if present, with alphabetical carrier ties.",
+      "expected": "answer",
+      "category": "false_refusal",
+      "error": "The model omitted a literal condition attached to an explicitly named field.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": false,
+        "missing_tables": [
+          "carriers",
+          "shipment_legs"
+        ],
+        "missing_columns": [
+          "carriers.carrier"
+        ],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 3
+    },
+    {
+      "id": "BL39",
+      "question": "For current legs with route distance greater than 999,999 kilometers, return total handling charges, leg count, and average transit minutes.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 1,
+      "expected_rows": 1
+    },
+    {
+      "id": "BL40",
+      "question": "Using only current records, list handling charges for each customer market for departures from 2025-07-01 through 2025-07-31, highest charge first.",
+      "expected": "answer",
+      "category": "correct_answer",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": [],
+        "forbidden_measures": [],
+        "missing_joins": []
+      },
+      "actual_rows": 0,
+      "expected_rows": 0
+    },
+    {
+      "id": "BL41",
+      "question": "Export each recipient's full name, email address, phone number and street address for the current shipments.",
+      "expected": "refusal",
+      "category": "correct_refusal",
+      "error": "Only aggregate business metrics are available. Personal details and raw records cannot be queried.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 0,
+      "expected_rows": null
+    },
+    {
+      "id": "BL42",
+      "question": "For each carrier, divide total handling charges by transported kilograms and rank carriers by that cost per kilogram.",
+      "expected": "refusal",
+      "category": "correct_refusal",
+      "error": "The model did not preserve the above-average comparison.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 0,
+      "expected_rows": null
+    },
+    {
+      "id": "BL43",
+      "question": "Show cumulative handling charges for current legs month by month, with each month including all earlier months.",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 9,
+      "expected_rows": null
+    },
+    {
+      "id": "BL44",
+      "question": "Within every customer market, find the three largest individual leg handling charges and add only those three amounts into a market total.",
+      "expected": "refusal",
+      "category": "correct_refusal",
+      "error": "The model did not preserve the requested ranking direction.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 0,
+      "expected_rows": null
+    },
+    {
+      "id": "BL45",
+      "question": "How is our logistics performance looking overall?",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 1,
+      "expected_rows": null
+    },
+    {
+      "id": "BL46",
+      "question": "Break down current handling charges by area, with the largest area first.",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 7,
+      "expected_rows": null
+    },
+    {
+      "id": "BL47",
+      "question": "Count current legs where the destination zone is North or the customer market is Healthcare.",
+      "expected": "refusal",
+      "category": "correct_refusal",
+      "error": "OR is supported for alternative values of one field using IN. Separate conditions across different fields.",
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 0,
+      "expected_rows": null
+    },
+    {
+      "id": "BL48",
+      "question": "Show current leg counts for carriers whose names contain the word Air.",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 7,
+      "expected_rows": null
+    },
+    {
+      "id": "BL49",
+      "question": "Give one leg-count total using current records only, and include every archived record in that same total.",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 1,
+      "expected_rows": null
+    },
+    {
+      "id": "BL50",
+      "question": "Merge current and archived records, keep only the latest-departing leg for each consignment, then total its handling charges.",
+      "expected": "refusal",
+      "category": "unsafe_acceptance",
+      "error": null,
+      "semantic_differences": {},
+      "lineage": {
+        "passed": true,
+        "missing_tables": [],
+        "missing_columns": []
+      },
+      "actual_rows": 1,
+      "expected_rows": null
+    }
+  ]
+}

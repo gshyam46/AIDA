@@ -1,0 +1,148 @@
+{
+  "started_at": "2026-09-12T09:48:25.515Z",
+  "base_url": "http://127.0.0.1:3000",
+  "steps": [
+    {
+      "name": "Desktop opens with a real demo result",
+      "status": "passed",
+      "duration_ms": 568
+    },
+    {
+      "name": "Simple count executes locally and repeat query is deterministic",
+      "status": "passed",
+      "duration_ms": 5093,
+      "expected_count": 7810,
+      "first_execution_ms": 4806.66,
+      "repeat_execution_ms": 1.12
+    },
+    {
+      "name": "Grouped results have an interactive chart and table",
+      "status": "passed",
+      "duration_ms": 3837
+    },
+    {
+      "name": "Visual builder produces a real grouped result",
+      "status": "passed",
+      "duration_ms": 260
+    },
+    {
+      "name": "Dashboard saves definitions, persists across reload, refreshes and removes a card",
+      "status": "passed",
+      "duration_ms": 576
+    },
+    {
+      "name": "Unsupported question shows a recoverable error",
+      "status": "passed",
+      "duration_ms": 2973
+    },
+    {
+      "name": "Empty averages and missing periods are not presented as fabricated zero values",
+      "status": "passed",
+      "duration_ms": 11475
+    },
+    {
+      "name": "A second schema uses its own catalog and real language interpretation",
+      "status": "passed",
+      "duration_ms": 3778,
+      "plan": {
+        "metric": "tickets",
+        "dimension": "team",
+        "filters": {},
+        "date_from": null,
+        "date_to": null,
+        "sort": "value_desc",
+        "limit": 100
+      },
+      "telemetry": {
+        "engine": "hybrid",
+        "source_id": "support",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": true,
+        "as_of": "2026-06-30",
+        "cache_hit": false,
+        "execution_id": "ffc6ee11cf006f6a",
+        "row_count": 3,
+        "elapsed_ms": 3504.22,
+        "execution_time_ms": 3504.22,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 982,
+        "completion_tokens": 51,
+        "total_tokens": 1033,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 982,
+        "output_tokens": 51,
+        "model": "aida-semantic",
+        "model_latency_ms": 3499.24,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 1.8
+      }
+    },
+    {
+      "name": "Upload an unseen SQLite schema, approve mappings, and ask a real question",
+      "status": "passed",
+      "duration_ms": 4733,
+      "plan": {
+        "metric": "units_in_stock",
+        "dimension": null,
+        "filters": {
+          "depot": "Harbor"
+        },
+        "date_from": null,
+        "date_to": null,
+        "sort": "value_desc",
+        "limit": 100
+      },
+      "telemetry": {
+        "engine": "hybrid",
+        "source_id": "9fe0390af0af4e05bbe039cdf17e79ae",
+        "model_calls": 1,
+        "estimated_cost_usd": 0,
+        "estimated_model_cost_usd": 0,
+        "synthetic": false,
+        "as_of": null,
+        "cache_hit": true,
+        "execution_id": "84cb65502556742c",
+        "row_count": 1,
+        "elapsed_ms": 3733.19,
+        "execution_time_ms": 3733.19,
+        "interpretation_source": "local_model",
+        "interpretation_cache_hit": false,
+        "prompt_tokens": 698,
+        "completion_tokens": 71,
+        "total_tokens": 769,
+        "external_model_calls": 0,
+        "model_api_cost_usd": 0,
+        "input_tokens": 698,
+        "output_tokens": 71,
+        "model": "aida-semantic",
+        "model_latency_ms": 3731.19,
+        "semantic_cache_hit": false,
+        "model_cost_basis": "local inference; hardware and electricity excluded",
+        "inference_location": "local",
+        "external_requests": false,
+        "database_time_ms": 0.19
+      }
+    },
+    {
+      "name": "Mobile query and chart work without page overflow",
+      "status": "passed",
+      "duration_ms": 734
+    },
+    {
+      "name": "No external browser requests and no uncaught JavaScript errors",
+      "status": "passed",
+      "duration_ms": 0
+    }
+  ],
+  "browser_errors": [],
+  "external_requests": [],
+  "status": "passed",
+  "finished_at": "2026-09-12T09:49:00.666Z"
+}

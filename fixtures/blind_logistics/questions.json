@@ -1,0 +1,2500 @@
+[
+  {
+    "id": "BL01",
+    "question": "Our network planning sheet needs a current leg total. How many shipment legs are recorded?",
+    "expected": "answer",
+    "expected_semantics": "Count all current fact rows, including rows with missing references or null measurements; one total row.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count\nFROM shipment_legs f\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "count",
+      "total",
+      "current_population",
+      "null_preservation"
+    ],
+    "rationale": "Counts the shipment-leg grain without an implicit completed or delivered restriction.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": []
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL02",
+    "question": "Some consignments travel on several legs. How many different consignments are represented in the current leg records?",
+    "expected": "answer",
+    "expected_semantics": "Count distinct non-null current leg consignment references, including references absent from the parent table.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "distinct_consignments"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "distinct_consignments",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(DISTINCT f.consignment_id) AS distinct_consignments\nFROM shipment_legs f\nORDER BY distinct_consignments DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "count_distinct",
+      "total",
+      "missing_parent"
+    ],
+    "rationale": "The approved entity count uses the fact reference and needs no parent inner join.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.consignment_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL03",
+    "question": "For the current network activity, what is the total transported weight in kilograms?",
+    "expected": "answer",
+    "expected_semantics": "Sum current leg grams and divide by 1000; repeat transport on different legs contributes each time.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nORDER BY transported_weight DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "sum",
+      "total",
+      "unit_scale"
+    ],
+    "rationale": "Tests leg grain and grams-to-kilograms conversion.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.weight_grams"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL04",
+    "question": "How much has the current leg activity incurred in handling charges, expressed in US dollars?",
+    "expected": "answer",
+    "expected_semantics": "Sum shipment_legs.charge_cents, divide by 100 and round to two decimals; exclude parent charges and tariffs.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nORDER BY handling_charges DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "sum",
+      "total",
+      "currency",
+      "same_name_columns"
+    ],
+    "rationale": "Several tables have charge_cents; only the leg amount is the handling measure.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL05",
+    "question": "What is the average recorded transit time, in minutes per leg, across the current records?",
+    "expected": "answer",
+    "expected_semantics": "Average non-null shipment-leg transit minutes; unknown durations contribute to neither numerator nor denominator.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "average_transit_minutes",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT AVG(f.transit_minutes) AS average_transit_minutes\nFROM shipment_legs f\nORDER BY average_transit_minutes DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "avg",
+      "total",
+      "null_semantics"
+    ],
+    "rationale": "Does not treat unknown duration as zero or infer end-to-end shipment time.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL06",
+    "question": "Prepare a customer-market breakdown of current handling charges and transported kilograms, with the largest charge total first.",
+    "expected": "answer",
+    "expected_semantics": "Group current legs by market through consignment and shipper; report handling USD and transported kg, charges descending then market ascending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges",
+        "transported_weight"
+      ],
+      "dimensions": [
+        "customer_market"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT m.market AS customer_market, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nGROUP BY m.market\nORDER BY handling_charges DESC, customer_market ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "two_measures",
+      "multi_hop_join",
+      "grouping",
+      "null_group",
+      "ordering"
+    ],
+    "rationale": "The three-edge market path preserves incomplete references while measures remain at leg grain.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets"
+      ],
+      "columns": [
+        "shipment_legs.charge_cents",
+        "shipment_legs.weight_grams",
+        "markets.market"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.consignment_id",
+        "consignments.shipper_id",
+        "shippers.market_id"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL07",
+    "question": "For each customer market and destination zone together, report current handling charges and the number of distinct consignments; put the largest charges first.",
+    "expected": "answer",
+    "expected_semantics": "Group by the two branches from consignment; report leg handling USD and distinct fact consignment references per market-zone pair.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges",
+        "distinct_consignments"
+      ],
+      "dimensions": [
+        "customer_market",
+        "destination_zone"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT m.market AS customer_market, z.zone AS destination_zone, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges, COUNT(DISTINCT f.consignment_id) AS distinct_consignments\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nLEFT JOIN depots d ON c.destination_depot_id = d.depot_id COLLATE BINARY\nLEFT JOIN zones z ON d.zone_id = z.zone_id COLLATE BINARY\nGROUP BY m.market, z.zone\nORDER BY handling_charges DESC, customer_market ASC, destination_zone ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "two_dimensions",
+      "two_measures",
+      "two_join_paths",
+      "count_distinct",
+      "null_group",
+      "same_name_columns"
+    ],
+    "rationale": "Both market and destination branches are required; parent consignment charges cannot be summed.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets",
+        "depots",
+        "zones"
+      ],
+      "columns": [
+        "shipment_legs.charge_cents",
+        "shipment_legs.consignment_id",
+        "markets.market",
+        "zones.zone"
+      ],
+      "join_key_evidence": [
+        "consignments.shipper_id",
+        "shippers.market_id",
+        "consignments.destination_depot_id",
+        "depots.zone_id"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL08",
+    "question": "Compare current service-class and carrier combinations using average transit minutes and leg count. Start with the shortest average, breaking ties alphabetically by service class and then carrier.",
+    "expected": "answer",
+    "expected_semantics": "Group by service class/carrier; average non-null durations and count all legs per pair; ascending mean with stable grouping ties.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes",
+        "leg_count"
+      ],
+      "dimensions": [
+        "service_class",
+        "carrier"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "average_transit_minutes",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT sc.service_class AS service_class, cr.carrier AS carrier, AVG(f.transit_minutes) AS average_transit_minutes, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nGROUP BY sc.service_class, cr.carrier\nORDER BY average_transit_minutes ASC, service_class ASC, carrier ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "two_dimensions",
+      "two_measures",
+      "two_join_paths",
+      "avg",
+      "count",
+      "ordering"
+    ],
+    "rationale": "Combines two direct dimension paths and distinct null rules for AVG and COUNT.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "service_classes",
+        "carriers"
+      ],
+      "columns": [
+        "shipment_legs.transit_minutes",
+        "service_classes.service_class",
+        "carriers.carrier"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL09",
+    "question": "How are current legs distributed across shipment states? Keep unassigned states as a group and list the state labels alphabetically.",
+    "expected": "answer",
+    "expected_semantics": "Count current legs by consignments.status, including the null group from missing references; sort shipment state ascending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [
+        "shipment_state"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "shipment_state",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT c.status AS shipment_state, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nGROUP BY c.status\nORDER BY shipment_state ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "count",
+      "grouping",
+      "same_name_columns",
+      "left_join",
+      "null_group",
+      "dimension_sort"
+    ],
+    "rationale": "Shipment state belongs to the parent, separately from leg and carrier state.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments"
+      ],
+      "columns": [
+        "consignments.status"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.consignment_id"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL10",
+    "question": "Give me the current transported kilograms month by month, starting with the earliest departure month.",
+    "expected": "answer",
+    "expected_semantics": "Group current legs by YYYY-MM from departed_on, sum kilograms and sort month ascending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight"
+      ],
+      "dimensions": [
+        "month"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "month",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT SUBSTR(f.departed_on, 1, 7) AS month, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nGROUP BY SUBSTR(f.departed_on, 1, 7)\nORDER BY month ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "month_group",
+      "reporting_date",
+      "sum",
+      "dimension_sort"
+    ],
+    "rationale": "Uses the approved departure date and keeps the current population.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.weight_grams"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL11",
+    "question": "For current legs whose service tariff is more than 1,800 cents, what are the average transit minutes and total handling charges?",
+    "expected": "answer",
+    "expected_semantics": "Filter service_classes.charge_cents > 1800, then average leg durations and sum leg handling USD.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes",
+        "handling_charges"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "service_tariff_cents",
+          "op": "gt",
+          "value": 1800
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "average_transit_minutes",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT AVG(f.transit_minutes) AS average_transit_minutes, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nWHERE sc.charge_cents > :tariff\nORDER BY average_transit_minutes DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "tariff": 1800
+    },
+    "features": [
+      "numeric_filter",
+      "where",
+      "same_name_columns",
+      "two_measures",
+      "avg",
+      "sum"
+    ],
+    "rationale": "Service tariff controls selection while handling charges read the leg charge column.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "service_classes"
+      ],
+      "columns": [
+        "service_classes.charge_cents",
+        "shipment_legs.transit_minutes",
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL12",
+    "question": "Count the current legs whose whole-consignment charge is at least 20,000 cents but whose own handling charge is below 5,000 cents, and give their total handling charges in dollars.",
+    "expected": "answer",
+    "expected_semantics": "AND parent charge >= 20000 cents with fact charge < 5000 cents; return leg count and fact handling USD.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count",
+        "handling_charges"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "consignment_charge_cents",
+          "op": "gte",
+          "value": 20000
+        },
+        {
+          "field": "leg_handling_cents",
+          "op": "lt",
+          "value": 5000
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nWHERE c.charge_cents >= :consignment_charge AND f.charge_cents < :leg_charge\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "consignment_charge": 20000,
+      "leg_charge": 5000
+    },
+    "features": [
+      "numeric_filter",
+      "and_filters",
+      "same_name_columns",
+      "two_measures",
+      "where",
+      "unit_scale"
+    ],
+    "rationale": "Parent and leg fields share a physical name; filter units are cents, result units dollars.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "consignments"
+      ],
+      "columns": [
+        "consignments.charge_cents",
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL13",
+    "question": "In the Retail customer market, how many current legs carry exactly four packages?",
+    "expected": "answer",
+    "expected_semantics": "Count current legs with customer market Retail and fact package_count = 4.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "customer_market",
+          "op": "eq",
+          "value": "Retail"
+        },
+        {
+          "field": "package_count",
+          "op": "eq",
+          "value": 4
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nWHERE m.market = :market AND f.package_count = :packages\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "market": "Retail",
+      "packages": 4
+    },
+    "features": [
+      "categorical_equality",
+      "numeric_equality",
+      "and_filters",
+      "multi_hop_join"
+    ],
+    "rationale": "Combines fact numeric equality with categorical equality three edges from the fact.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets"
+      ],
+      "columns": [
+        "markets.market",
+        "shipment_legs.package_count"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL14",
+    "question": "What are the current transported weight and handling charges for Express or Overnight legs going to North or West destination zones, when route distance is at least 1,000 kilometers?",
+    "expected": "answer",
+    "expected_semantics": "AND class IN Express/Overnight, zone IN North/West and distance >= 1000; return leg kg and handling USD.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight",
+        "handling_charges"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "service_class",
+          "op": "in",
+          "value": [
+            "Express",
+            "Overnight"
+          ]
+        },
+        {
+          "field": "destination_zone",
+          "op": "in",
+          "value": [
+            "North",
+            "West"
+          ]
+        },
+        {
+          "field": "route_distance_km",
+          "op": "gte",
+          "value": 1000
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN depots d ON c.destination_depot_id = d.depot_id COLLATE BINARY\nLEFT JOIN zones z ON d.zone_id = z.zone_id COLLATE BINARY\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nWHERE sc.service_class IN (:service_a, :service_b) AND z.zone IN (:zone_a, :zone_b) AND f.distance_km >= :distance\nORDER BY transported_weight DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "service_a": "Express",
+      "service_b": "Overnight",
+      "zone_a": "North",
+      "zone_b": "West",
+      "distance": 1000
+    },
+    "features": [
+      "in_filter",
+      "numeric_filter",
+      "and_filters",
+      "two_join_paths",
+      "two_measures"
+    ],
+    "rationale": "Within-field alternatives become IN, with all three independent predicates combined by AND.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "depots",
+        "zones",
+        "service_classes"
+      ],
+      "columns": [
+        "service_classes.service_class",
+        "zones.zone",
+        "shipment_legs.distance_km",
+        "shipment_legs.weight_grams",
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL15",
+    "question": "For current legs marked Delayed whose shipment state is Delivered, show the leg count and average transit minutes.",
+    "expected": "answer",
+    "expected_semantics": "Filter fact status Delayed and parent consignment status Delivered; count facts and average recorded duration.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count",
+        "average_transit_minutes"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "leg_state",
+          "op": "eq",
+          "value": "Delayed"
+        },
+        {
+          "field": "shipment_state",
+          "op": "eq",
+          "value": "Delivered"
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count, AVG(f.transit_minutes) AS average_transit_minutes\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nWHERE f.status = :leg_state AND c.status = :shipment_state\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "leg_state": "Delayed",
+      "shipment_state": "Delivered"
+    },
+    "features": [
+      "same_name_columns",
+      "categorical_equality",
+      "and_filters",
+      "two_measures"
+    ],
+    "rationale": "Distinguishes a leg state from its parent shipment state.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments"
+      ],
+      "columns": [
+        "shipment_legs.status",
+        "consignments.status",
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL16",
+    "question": "For active carriers, count current legs in every service class except Freight, split by carrier and listed alphabetically.",
+    "expected": "answer",
+    "expected_semantics": "Require carrier state Active and service class <> Freight; unknown service classes do not pass ordinary inequality; group by carrier.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [
+        "carrier"
+      ],
+      "filters": [
+        {
+          "field": "carrier_state",
+          "op": "eq",
+          "value": "Active"
+        },
+        {
+          "field": "service_class",
+          "op": "ne",
+          "value": "Freight"
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "carrier",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT cr.carrier AS carrier, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nWHERE cr.status = :carrier_state AND sc.service_class <> :excluded_service\nGROUP BY cr.carrier\nORDER BY carrier ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "carrier_state": "Active",
+      "excluded_service": "Freight"
+    },
+    "features": [
+      "inequality_filter",
+      "same_name_columns",
+      "two_join_paths",
+      "null_filter_semantics",
+      "dimension_sort"
+    ],
+    "rationale": "Carrier state has its own owner, and null service labels are not admitted by not-equal.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "carriers",
+        "service_classes"
+      ],
+      "columns": [
+        "carriers.status",
+        "carriers.carrier",
+        "service_classes.service_class"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL17",
+    "question": "Which destination zones have more than 850,000 kilograms of current transported weight? Show each qualifying total, largest first.",
+    "expected": "answer",
+    "expected_semantics": "Group current legs by zone; retain transported_weight > 850000 kilograms; sort descending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight"
+      ],
+      "dimensions": [
+        "destination_zone"
+      ],
+      "filters": [],
+      "having": [
+        {
+          "metric": "transported_weight",
+          "op": "gt",
+          "value": 850000
+        }
+      ],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT z.zone AS destination_zone, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN depots d ON c.destination_depot_id = d.depot_id COLLATE BINARY\nLEFT JOIN zones z ON d.zone_id = z.zone_id COLLATE BINARY\nGROUP BY z.zone\nHAVING COALESCE(SUM(f.weight_grams), 0) / 1000.0 > :minimum_kg\nORDER BY transported_weight DESC, destination_zone ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "minimum_kg": 850000
+    },
+    "features": [
+      "having",
+      "sum",
+      "display_units",
+      "multi_hop_join"
+    ],
+    "rationale": "Threshold applies to grouped kilograms, not each leg raw grams.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "depots",
+        "zones"
+      ],
+      "columns": [
+        "zones.zone",
+        "shipment_legs.weight_grams"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL18",
+    "question": "Only consider current legs with a service tariff above 1,000 cents. Among their carriers, show those whose total handling charges exceed $73,000, highest total first.",
+    "expected": "answer",
+    "expected_semantics": "Filter service tariff > 1000 cents in WHERE; group by carrier; apply handling USD total > 73000 in HAVING.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges"
+      ],
+      "dimensions": [
+        "carrier"
+      ],
+      "filters": [
+        {
+          "field": "service_tariff_cents",
+          "op": "gt",
+          "value": 1000
+        }
+      ],
+      "having": [
+        {
+          "metric": "handling_charges",
+          "op": "gt",
+          "value": 73000
+        }
+      ],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT cr.carrier AS carrier, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nWHERE sc.charge_cents > :tariff_cents\nGROUP BY cr.carrier\nHAVING ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) > :total_usd\nORDER BY handling_charges DESC, carrier ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "tariff_cents": 1000,
+      "total_usd": 73000
+    },
+    "features": [
+      "where_vs_having",
+      "same_name_columns",
+      "display_units",
+      "two_join_paths",
+      "currency"
+    ],
+    "rationale": "Separates tariff row selection in cents from fact handling aggregate comparison in dollars.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "carriers",
+        "service_classes"
+      ],
+      "columns": [
+        "service_classes.charge_cents",
+        "shipment_legs.charge_cents",
+        "carriers.carrier"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL19",
+    "question": "List service classes represented by at least 2,000 distinct consignments in current legs, showing those distinct counts from highest to lowest.",
+    "expected": "answer",
+    "expected_semantics": "Count distinct current fact consignment references per service class and retain counts >= 2000.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "distinct_consignments"
+      ],
+      "dimensions": [
+        "service_class"
+      ],
+      "filters": [],
+      "having": [
+        {
+          "metric": "distinct_consignments",
+          "op": "gte",
+          "value": 2000
+        }
+      ],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "distinct_consignments",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT sc.service_class AS service_class, COUNT(DISTINCT f.consignment_id) AS distinct_consignments\nFROM shipment_legs f\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nGROUP BY sc.service_class\nHAVING COUNT(DISTINCT f.consignment_id) >= :minimum_consignments\nORDER BY distinct_consignments DESC, service_class ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "minimum_consignments": 2000
+    },
+    "features": [
+      "count_distinct",
+      "having",
+      "nonadditive_group_counts",
+      "grouping"
+    ],
+    "rationale": "A consignment can count in several groups; no global total is inferred by summing them.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "service_classes"
+      ],
+      "columns": [
+        "shipment_legs.consignment_id",
+        "service_classes.service_class"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL20",
+    "question": "How many current legs have at least one shipment-leg exception recorded?",
+    "expected": "answer",
+    "expected_semantics": "Count a current leg once when any child exception event matches its leg_id.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": false,
+        "filters": []
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count\nFROM shipment_legs f\nWHERE EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY)\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "exists",
+      "count",
+      "child_duplicate_preservation"
+    ],
+    "rationale": "Repeated exceptions must not multiply counted legs.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "exception_events"
+      ],
+      "columns": [],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL21",
+    "question": "For current legs with no recorded exceptions at all, give the transported weight and handling-charge totals.",
+    "expected": "answer",
+    "expected_semantics": "Select current legs with no child exception event; sum fact kilograms and handling USD.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight",
+        "handling_charges"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": true,
+        "filters": []
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nWHERE NOT EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY)\nORDER BY transported_weight DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "not_exists",
+      "two_measures",
+      "sum",
+      "missing_child"
+    ],
+    "rationale": "The absence test covers every child reason and state without joining event amounts.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "exception_events"
+      ],
+      "columns": [
+        "shipment_legs.weight_grams",
+        "shipment_legs.charge_cents"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL22",
+    "question": "How much handling charge did current legs incur when they had a Damage exception of severity at least 3? Also count those legs once each.",
+    "expected": "answer",
+    "expected_semantics": "Require one child event with reason Damage AND severity >= 3; sum fact charges and count selected facts once.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges",
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": false,
+        "filters": [
+          {
+            "field": "exception_reason",
+            "op": "eq",
+            "value": "Damage"
+          },
+          {
+            "field": "exception_severity",
+            "op": "gte",
+            "value": 3
+          }
+        ]
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges, COUNT(*) AS leg_count\nFROM shipment_legs f\nWHERE EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY AND e.reason = :reason AND e.severity >= :severity)\nORDER BY handling_charges DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "reason": "Damage",
+      "severity": 3
+    },
+    "features": [
+      "exists",
+      "child_filters",
+      "numeric_filter",
+      "same_event_predicates",
+      "same_name_columns",
+      "two_measures"
+    ],
+    "rationale": "Reason and severity must match the same event; handling reads the leg charge, not the exception fee.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "exception_events"
+      ],
+      "columns": [
+        "shipment_legs.charge_cents",
+        "exception_events.reason",
+        "exception_events.severity"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL23",
+    "question": "Count current legs for which no exception has been marked Resolved; legs without any exception should count too.",
+    "expected": "answer",
+    "expected_semantics": "Count current legs with no correlated child status Resolved, including legs with no children and those with only other statuses.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": true,
+        "filters": [
+          {
+            "field": "exception_state",
+            "op": "eq",
+            "value": "Resolved"
+          }
+        ]
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count\nFROM shipment_legs f\nWHERE NOT EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY AND e.status = :state)\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "state": "Resolved"
+    },
+    "features": [
+      "not_exists",
+      "child_filters",
+      "same_name_columns",
+      "missing_child"
+    ],
+    "rationale": "NOT EXISTS Resolved is not equivalent to EXISTS a non-Resolved event.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "exception_events"
+      ],
+      "columns": [
+        "exception_events.status"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL24",
+    "question": "Give the current leg count and transported kilograms after excluding any leg with an Open Weather exception. Other exceptions may remain.",
+    "expected": "answer",
+    "expected_semantics": "Require NOT EXISTS one event whose reason Weather AND status Open; other combinations do not exclude a fact.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count",
+        "transported_weight"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": true,
+        "filters": [
+          {
+            "field": "exception_reason",
+            "op": "eq",
+            "value": "Weather"
+          },
+          {
+            "field": "exception_state",
+            "op": "eq",
+            "value": "Open"
+          }
+        ]
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nWHERE NOT EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY AND e.reason = :reason AND e.status = :state)\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "reason": "Weather",
+      "state": "Open"
+    },
+    "features": [
+      "not_exists",
+      "child_filters",
+      "same_event_predicates",
+      "two_measures"
+    ],
+    "rationale": "Resolved Weather and a separate Open Damage event do not jointly satisfy Open Weather.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "exception_events"
+      ],
+      "columns": [
+        "shipment_legs.weight_grams",
+        "exception_events.reason",
+        "exception_events.status"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL25",
+    "question": "For active carriers, compare average transit minutes and leg counts among current legs with a Weather or Customs exception of severity at least 4. Put the longest average first.",
+    "expected": "answer",
+    "expected_semantics": "Filter carrier Active and require one child with reason IN Weather/Customs AND severity >= 4; group by carrier, average duration and count facts.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes",
+        "leg_count"
+      ],
+      "dimensions": [
+        "carrier"
+      ],
+      "filters": [
+        {
+          "field": "carrier_state",
+          "op": "eq",
+          "value": "Active"
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": {
+        "relation": "exceptions",
+        "negate": false,
+        "filters": [
+          {
+            "field": "exception_reason",
+            "op": "in",
+            "value": [
+              "Weather",
+              "Customs"
+            ]
+          },
+          {
+            "field": "exception_severity",
+            "op": "gte",
+            "value": 4
+          }
+        ]
+      },
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "average_transit_minutes",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT cr.carrier AS carrier, AVG(f.transit_minutes) AS average_transit_minutes, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nWHERE cr.status = :carrier_state AND EXISTS (SELECT 1 FROM exception_events e WHERE e.leg_id = f.leg_id COLLATE BINARY AND e.reason IN (:reason_a, :reason_b) AND e.severity >= :severity)\nGROUP BY cr.carrier\nORDER BY average_transit_minutes DESC, carrier ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "carrier_state": "Active",
+      "reason_a": "Weather",
+      "reason_b": "Customs",
+      "severity": 4
+    },
+    "features": [
+      "exists",
+      "child_in_filter",
+      "same_event_predicates",
+      "where",
+      "grouping",
+      "two_measures"
+    ],
+    "rationale": "Combines a dimension row filter, multiple same-event predicates and grouped measures without fanout.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "carriers",
+        "exception_events"
+      ],
+      "columns": [
+        "carriers.status",
+        "carriers.carrier",
+        "shipment_legs.transit_minutes",
+        "exception_events.reason",
+        "exception_events.severity"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id",
+        "exception_events.leg_id"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL26",
+    "question": "Which customer markets have current handling-charge totals above the average of all customer-market totals? Show their totals, highest first.",
+    "expected": "answer",
+    "expected_semantics": "Compute every current market handling total including the unassigned group; retain totals strictly above their arithmetic group average.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges"
+      ],
+      "dimensions": [
+        "customer_market"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": {
+        "kind": "above_average",
+        "metric": "handling_charges"
+      },
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "WITH group_totals AS (\nSELECT m.market AS customer_market, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nGROUP BY m.market\n)\nSELECT customer_market, handling_charges\nFROM group_totals\nWHERE handling_charges > (SELECT AVG(handling_charges) FROM group_totals)\nORDER BY handling_charges DESC, customer_market ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "above_average",
+      "grouped_subquery",
+      "multi_hop_join",
+      "null_group"
+    ],
+    "rationale": "Compares against the mean of market sums, not mean leg charge or an average after limiting.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets"
+      ],
+      "columns": [
+        "markets.market",
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL27",
+    "question": "Considering only current Express legs, show the two destination zones with the largest transported weights among zones above the average zone total for those Express legs.",
+    "expected": "answer",
+    "expected_semantics": "Filter Express before grouping; compare zone kg totals to the mean of all filtered zone totals; then sort descending and take two.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight"
+      ],
+      "dimensions": [
+        "destination_zone"
+      ],
+      "filters": [
+        {
+          "field": "service_class",
+          "op": "eq",
+          "value": "Express"
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": {
+        "kind": "above_average",
+        "metric": "transported_weight"
+      },
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 2
+    },
+    "oracle_sql": "WITH group_totals AS (\nSELECT z.zone AS destination_zone, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN depots d ON c.destination_depot_id = d.depot_id COLLATE BINARY\nLEFT JOIN zones z ON d.zone_id = z.zone_id COLLATE BINARY\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nWHERE sc.service_class = :service\nGROUP BY z.zone\n)\nSELECT destination_zone, transported_weight\nFROM group_totals\nWHERE transported_weight > (SELECT AVG(transported_weight) FROM group_totals)\nORDER BY transported_weight DESC, destination_zone ASC\nLIMIT 2;",
+    "oracle_parameters": {
+      "service": "Express"
+    },
+    "features": [
+      "above_average",
+      "filtered_comparison_population",
+      "limit_after_comparison",
+      "two_join_paths"
+    ],
+    "rationale": "Both selected groups and their comparison average use only Express facts; limit applies last.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "depots",
+        "zones",
+        "service_classes"
+      ],
+      "columns": [
+        "zones.zone",
+        "service_classes.service_class",
+        "shipment_legs.weight_grams"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL28",
+    "question": "Among current service-class and carrier pairs, show the four largest leg counts that exceed the average count across all pairs. Break count ties by service class, then carrier, alphabetically.",
+    "expected": "answer",
+    "expected_semantics": "Group by class/carrier; compare count to the unweighted mean of all pair counts, then sort descending with two ascending ties and take four.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [
+        "service_class",
+        "carrier"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": {
+        "kind": "above_average",
+        "metric": "leg_count"
+      },
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 4
+    },
+    "oracle_sql": "WITH group_totals AS (\nSELECT sc.service_class AS service_class, cr.carrier AS carrier, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN service_classes sc ON f.service_class_id = sc.service_class_id COLLATE BINARY\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nGROUP BY sc.service_class, cr.carrier\n)\nSELECT service_class, carrier, leg_count\nFROM group_totals\nWHERE leg_count > (SELECT AVG(leg_count) FROM group_totals)\nORDER BY leg_count DESC, service_class ASC, carrier ASC\nLIMIT 4;",
+    "oracle_parameters": {},
+    "features": [
+      "above_average",
+      "two_dimensions",
+      "grouped_subquery",
+      "limit_after_comparison",
+      "deterministic_ties"
+    ],
+    "rationale": "Comparison covers the complete pair population including missing-reference groups.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "service_classes",
+        "carriers"
+      ],
+      "columns": [
+        "service_classes.service_class",
+        "carriers.carrier"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL29",
+    "question": "Append archived legs to current legs, retaining overlapping rows. How many leg records and distinct consignments does that combined population contain?",
+    "expected": "answer",
+    "expected_semantics": "UNION ALL all approved current/archive columns, retaining 120 overlaps; count combined facts and distinct non-null consignment references.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count",
+        "distinct_consignments"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "all",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "WITH population AS (\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM shipment_legs\n UNION ALL\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM archive_shipment_legs\n)\nSELECT COUNT(*) AS leg_count, COUNT(DISTINCT f.consignment_id) AS distinct_consignments\nFROM population f\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "union_all",
+      "archive",
+      "overlap",
+      "count",
+      "count_distinct",
+      "two_measures"
+    ],
+    "rationale": "Leg count is 15000; distinct consignment count still removes repeated entity references.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "archive_shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.consignment_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL30",
+    "question": "Combine current and archived legs but remove rows duplicated exactly across every approved leg column. Report the leg count and distinct consignment count.",
+    "expected": "answer",
+    "expected_semantics": "UNION all twelve approved columns including leg_id, leaving 14880 facts; count facts and distinct non-null consignment references.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count",
+        "distinct_consignments"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "all",
+      "set_operation": "union",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "WITH population AS (\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM shipment_legs\n UNION\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM archive_shipment_legs\n)\nSELECT COUNT(*) AS leg_count, COUNT(DISTINCT f.consignment_id) AS distinct_consignments\nFROM population f\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "union",
+      "archive",
+      "exact_row_dedup",
+      "count",
+      "count_distinct",
+      "two_measures"
+    ],
+    "rationale": "Full-row overlap removal does not collapse different legs belonging to one consignment.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "archive_shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.consignment_id"
+      ],
+      "join_key_evidence": [
+        "shipment_legs.leg_id"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL31",
+    "question": "Using current and archived legs with every overlap retained, show the five customer-market and destination-zone pairs with the largest handling-charge totals.",
+    "expected": "answer",
+    "expected_semantics": "UNION ALL both populations, follow both dimension branches, group by market/zone, sort handling USD descending and take five.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges"
+      ],
+      "dimensions": [
+        "customer_market",
+        "destination_zone"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "all",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 5
+    },
+    "oracle_sql": "WITH population AS (\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM shipment_legs\n UNION ALL\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM archive_shipment_legs\n)\nSELECT m.market AS customer_market, z.zone AS destination_zone, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM population f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nLEFT JOIN depots d ON c.destination_depot_id = d.depot_id COLLATE BINARY\nLEFT JOIN zones z ON d.zone_id = z.zone_id COLLATE BINARY\nGROUP BY m.market, z.zone\nORDER BY handling_charges DESC, customer_market ASC, destination_zone ASC\nLIMIT 5;",
+    "oracle_parameters": {},
+    "features": [
+      "union_all",
+      "archive",
+      "two_join_paths",
+      "two_dimensions",
+      "top_n",
+      "same_name_columns"
+    ],
+    "rationale": "Both populations use identical fact definitions before their combined rows flow through approved paths.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [
+        "consignments.charge_cents",
+        "service_classes.charge_cents",
+        "carriers.charge_cents",
+        "exception_events.charge_cents"
+      ],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets",
+        "depots",
+        "zones",
+        "archive_shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.charge_cents",
+        "markets.market",
+        "zones.zone"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL32",
+    "question": "Make a departure-month series of transported kilograms across current and archived legs, dropping only exact duplicate leg rows. Start with the oldest month.",
+    "expected": "answer",
+    "expected_semantics": "UNION approved fact rows, group the deduplicated population by departure month, sum kilograms and sort month ascending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight"
+      ],
+      "dimensions": [
+        "month"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "all",
+      "set_operation": "union",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "month",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "WITH population AS (\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM shipment_legs\n UNION\n SELECT leg_id, consignment_id, service_class_id, carrier_id, departed_on, weight_grams, charge_cents, transit_minutes, distance_km, package_count, planned_transit_minutes, status FROM archive_shipment_legs\n)\nSELECT SUBSTR(f.departed_on, 1, 7) AS month, COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight\nFROM population f\nGROUP BY SUBSTR(f.departed_on, 1, 7)\nORDER BY month ASC\nLIMIT 100;",
+    "oracle_parameters": {},
+    "features": [
+      "union",
+      "archive",
+      "exact_row_dedup",
+      "month_group",
+      "date_ordering"
+    ],
+    "rationale": "Archive history supplies earlier months, while current overlaps contribute once before monthly aggregation.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "archive_shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.weight_grams"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL33",
+    "question": "For last calendar month, what were the current handling charges and leg count?",
+    "expected": "answer",
+    "expected_semantics": "With as_of 2026-09-12, last calendar month is inclusive 2026-08-01 through 2026-08-31 on current departed_on.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges",
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": "2026-08-01",
+      "date_to": "2026-08-31",
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges, COUNT(*) AS leg_count\nFROM shipment_legs f\nWHERE f.departed_on >= :start AND f.departed_on <= :end\nORDER BY handling_charges DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "start": "2026-08-01",
+      "end": "2026-08-31"
+    },
+    "features": [
+      "relative_date",
+      "last_month",
+      "as_of",
+      "inclusive_dates",
+      "two_measures"
+    ],
+    "rationale": "Uses the fixed September reference date, not machine time or a rolling thirty-day window.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.charge_cents"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL34",
+    "question": "For this month through the catalog reference date, give the transported weight and average transit minutes of current legs.",
+    "expected": "answer",
+    "expected_semantics": "Use inclusive 2026-09-01 through fixed as_of 2026-09-12; return leg kilograms and average non-null transit minutes.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "transported_weight",
+        "average_transit_minutes"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": "2026-09-01",
+      "date_to": "2026-09-12",
+      "sort": {
+        "field": "transported_weight",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COALESCE(SUM(f.weight_grams), 0) / 1000.0 AS transported_weight, AVG(f.transit_minutes) AS average_transit_minutes\nFROM shipment_legs f\nWHERE f.departed_on >= :start AND f.departed_on <= :end\nORDER BY transported_weight DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "start": "2026-09-01",
+      "end": "2026-09-12"
+    },
+    "features": [
+      "relative_date",
+      "this_month",
+      "as_of",
+      "inclusive_dates",
+      "two_measures"
+    ],
+    "rationale": "The partial current calendar month ends at the published as_of date.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.weight_grams",
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL35",
+    "question": "How many current legs departed on 2026-09-12 itself?",
+    "expected": "answer",
+    "expected_semantics": "Count current departed_on values bounded inclusively at 2026-09-12 on both ends.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": "2026-09-12",
+      "date_to": "2026-09-12",
+      "sort": {
+        "field": "leg_count",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT COUNT(*) AS leg_count\nFROM shipment_legs f\nWHERE f.departed_on >= :start AND f.departed_on <= :end\nORDER BY leg_count DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "start": "2026-09-12",
+      "end": "2026-09-12"
+    },
+    "features": [
+      "absolute_date",
+      "single_day",
+      "inclusive_boundary",
+      "count"
+    ],
+    "rationale": "A same-day inclusive range includes the final snapshot date.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL36",
+    "question": "From 2026-06-01 through 2026-08-31 inclusive, show average transit minutes for current legs by departure month, in calendar order.",
+    "expected": "answer",
+    "expected_semantics": "Filter current departures to the inclusive three-month range, then average non-null duration per YYYY-MM and sort ascending.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes"
+      ],
+      "dimensions": [
+        "month"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": "2026-06-01",
+      "date_to": "2026-08-31",
+      "sort": {
+        "field": "month",
+        "direction": "asc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT SUBSTR(f.departed_on, 1, 7) AS month, AVG(f.transit_minutes) AS average_transit_minutes\nFROM shipment_legs f\nWHERE f.departed_on >= :start AND f.departed_on <= :end\nGROUP BY SUBSTR(f.departed_on, 1, 7)\nORDER BY month ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "start": "2026-06-01",
+      "end": "2026-08-31"
+    },
+    "features": [
+      "absolute_date",
+      "inclusive_dates",
+      "month_group",
+      "avg",
+      "dimension_sort"
+    ],
+    "rationale": "Date filtering precedes monthly aggregation; no archive population is requested.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL37",
+    "question": "For current legs belonging to Cancelled shipments, what are the average transit minutes and the leg count?",
+    "expected": "answer",
+    "expected_semantics": "Filter parent consignment status Cancelled; average recorded durations and count selected legs. The selected rows all have null transit duration.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "average_transit_minutes",
+        "leg_count"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "shipment_state",
+          "op": "eq",
+          "value": "Cancelled"
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "average_transit_minutes",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT AVG(f.transit_minutes) AS average_transit_minutes, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nWHERE c.status = :shipment_state\nORDER BY average_transit_minutes DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "shipment_state": "Cancelled"
+    },
+    "features": [
+      "all_null_avg",
+      "valid_null",
+      "nonempty_population",
+      "same_name_columns",
+      "two_measures"
+    ],
+    "rationale": "Valid output is null average and positive leg count, not zero mean, refusal or empty result.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments"
+      ],
+      "columns": [
+        "consignments.status",
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL38",
+    "question": "Which three carrier groups have the fewest current legs? Show the counts from smallest to largest, including an unassigned carrier group if present, with alphabetical carrier ties.",
+    "expected": "answer",
+    "expected_semantics": "Count current facts by carrier preserving its null group; sort count ascending then carrier ascending and take three.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "leg_count"
+      ],
+      "dimensions": [
+        "carrier"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "leg_count",
+        "direction": "asc"
+      },
+      "limit": 3
+    },
+    "oracle_sql": "SELECT cr.carrier AS carrier, COUNT(*) AS leg_count\nFROM shipment_legs f\nLEFT JOIN carriers cr ON f.carrier_id = cr.carrier_id COLLATE BINARY\nGROUP BY cr.carrier\nORDER BY leg_count ASC, carrier ASC\nLIMIT 3;",
+    "oracle_parameters": {},
+    "features": [
+      "bottom_n",
+      "limit",
+      "ascending_metric_sort",
+      "null_group",
+      "deterministic_ties"
+    ],
+    "rationale": "Bottom-three uses count ordering and keeps missing carriers eligible.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "carriers"
+      ],
+      "columns": [
+        "carriers.carrier"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL39",
+    "question": "For current legs with route distance greater than 999,999 kilometers, return total handling charges, leg count, and average transit minutes.",
+    "expected": "answer",
+    "expected_semantics": "Apply a valid impossible numeric distance predicate; return one scalar row with handling_charges 0, leg_count 0 and average_transit_minutes null.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges",
+        "leg_count",
+        "average_transit_minutes"
+      ],
+      "dimensions": [],
+      "filters": [
+        {
+          "field": "route_distance_km",
+          "op": "gt",
+          "value": 999999
+        }
+      ],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": null,
+      "date_to": null,
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges, COUNT(*) AS leg_count, AVG(f.transit_minutes) AS average_transit_minutes\nFROM shipment_legs f\nWHERE f.distance_km > :distance\nORDER BY handling_charges DESC\nLIMIT 100;",
+    "oracle_parameters": {
+      "distance": 999999
+    },
+    "features": [
+      "valid_no_match",
+      "sum_zero",
+      "count_zero",
+      "avg_null",
+      "three_measures",
+      "numeric_filter"
+    ],
+    "rationale": "A no-match question remains supported and preserves documented aggregate zero/null distinctions.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs"
+      ],
+      "columns": [
+        "shipment_legs.distance_km",
+        "shipment_legs.charge_cents",
+        "shipment_legs.transit_minutes"
+      ]
+    },
+    "order_sensitive": false
+  },
+  {
+    "id": "BL40",
+    "question": "Using only current records, list handling charges for each customer market for departures from 2025-07-01 through 2025-07-31, highest charge first.",
+    "expected": "answer",
+    "expected_semantics": "Filter only current departure dates to July 2025, group by market and sort charges descending. No facts match, so return an empty grouped row set despite archive history.",
+    "plan": {
+      "version": 2,
+      "metrics": [
+        "handling_charges"
+      ],
+      "dimensions": [
+        "customer_market"
+      ],
+      "filters": [],
+      "having": [],
+      "population": "primary",
+      "set_operation": "union_all",
+      "exists": null,
+      "comparison": null,
+      "date_from": "2025-07-01",
+      "date_to": "2025-07-31",
+      "sort": {
+        "field": "handling_charges",
+        "direction": "desc"
+      },
+      "limit": 100
+    },
+    "oracle_sql": "SELECT m.market AS customer_market, ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2) AS handling_charges\nFROM shipment_legs f\nLEFT JOIN consignments c ON f.consignment_id = c.consignment_id COLLATE BINARY\nLEFT JOIN shippers s ON c.shipper_id = s.shipper_id COLLATE BINARY\nLEFT JOIN markets m ON s.market_id = m.market_id COLLATE BINARY\nWHERE f.departed_on >= :start AND f.departed_on <= :end\nGROUP BY m.market\nORDER BY handling_charges DESC, customer_market ASC\nLIMIT 100;",
+    "oracle_parameters": {
+      "start": "2025-07-01",
+      "end": "2025-07-31"
+    },
+    "features": [
+      "valid_empty_grouped_result",
+      "absolute_date",
+      "current_population",
+      "no_implicit_archive",
+      "multi_hop_join"
+    ],
+    "rationale": "Older dates do not select archives, and grouping an empty fact selection produces no rows.",
+    "expected_lineage": {
+      "forbidden_measure_columns": [],
+      "tables": [
+        "shipment_legs",
+        "consignments",
+        "shippers",
+        "markets"
+      ],
+      "columns": [
+        "shipment_legs.departed_on",
+        "shipment_legs.charge_cents",
+        "markets.market"
+      ]
+    },
+    "order_sensitive": true
+  },
+  {
+    "id": "BL41",
+    "question": "Export each recipient's full name, email address, phone number and street address for the current shipments.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse unapproved personal records; the catalog permits aggregate logistics reports only.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "raw_personal_data",
+      "unapproved_columns"
+    ],
+    "rationale": "Fabricated contacts in an unrelated table do not authorize raw contact access.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL42",
+    "question": "For each carrier, divide total handling charges by transported kilograms and rank carriers by that cost per kilogram.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse or explain that a charges/weight ratio needs an approved new metric; do not substitute either component.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_arithmetic",
+      "ratio_of_aggregates"
+    ],
+    "rationale": "The catalog allows separate sums but cannot divide or rank by the unapproved result.",
+    "expected_lineage": null,
+    "order_sensitive": true
+  },
+  {
+    "id": "BL43",
+    "question": "Show cumulative handling charges for current legs month by month, with each month including all earlier months.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse the cumulative window calculation; ordinary monthly sums do not answer this question.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_window",
+      "running_total"
+    ],
+    "rationale": "Running sums across grouped months are outside version 2.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL44",
+    "question": "Within every customer market, find the three largest individual leg handling charges and add only those three amounts into a market total.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse per-group top-three nested aggregation; neither all-leg sums nor a global top-three limit is equivalent.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_nested_operation",
+      "per_group_top_n"
+    ],
+    "rationale": "Requires ranking fact rows within each market before aggregating their selected amounts.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL45",
+    "question": "How is our logistics performance looking overall?",
+    "expected": "refusal",
+    "expected_semantics": "Clarify which approved measure is intended; no overall performance definition exists.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_clarification",
+      "ambiguous_business_metric"
+    ],
+    "rationale": "Count, weight, charge and duration remain unresolved; choosing a score invents semantics.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL46",
+    "question": "Break down current handling charges by area, with the largest area first.",
+    "expected": "refusal",
+    "expected_semantics": "Clarify which approved dimension area denotes; do not silently choose customer market or destination zone.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_clarification",
+      "ambiguous_dimension",
+      "ambiguous_join_path"
+    ],
+    "rationale": "Area is not an approved label and does not unambiguously choose a grouping branch.",
+    "expected_lineage": null,
+    "order_sensitive": true
+  },
+  {
+    "id": "BL47",
+    "question": "Count current legs where the destination zone is North or the customer market is Healthcare.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse or explain cross-field OR is unsupported; AND or within-field IN changes the population.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_or",
+      "conflicting_filter_branches"
+    ],
+    "rationale": "The alternatives refer to different fields; available row clauses combine only with AND.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL48",
+    "question": "Show current leg counts for carriers whose names contain the word Air.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse unapproved contains/LIKE rather than selecting guessed carrier labels.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_like",
+      "string_contains"
+    ],
+    "rationale": "Substring filtering is outside the contract even if an allowed label happens to contain the word.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL49",
+    "question": "Give one leg-count total using current records only, and include every archived record in that same total.",
+    "expected": "refusal",
+    "expected_semantics": "Clarify the contradictory population instructions before answering.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_clarification",
+      "conflicting_population_scope"
+    ],
+    "rationale": "One total cannot both exclude all archives and include all archives.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  },
+  {
+    "id": "BL50",
+    "question": "Merge current and archived records, keep only the latest-departing leg for each consignment, then total its handling charges.",
+    "expected": "refusal",
+    "expected_semantics": "Refuse latest-row-per-business-key deduplication; full-row UNION does not implement it.",
+    "plan": null,
+    "oracle_sql": null,
+    "oracle_parameters": {},
+    "features": [
+      "safe_refusal",
+      "unsupported_business_key_dedup",
+      "latest_version",
+      "unsupported_nested_operation"
+    ],
+    "rationale": "UNION removes only exact fact-row duplicates and cannot select each consignment latest leg.",
+    "expected_lineage": null,
+    "order_sensitive": false
+  }
+]

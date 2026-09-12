@@ -1,0 +1,543 @@
+{
+  "contract_version": 1,
+  "contract_id": "blind-logistics-2026-09-12-v1",
+  "authorship": {
+    "method": "Agent-authored blind transfer evaluation",
+    "original_dataset": true,
+    "fully_synthetic": true,
+    "human_or_external_holdout": false,
+    "scope": "The author did not read semantic parser modules, model prompts, earlier question suites or model outputs. Public catalog documentation and relational manifest validation structure were permitted. Business semantics and oracle are independently authored from that language interpreter."
+  },
+  "generator": {
+    "file": "build_database.py",
+    "seed": 260912,
+    "prng": "Python random.Random",
+    "network_sources": [],
+    "license": "CC0-1.0",
+    "deterministic_same_runtime": true
+  },
+  "structural_accommodations": {
+    "reason": "The existing schema inspector marks names ending in _name sensitive, including non-personal category labels. Initial manifest validation rejected these mappings.",
+    "physical_column_renames": {
+      "markets.market_name": "markets.market",
+      "zones.zone_name": "zones.zone",
+      "service_classes.class_name": "service_classes.service_class",
+      "carriers.carrier_name": "carriers.carrier"
+    },
+    "scope": "Physical names were changed before question sealing or model evaluation solely to satisfy structural approval. Business labels, semantic IDs, categorical values and intended measures stayed fixed. No application sensitivity rule was changed."
+  },
+  "snapshot": {
+    "database": "logistics.sqlite",
+    "current_rows": 12000,
+    "archive_rows": 3000,
+    "exact_archive_overlaps": 120,
+    "union_all_rows": 15000,
+    "union_rows": 14880,
+    "physical_tables": 12,
+    "maximum_bytes": 20000000,
+    "as_of": "2026-09-12",
+    "date_from": "2025-07-01",
+    "date_to": "2026-09-12"
+  },
+  "ddl": {
+    "markets": "CREATE TABLE markets (market_id INTEGER PRIMARY KEY, market TEXT NOT NULL UNIQUE)",
+    "zones": "CREATE TABLE zones (zone_id INTEGER PRIMARY KEY, zone TEXT NOT NULL UNIQUE)",
+    "shippers": "CREATE TABLE shippers (shipper_id INTEGER PRIMARY KEY, market_id INTEGER REFERENCES markets(market_id), shipper_name TEXT NOT NULL, status TEXT NOT NULL)",
+    "depots": "CREATE TABLE depots (depot_id INTEGER PRIMARY KEY, zone_id INTEGER REFERENCES zones(zone_id), depot_name TEXT NOT NULL)",
+    "service_classes": "CREATE TABLE service_classes (service_class_id INTEGER PRIMARY KEY, service_class TEXT NOT NULL UNIQUE, charge_cents INTEGER NOT NULL)",
+    "carriers": "CREATE TABLE carriers (carrier_id INTEGER PRIMARY KEY, carrier TEXT NOT NULL UNIQUE, status TEXT NOT NULL, charge_cents INTEGER NOT NULL)",
+    "consignments": "CREATE TABLE consignments (consignment_id INTEGER PRIMARY KEY, shipper_id INTEGER REFERENCES shippers(shipper_id), destination_depot_id INTEGER REFERENCES depots(depot_id), status TEXT NOT NULL, charge_cents INTEGER NOT NULL, declared_value_cents INTEGER NOT NULL)",
+    "shipment_legs": "CREATE TABLE shipment_legs (\n    leg_id INTEGER PRIMARY KEY,\n    consignment_id INTEGER REFERENCES consignments(consignment_id),\n    service_class_id INTEGER REFERENCES service_classes(service_class_id),\n    carrier_id INTEGER REFERENCES carriers(carrier_id),\n    departed_on TEXT NOT NULL,\n    weight_grams INTEGER,\n    charge_cents INTEGER,\n    transit_minutes INTEGER,\n    distance_km REAL,\n    package_count INTEGER NOT NULL,\n    planned_transit_minutes INTEGER,\n    status TEXT NOT NULL\n)",
+    "archive_shipment_legs": "CREATE TABLE archive_shipment_legs (\n    leg_id INTEGER PRIMARY KEY,\n    consignment_id INTEGER REFERENCES consignments(consignment_id),\n    service_class_id INTEGER REFERENCES service_classes(service_class_id),\n    carrier_id INTEGER REFERENCES carriers(carrier_id),\n    departed_on TEXT NOT NULL,\n    weight_grams INTEGER,\n    charge_cents INTEGER,\n    transit_minutes INTEGER,\n    distance_km REAL,\n    package_count INTEGER NOT NULL,\n    planned_transit_minutes INTEGER,\n    status TEXT NOT NULL\n)",
+    "exception_events": "CREATE TABLE exception_events (event_id INTEGER PRIMARY KEY, leg_id INTEGER NOT NULL, reason TEXT NOT NULL, status TEXT NOT NULL, severity INTEGER NOT NULL, charge_cents INTEGER NOT NULL, occurred_on TEXT NOT NULL)",
+    "operator_credentials": "CREATE TABLE operator_credentials (operator_id INTEGER PRIMARY KEY, email TEXT NOT NULL, password_hash TEXT NOT NULL, api_key TEXT NOT NULL)",
+    "contact_directory": "CREATE TABLE contact_directory (contact_id INTEGER PRIMARY KEY, full_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL)"
+  },
+  "approved_catalog": {
+    "version": 2,
+    "name": "Blind synthetic logistics",
+    "currency": "USD",
+    "fact": {
+      "table": "shipment_legs",
+      "key": "leg_id",
+      "columns": [
+        "leg_id",
+        "consignment_id",
+        "service_class_id",
+        "carrier_id",
+        "departed_on",
+        "weight_grams",
+        "charge_cents",
+        "transit_minutes",
+        "distance_km",
+        "package_count",
+        "planned_transit_minutes",
+        "status"
+      ],
+      "archive_table": "archive_shipment_legs"
+    },
+    "tables": {
+      "consignments": {
+        "table": "consignments"
+      },
+      "shippers": {
+        "table": "shippers"
+      },
+      "markets": {
+        "table": "markets"
+      },
+      "depots": {
+        "table": "depots"
+      },
+      "zones": {
+        "table": "zones"
+      },
+      "service_classes": {
+        "table": "service_classes"
+      },
+      "carriers": {
+        "table": "carriers"
+      }
+    },
+    "relations": [
+      {
+        "id": "leg_consignment",
+        "from": "fact",
+        "from_column": "consignment_id",
+        "to": "consignments",
+        "to_column": "consignment_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "consignment_shipper",
+        "from": "consignments",
+        "from_column": "shipper_id",
+        "to": "shippers",
+        "to_column": "shipper_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "shipper_market",
+        "from": "shippers",
+        "from_column": "market_id",
+        "to": "markets",
+        "to_column": "market_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "consignment_destination",
+        "from": "consignments",
+        "from_column": "destination_depot_id",
+        "to": "depots",
+        "to_column": "depot_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "depot_zone",
+        "from": "depots",
+        "from_column": "zone_id",
+        "to": "zones",
+        "to_column": "zone_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "leg_service",
+        "from": "fact",
+        "from_column": "service_class_id",
+        "to": "service_classes",
+        "to_column": "service_class_id",
+        "kind": "many_to_one"
+      },
+      {
+        "id": "leg_carrier",
+        "from": "fact",
+        "from_column": "carrier_id",
+        "to": "carriers",
+        "to_column": "carrier_id",
+        "kind": "many_to_one"
+      }
+    ],
+    "metrics": [
+      {
+        "id": "transported_weight",
+        "label": "Transported weight",
+        "description": "Kilograms transported across selected shipment legs, summing recorded leg weights; a consignment carried on several legs contributes on each leg. Null weights do not contribute.",
+        "aggregate": "SUM",
+        "table": "fact",
+        "scale": 1000,
+        "format": "number",
+        "column": "weight_grams"
+      },
+      {
+        "id": "handling_charges",
+        "label": "Handling charges",
+        "description": "Shipment-leg handling charges in USD, summing recorded leg charges and dividing cents by 100. Excludes consignment charges, service tariffs, carrier fees and exception fees. Null charges do not contribute.",
+        "aggregate": "SUM",
+        "table": "fact",
+        "scale": 100,
+        "format": "currency",
+        "column": "charge_cents"
+      },
+      {
+        "id": "average_transit_minutes",
+        "label": "Average transit minutes",
+        "description": "Arithmetic mean of recorded transit minutes per selected shipment leg. Null transit durations are excluded from numerator and denominator. This is not end-to-end consignment transit time.",
+        "aggregate": "AVG",
+        "table": "fact",
+        "scale": 1,
+        "format": "number",
+        "column": "transit_minutes"
+      },
+      {
+        "id": "distinct_consignments",
+        "label": "Distinct consignments",
+        "description": "Number of distinct non-null consignment references represented by selected shipment legs, including references missing from the consignment table. Count separately within each group; grouped counts are not additive.",
+        "aggregate": "COUNT_DISTINCT",
+        "table": "fact",
+        "scale": 1,
+        "format": "number",
+        "column": "consignment_id"
+      },
+      {
+        "id": "leg_count",
+        "label": "Leg count",
+        "description": "Number of shipment-leg fact rows in the selected population, regardless of missing dimensions or null measurements.",
+        "aggregate": "COUNT",
+        "table": "fact",
+        "scale": 1,
+        "format": "number"
+      }
+    ],
+    "dimensions": [
+      {
+        "id": "customer_market",
+        "label": "Customer market",
+        "table": "markets",
+        "column": "market",
+        "type": "string",
+        "values": [
+          "Retail",
+          "Manufacturing",
+          "Healthcare",
+          "Technology",
+          "Public sector"
+        ]
+      },
+      {
+        "id": "destination_zone",
+        "label": "Destination zone",
+        "table": "zones",
+        "column": "zone",
+        "type": "string",
+        "values": [
+          "North",
+          "South",
+          "East",
+          "West",
+          "Central",
+          "Islands"
+        ]
+      },
+      {
+        "id": "service_class",
+        "label": "Service class",
+        "table": "service_classes",
+        "column": "service_class",
+        "type": "string",
+        "values": [
+          "Standard",
+          "Express",
+          "Overnight",
+          "Freight"
+        ]
+      },
+      {
+        "id": "carrier",
+        "label": "Carrier",
+        "table": "carriers",
+        "column": "carrier",
+        "type": "string",
+        "values": [
+          "Arrow Parcel",
+          "Cedar Freight",
+          "Harbor Air",
+          "Maple Logistics",
+          "Polar Transit",
+          "Quartz Express"
+        ]
+      },
+      {
+        "id": "shipment_state",
+        "label": "Shipment state",
+        "table": "consignments",
+        "column": "status",
+        "type": "string",
+        "values": [
+          "Delivered",
+          "In transit",
+          "On hold",
+          "Cancelled",
+          "Returned"
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "id": "leg_weight_grams",
+        "label": "Leg weight in grams",
+        "table": "fact",
+        "column": "weight_grams",
+        "type": "number"
+      },
+      {
+        "id": "leg_handling_cents",
+        "label": "Leg handling charge in cents",
+        "table": "fact",
+        "column": "charge_cents",
+        "type": "number"
+      },
+      {
+        "id": "leg_transit_minutes",
+        "label": "Leg transit minutes",
+        "table": "fact",
+        "column": "transit_minutes",
+        "type": "number"
+      },
+      {
+        "id": "route_distance_km",
+        "label": "Route distance in kilometers",
+        "table": "fact",
+        "column": "distance_km",
+        "type": "number"
+      },
+      {
+        "id": "package_count",
+        "label": "Packages on a leg",
+        "table": "fact",
+        "column": "package_count",
+        "type": "number"
+      },
+      {
+        "id": "planned_transit_minutes",
+        "label": "Planned transit minutes",
+        "table": "fact",
+        "column": "planned_transit_minutes",
+        "type": "number"
+      },
+      {
+        "id": "service_tariff_cents",
+        "label": "Service tariff in cents",
+        "table": "service_classes",
+        "column": "charge_cents",
+        "type": "number"
+      },
+      {
+        "id": "consignment_charge_cents",
+        "label": "Consignment charge in cents",
+        "table": "consignments",
+        "column": "charge_cents",
+        "type": "number"
+      },
+      {
+        "id": "declared_value_cents",
+        "label": "Declared consignment value in cents",
+        "table": "consignments",
+        "column": "declared_value_cents",
+        "type": "number"
+      },
+      {
+        "id": "leg_state",
+        "label": "Leg state",
+        "table": "fact",
+        "column": "status",
+        "type": "string",
+        "values": [
+          "Completed",
+          "In transit",
+          "Delayed",
+          "Cancelled"
+        ]
+      },
+      {
+        "id": "carrier_state",
+        "label": "Carrier state",
+        "table": "carriers",
+        "column": "status",
+        "type": "string",
+        "values": [
+          "Active",
+          "Suspended"
+        ]
+      }
+    ],
+    "date": {
+      "table": "fact",
+      "column": "departed_on"
+    },
+    "as_of": "2026-09-12",
+    "date_from": "2025-07-01",
+    "date_to": "2026-09-12",
+    "exists_relations": [
+      {
+        "id": "exceptions",
+        "label": "Shipment leg exceptions",
+        "table": "exception_events",
+        "parent": "fact",
+        "parent_column": "leg_id",
+        "child_column": "leg_id",
+        "fields": [
+          {
+            "id": "exception_reason",
+            "label": "Exception reason",
+            "column": "reason",
+            "type": "string",
+            "values": [
+              "Weather",
+              "Damage",
+              "Customs",
+              "Capacity",
+              "Address"
+            ]
+          },
+          {
+            "id": "exception_state",
+            "label": "Exception state",
+            "column": "status",
+            "type": "string",
+            "values": [
+              "Open",
+              "Resolved",
+              "Waived"
+            ]
+          },
+          {
+            "id": "exception_severity",
+            "label": "Exception severity",
+            "column": "severity",
+            "type": "number"
+          }
+        ]
+      }
+    ],
+    "examples": [
+      "Show transported weight by customer market.",
+      "Show handling charges by destination zone for Express service.",
+      "Count shipment legs with a Weather exception."
+    ]
+  },
+  "business_semantics": {
+    "grain": "One recorded movement leg of a consignment; normally three legs per consignment. No implicit delivered/completed filter.",
+    "population_default": "Current shipment_legs only, even when an older date is requested. Dates do not automatically include archives.",
+    "archive_union_all": "Append all 3000 archived rows to all 12000 current rows, retaining 120 exact overlaps.",
+    "archive_union": "Deduplicate exact rows across all 12 approved fact columns, including leg_id; 14880 rows remain. This is not business-key or latest-version deduplication.",
+    "join_semantics": "LEFT JOIN each necessary many-to-one path with binary equality. Null or absent references remain in the population and yield SQL NULL dimension groups. Every target key is a single-column INTEGER primary key.",
+    "date_semantics": "Inclusive ISO calendar dates on shipment_legs.departed_on. Month grouping is the first seven characters. Current unique facts span 2026-01-01 through 2026-09-12; unique archived facts span 2025-07-01 through 2025-12-31. Archives also contain exact current overlaps.",
+    "relative_dates": {
+      "as_of": "2026-09-12",
+      "this_year": [
+        "2026-01-01",
+        "2026-09-12"
+      ],
+      "last_year": [
+        "2025-01-01",
+        "2025-12-31"
+      ],
+      "this_month": [
+        "2026-09-01",
+        "2026-09-12"
+      ],
+      "last_month": [
+        "2026-08-01",
+        "2026-08-31"
+      ],
+      "last_30_days": [
+        "2026-08-14",
+        "2026-09-12"
+      ]
+    },
+    "metrics_sql": {
+      "transported_weight": "COALESCE(SUM(f.weight_grams), 0) / 1000.0",
+      "handling_charges": "ROUND(COALESCE(SUM(f.charge_cents), 0) / 100.0, 2)",
+      "average_transit_minutes": "AVG(f.transit_minutes)",
+      "distinct_consignments": "COUNT(DISTINCT f.consignment_id)",
+      "leg_count": "COUNT(*)"
+    },
+    "scale_rounding": "Handling charges use USD and round the sum to two decimals. Transported weight uses kilograms without additional rounding. Transit averages use minutes without additional rounding. Numeric row-filter values use the units stated in field labels, including cents and grams. HAVING thresholds use metric display units.",
+    "null_semantics": "SUM skips nulls and becomes zero for an empty/all-null selection; AVG skips nulls and is NULL for an empty/all-null selection; COUNT DISTINCT skips null identifiers but counts missing non-null dimension references; COUNT includes all rows. Ordinary comparisons with NULL do not pass WHERE, including inequality.",
+    "cancelled_transit": "Consignments with shipment state Cancelled have no recorded leg transit minutes, providing an approved all-null duration selection. Their fact rows, weights and charges are retained.",
+    "grouped_distinct": "A consignment with several service classes or carriers can contribute once to several groups. Never add grouped distinct counts to infer a global distinct count.",
+    "existence": "Correlate exception_events.leg_id to the selected fact leg_id. Multiple matching events select a fact once; NOT EXISTS selects a fact only if no child matches all requested child conditions. All child predicates must match the same event.",
+    "above_average": "Compute each group's selected metric after all row/date/child filters. Keep groups strictly above the arithmetic mean of all these grouped metric values, before ordering and limiting. Null metric values are excluded from that mean.",
+    "categorical_case": "Approved categorical values are exact canonical strings stored with SQLite BINARY collation. The interpreter may resolve user casing to canonical allowlist values. SQL categorical comparisons and sorting use BINARY. No case-only duplicate allowed values exist.",
+    "ordering": "An explicit sort metric/dimension and direction controls primary ordering. Remaining selected dimensions break ties ascending in their selected order, using SQLite binary text ordering; NULL sorts first ascending and last descending. Apply limit after filters, grouping and any above-average comparison. Unordered questions should be compared as typed row multisets unless an explicit ordering is supplied by the gold case.",
+    "same_name_traps": [
+      "shipment_legs.charge_cents is the handling measure; consignments.charge_cents is a nonadditive whole-consignment charge; service_classes.charge_cents is a service tariff; carriers.charge_cents is a carrier fee; exception_events.charge_cents is an exception fee.",
+      "consignments.status is shipment state; shipment_legs.status is leg state; carriers.status is carrier state; exception_events.status is exception state; shippers.status is unapproved."
+    ],
+    "excluded_tables": [
+      "operator_credentials",
+      "contact_directory"
+    ],
+    "excluded_columns": [
+      "shippers.shipper_name",
+      "shippers.status",
+      "depots.depot_name",
+      "carriers.charge_cents",
+      "exception_events.charge_cents",
+      "exception_events.occurred_on"
+    ],
+    "synthetic_sensitive_values": "All names, emails, phones, addresses, password hashes and API-key-looking strings are fabricated. Emails use example.invalid; credentials are conspicuously fake placeholders. None may be queried through the approved catalog."
+  },
+  "allowed_bounds": {
+    "metrics_per_query": 3,
+    "dimensions_per_query": 2,
+    "and_row_filters": 12,
+    "in_values": 20,
+    "having_clauses": 3,
+    "child_existence_conditions": 1,
+    "above_average_comparisons": 1,
+    "result_rows": 100,
+    "execution_seconds": 2,
+    "row_operators": [
+      "eq",
+      "ne",
+      "in",
+      "gt",
+      "gte",
+      "lt",
+      "lte"
+    ],
+    "having_operators": [
+      "eq",
+      "ne",
+      "gt",
+      "gte",
+      "lt",
+      "lte"
+    ],
+    "unsupported": [
+      "Arbitrary SQL or physical table/column requests",
+      "Unapproved columns or personal data",
+      "DML, DDL or credential access",
+      "Ratios, profit or cost metrics absent from catalog",
+      "Parent-table measure aggregation",
+      "Multi-fact or child-event counts as metrics",
+      "Arbitrary OR expressions",
+      "LIKE/contains",
+      "Window/running totals",
+      "More than two grouping dimensions",
+      "More than three selected metrics",
+      "Several child-existence conditions",
+      "Combining above-average and HAVING",
+      "Dates are not an automatic archive switch",
+      "Unknown categorical allowlist values"
+    ]
+  },
+  "verification_tolerance": {
+    "integers": "exact",
+    "strings_and_nulls": "exact",
+    "currency_usd_absolute": 1e-06,
+    "other_numeric_relative": 1e-09,
+    "other_numeric_absolute": 1e-07
+  }
+}
