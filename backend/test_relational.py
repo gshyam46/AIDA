@@ -274,12 +274,12 @@ def test_part_to_whole_metadata_matches_actual_group_aggregation(fixture_sources
 
 
 def test_visual_additivity_metadata_does_not_change_semantic_projection(engines):
-    from backend.core.relational_semantic import _project_catalog
+    from backend.core.interpreter import project_catalog
     catalog = engines["warehouse"].catalog()
     without_visual_metadata = copy.deepcopy(catalog)
     for metric in without_visual_metadata["metrics"]:
         metric.pop("additive")
-    assert _project_catalog(catalog) == _project_catalog(without_visual_metadata)
+    assert project_catalog(catalog).text == project_catalog(without_visual_metadata).text
 
 
 def test_compiler_is_identical_across_python_hash_seeds(fixture_sources):

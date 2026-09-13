@@ -1,5 +1,7 @@
 # AIDA hybrid verification
 
+> **Historical record.** This evidence was produced by the pre-AIDA 4 single-call pipeline (`backend/core/semantic.py`, `scripts/evaluate_semantics.py`), which has been removed. Current behaviour is measured by `scripts/benchmark_nl.py`; see [BENCHMARK.md](BENCHMARK.md) and [SECURITY.md](SECURITY.md).
+
 The subsequent multi-table expansion is documented separately in [RELATIONAL_VERIFICATION.md](RELATIONAL_VERIFICATION.md). The evidence below records the earlier single-table baseline and is retained for comparison.
 
 Verification date: September 12, 2026. Windows, Python 3.13.14, Node 24.20.0, Intel Core Ultra 7 266V, 16 GB RAM and Intel Arc 140V Vulkan acceleration.

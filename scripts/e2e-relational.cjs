@@ -18,13 +18,13 @@ const sha256 = file => createHash('sha256').update(fs.readFileSync(path.join(roo
 const previousFile = process.env.AIDA_E2E_REUSE_QUERIES;
 const previous = previousFile ? JSON.parse(fs.readFileSync(path.resolve(root, previousFile), 'utf8')) : null;
 if (previous) {
-  for (const [key, file] of [['parser_sha256', 'backend/core/relational_semantic.py'], ['compiler_sha256', 'backend/core/relational.py']]) assert.equal(previous.provenance[key], sha256(file), 'Cannot reuse inference evidence after changing interpretation or compilation');
+  for (const [key, file] of [['parser_sha256', 'backend/core/interpreter.py'], ['compiler_sha256', 'backend/core/relational.py']]) assert.equal(previous.provenance[key], sha256(file), 'Cannot reuse inference evidence after changing interpretation or compilation');
   assert.equal(previous.cases.length, cases.length);
   assert(previous.cases.every(test => test.status === 'passed' && test.meta.model_calls === 1 && test.meta.total_tokens > 0), 'Reuse requires a complete uncached real-model query matrix');
 }
 const report = {started_at: new Date().toISOString(), base_url: base, real_model: true,
   provenance: {model_manifest: JSON.parse(fs.readFileSync(path.join(root, 'scripts/model-runtime.json'), 'utf8')),
-    parser_sha256: sha256('backend/core/relational_semantic.py'), compiler_sha256: sha256('backend/core/relational.py'),
+    parser_sha256: sha256('backend/core/interpreter.py'), compiler_sha256: sha256('backend/core/relational.py'),
     oracle_fixture_sha256: sha256('artifacts/relational-e2e-oracles.json'), browser_script_sha256: sha256('scripts/e2e-relational.cjs'),
     ...(previous ? {initial_uncached_report: previousFile, initial_uncached_report_sha256: sha256(previousFile), interpretation_mode: 'verified exact cache; every API response still checked'} : {interpretation_mode: 'uncached real model'})},
   cases: [], refusals: [], steps: [], browser_errors: [], external_requests: []};

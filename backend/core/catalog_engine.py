@@ -35,7 +35,7 @@ class CatalogEngine:
     def catalog(self) -> dict[str, Any]:
         manifest = self.manifest
         return {
-            "metrics": [{key: value for key, value in metric.items() if key in {"id", "label", "description", "format"}} for metric in self.metrics.values()],
+            "metrics": [{key: value for key, value in metric.items() if key in {"id", "label", "description", "format", "aggregate"}} for metric in self.metrics.values()],
             "dimensions": [{key: copy.deepcopy(value) for key, value in dimension.items() if key in {"id", "label", "values", "aliases"}} for dimension in self.dimensions.values()],
             "filter_values": {key: copy.deepcopy(value["values"]) for key, value in self.dimensions.items() if "values" in value},
             "examples": manifest["examples"] or [f"{metric['label']}" for metric in self.metrics.values()],

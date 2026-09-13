@@ -1,5 +1,7 @@
 # Relational query verification
 
+> **Historical record.** The interpretation evidence below came from the pre-AIDA 4 pipeline (`backend/core/relational_semantic.py`, `scripts/evaluate_relational.py`), which has been removed. The relational compiler, fixtures and oracles described here are still in use. Current interpretation results are in [BENCHMARK.md](BENCHMARK.md).
+
 September 12, 2026. This extends the earlier single-table demo while retaining local model interpretation followed by deterministic validation, SQL compilation and execution. The query matrix and complete browser workflows passed; their separate inference and cache evidence is recorded below.
 
 ## Databases and independent checks

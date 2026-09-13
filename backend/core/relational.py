@@ -314,7 +314,7 @@ class RelationalEngine:
         def public(item: dict[str, Any]) -> dict[str, Any]:
             return {key: copy.deepcopy(value) for key, value in item.items() if key in {"id", "label", "description", "format", "type", "values", "aliases"}}
         manifest = self.manifest
-        public_metrics = [{**public(metric), "additive": metric["aggregate"] in {"SUM", "COUNT"}} for metric in self.metrics.values()]
+        public_metrics = [{**public(metric), "aggregate": metric["aggregate"], "additive": metric["aggregate"] in {"SUM", "COUNT"}} for metric in self.metrics.values()]
         populations = [{"id": "primary", "label": "Current records", "description": "The primary fact table only."}]
         if manifest["fact"].get("archive_table"):
             populations.append({"id": "all", "label": "Current and archived records", "description": "Combine aligned current and archive fact rows. UNION ALL keeps every row; UNION removes exact duplicate fact rows."})

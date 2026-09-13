@@ -1,4 +1,4 @@
-"""API boundary tests; the parser below is explicitly a stub, not model evidence."""
+"""API boundary tests; the interpreter below is explicitly a stub, not model evidence."""
 import copy
 import json
 import sqlite3
@@ -7,11 +7,12 @@ from contextlib import closing
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.core.semantic import ModelUnavailable, SemanticResult
+from backend.core.interpreter import Interpretation
+from backend.core.llm import ModelUnavailable, SemanticClarification
 from backend.main import create_app
 
 
-class StubParser:
+class StubInterpreter:
     """Records API-to-interpreter wiring without network or model inference."""
     def __init__(self, plan=None, failure=None):
         self.plan = plan or {"metric": "tickets", "dimension": "team"}
@@ -19,23 +20,24 @@ class StubParser:
         self.calls = []
 
     def status(self):
-        return {"configured": True, "ready": True, "model": "explicit-api-test-stub", "inference_location": "local"}
+        return {"available": True, "status": "ready", "model": "explicit-api-test-stub", "inference_location": "local"}
 
-    def parse(self, question, catalog, as_of=None):
-        self.calls.append({"question": question, "catalog": copy.deepcopy(catalog), "as_of": as_of})
+    def interpret(self, question, catalog):
+        self.calls.append({"question": question, "catalog": copy.deepcopy(catalog), "as_of": catalog["dataset"]["as_of"]})
         if self.failure:
             raise self.failure
-        return SemanticResult(plan=copy.deepcopy(self.plan), ir={"kind": "api-test-stub"}, telemetry={"model_calls": 1, "interpretation_source": "api_test_stub", "input_tokens": 10, "output_tokens": 8})
+        return Interpretation(plan=copy.deepcopy(self.plan), calculations=[], post={}, notes=["Interpreted “requests” as Tickets."], mentions=[],
+                              ir={"kind": "api-test-stub"}, telemetry={"model_calls": 2, "interpretation_source": "api_test_stub", "prompt_tokens": 10, "completion_tokens": 8})
 
 
 @pytest.fixture
-def parser():
-    return StubParser()
+def interpreter():
+    return StubInterpreter()
 
 
 @pytest.fixture
-def client(tmp_path, parser):
-    with TestClient(create_app(tmp_path / "application", semantic_parser=parser, public_demo=False)) as instance:
+def client(tmp_path, interpreter):
+    with TestClient(create_app(tmp_path / "application", interpreter=interpreter, public_demo=False)) as instance:
         yield instance
 
 
@@ -58,7 +60,7 @@ def mapping():
     return {"name": "Supply snapshot", "table": "supply", "metrics": [{"id": "stock", "label": "Available stock", "description": "Sum of on-hand units across stored stock positions.", "aggregate": "SUM", "column": "on_hand"}], "dimensions": [{"id": "aisle", "label": "Aisle", "column": "aisle"}], "date_column": "checked_at", "as_of": "2026-08-31"}
 
 
-def test_saved_plan_version_cannot_silently_change_business_meaning(client, uploaded_bytes, parser):
+def test_saved_plan_version_cannot_silently_change_business_meaning(client, uploaded_bytes, interpreter):
     source_id = upload(client, uploaded_bytes)["id"]
     first = client.post(f"/api/v1/sources/{source_id}/configure", json=mapping()).json()
     request = {"source_id": source_id, "catalog_version": first["dataset"]["catalog_version"], "plan": {"metric": "stock"}}
@@ -69,12 +71,12 @@ def test_saved_plan_version_cannot_silently_change_business_meaning(client, uplo
     assert second["dataset"]["catalog_version"] != request["catalog_version"]
     stale = client.post("/api/v1/query", json=request).json()
     assert stale["success"] is False and stale["error_type"] == "catalog_changed"
-    assert "sql" not in stale and parser.calls == []
+    assert "sql" not in stale and interpreter.calls == []
     request["catalog_version"] = second["dataset"]["catalog_version"]
     assert client.post("/api/v1/query", json=request).json()["data"] == [{"value": 11.0}]
 
 
-def test_source_onboarding_roundtrip_to_bounded_aggregate(client, uploaded_bytes, parser):
+def test_source_onboarding_roundtrip_to_bounded_aggregate(client, uploaded_bytes, interpreter):
     sources = client.get("/api/v1/sources").json()
     assert {source["id"] for source in sources["sources"]} == {"commerce", "support", "warehouse", "billing", "chinook"}
     assert sources["uploads_enabled"]
@@ -95,36 +97,42 @@ def test_source_onboarding_roundtrip_to_bounded_aggregate(client, uploaded_bytes
     assert response.json()["data"] == [{"aisle": "Garden", "value": 25}, {"aisle": "Tools", "value": 8}]
     assert response.json()["source_id"] == source_id
     assert response.json()["meta"]["model_calls"] == 0
-    assert parser.calls == []
+    assert interpreter.calls == []
     assert client.get("/api/v1/catalog", params={"source_id": source_id}).json()["dataset"]["id"] == source_id
 
 
-def test_question_uses_selected_catalog_and_its_actual_reference_date(client, parser):
+def test_question_uses_selected_catalog_and_its_actual_reference_date(client, interpreter):
     response = client.post("/api/v1/query", json={"source_id": "support", "question": "Count support requests for each team"})
     assert response.status_code == 200 and response.json()["success"], response.text
     assert response.json()["data"] == [{"team": "Accounts", "value": 56}, {"team": "Billing", "value": 56}, {"team": "Technical", "value": 56}]
-    assert response.json()["meta"]["model_calls"] == 1
+    assert response.json()["meta"]["model_calls"] == 2
     assert response.json()["meta"]["interpretation_source"] == "api_test_stub"
-    assert parser.calls[0]["as_of"] == "2026-06-30"
-    assert parser.calls[0]["catalog"]["dataset"]["id"] == "support"
-    assert {metric["id"] for metric in parser.calls[0]["catalog"]["metrics"]} == {"tickets", "resolution_time"}
+    assert response.json()["interpretation"]["notes"] == ["Interpreted “requests” as Tickets."]
+    assert interpreter.calls[0]["as_of"] == "2026-06-30"
+    assert interpreter.calls[0]["catalog"]["dataset"]["id"] == "support"
+    assert {metric["id"] for metric in interpreter.calls[0]["catalog"]["metrics"]} == {"tickets", "resolution_time"}
 
 
-def test_model_plan_cannot_bypass_source_mapping(client, parser):
-    parser.plan = {"metric": "revenue", "dimension": "region"}
+def test_model_plan_cannot_bypass_source_mapping(client, interpreter):
+    interpreter.plan = {"metric": "revenue", "dimension": "region"}
     response = client.post("/api/v1/query", json={"source_id": "support", "question": "Show revenue by region"})
     assert response.status_code == 200
-    assert not response.json()["success"]
-    assert response.json()["error_type"] == "clarification_required"
-    parser.plan = {"metric": "tickets", "sql": "SELECT * FROM support_tickets"}
+    assert not response.json()["success"] and response.json()["error_type"] == "clarification_required"
+    interpreter.plan = {"metric": "tickets", "sql": "SELECT * FROM support_tickets"}
     response = client.post("/api/v1/query", json={"source_id": "support", "question": "Return everything"})
-    assert not response.json()["success"]
-    assert "sql" not in response.json()
+    assert not response.json()["success"] and "sql" not in response.json()
+
+
+def test_clarification_options_and_reason_reach_the_client(tmp_path):
+    failure = SemanticClarification("Which country do you mean?", options=["Units sold by customer country", "Units sold by billing country"], reason="ambiguous")
+    with TestClient(create_app(tmp_path, interpreter=StubInterpreter(failure=failure), public_demo=False)) as client:
+        response = client.post("/api/v1/query", json={"source_id": "chinook", "question": "Units sold by country"}).json()
+    assert response["error_type"] == "clarification_required" and response["clarification_reason"] == "ambiguous"
+    assert response["suggestions"] == ["Units sold by customer country", "Units sold by billing country"]
 
 
 def test_model_unavailable_is_explicit_and_builder_remains_available(tmp_path):
-    parser = StubParser(failure=ModelUnavailable("The local semantic model is unavailable."))
-    with TestClient(create_app(tmp_path, semantic_parser=parser, public_demo=False)) as client:
+    with TestClient(create_app(tmp_path, interpreter=StubInterpreter(failure=ModelUnavailable("The semantic model is unavailable.")), public_demo=False)) as client:
         response = client.post("/api/v1/query", json={"source_id": "support", "question": "Count support tickets"})
         assert response.json()["error_type"] == "model_unavailable"
         assert response.json()["data"] == []
@@ -152,7 +160,7 @@ def test_query_mapping_and_upload_body_limits(client):
 
 
 def test_public_mode_rejects_uploads_and_mapping_before_reading_body(tmp_path, uploaded_bytes):
-    with TestClient(create_app(tmp_path, semantic_parser=StubParser(), public_demo=True)) as client:
+    with TestClient(create_app(tmp_path, interpreter=StubInterpreter(), public_demo=True)) as client:
         assert client.get("/api/v1/sources").json()["uploads_enabled"] is False
         assert client.post("/api/v1/sources", content=uploaded_bytes, headers={"Content-Type": "application/octet-stream"}).status_code == 403
         assert client.post("/api/v1/sources/support/configure", json=mapping()).status_code == 403
@@ -173,8 +181,7 @@ def test_unknown_source_and_invalid_mapping_return_controlled_errors(client, upl
     source_id = upload(client, uploaded_bytes)["id"]
     invalid = mapping()
     invalid["metrics"][0]["aggregate"] = []
-    response = client.post(f"/api/v1/sources/{source_id}/configure", json=invalid)
-    assert response.status_code == 400
+    assert client.post(f"/api/v1/sources/{source_id}/configure", json=invalid).status_code == 400
     invalid = mapping()
     invalid["dimensions"][0]["column"] = "buyer_email"
     response = client.post(f"/api/v1/sources/{source_id}/configure", json=invalid)
@@ -183,12 +190,12 @@ def test_unknown_source_and_invalid_mapping_return_controlled_errors(client, upl
 
 def test_public_restart_hides_persisted_private_sources_from_every_route(tmp_path, uploaded_bytes):
     directory = tmp_path / "persisted"
-    parser = StubParser()
-    with TestClient(create_app(directory, semantic_parser=parser, public_demo=False)) as local:
+    interpreter = StubInterpreter()
+    with TestClient(create_app(directory, interpreter=interpreter, public_demo=False)) as local:
         approved_id = upload(local, uploaded_bytes)["id"]
         assert local.post(f"/api/v1/sources/{approved_id}/configure", json=mapping()).status_code == 200
         pending_id = upload(local, uploaded_bytes)["id"]
-    with TestClient(create_app(directory, semantic_parser=parser, public_demo=True)) as public:
+    with TestClient(create_app(directory, interpreter=interpreter, public_demo=True)) as public:
         listed = public.get("/api/v1/sources").json()
         assert {source["id"] for source in listed["sources"]} == {"commerce", "support", "warehouse", "billing", "chinook"}
         assert "Supply snapshot" not in json.dumps(listed)
@@ -202,4 +209,4 @@ def test_public_restart_hides_persisted_private_sources_from_every_route(tmp_pat
             assert public.post("/api/v1/query", json={"source_id": source_id, "plan": {"metric": "stock"}}).status_code == 400
             assert public.post("/api/v1/query", json={"source_id": source_id, "question": "Show available stock"}).status_code == 400
             assert public.post(f"/api/v1/sources/{source_id}/configure", json=mapping()).status_code == 403
-        assert parser.calls == []
+        assert interpreter.calls == []

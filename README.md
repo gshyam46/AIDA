@@ -1,204 +1,166 @@
-# AIDA — local language understanding, controlled database analytics
+# AIDA — Artificial Intelligence Data Analyst
 
-AIDA uses a small local language model to interpret a business question, then validates an explicit plan and compiles read-only SQL in code. The result becomes an interactive chart, table or saved dashboard view.
+AIDA answers business questions over approved databases. A language model interprets what you mean and resolves your words to approved business definitions; deterministic code validates that interpretation and compiles read-only SQL. Every answer arrives as an interactive chart, a searchable table, the exact SQL and its lineage.
 
-**A bounded model interprets language; code controls execution.** Explicit business definitions, source selection and deterministic compilation keep database access constrained. [Relational verification](docs/RELATIONAL_VERIFICATION.md) records the multi-table model, independent SQL and browser checks; [VERIFICATION.md](docs/VERIFICATION.md) retains the original single-table baseline.
+**Language understands. Code verifies.** The model never writes SQL and never sees database rows. It returns a structured plan over temporary catalog ids, and code refuses any plan that quotes words that are not in the question, drops or adds a condition, uses an unapproved value or cites a number the user never typed.
 
-**Current reliability:** the [new 50-question transfer assessment](docs/BLIND_EVALUATION.md) passed all 40 explicit SQL plans but answered only **19/40 supported natural-language questions correctly** and incorrectly executed **6/10 unsupported or ambiguous requests**. This is a working local demonstration with documented language failures; it does **not** pass the release gate for reliable querying across new databases. The frozen results, repeatability/privacy measurements and prioritized fixes are preserved in that report.
+- [Benchmark report](docs/BENCHMARK.md): model selection, before/after comparison and cost.
+- [Test data and queries](docs/TEST_QUERIES.md): the sample databases and questions to try, with measured pass/fail.
+- [Security controls and attack tests](docs/SECURITY.md).
+- [Model, test data and repository status](docs/MODEL_TEST_DATA_AND_REPOSITORY.md).
 
-[Model, test data and repository status](docs/MODEL_TEST_DATA_AND_REPOSITORY.md) explains the pinned model choice, exactly what enters model prompts, which six databases to use for each test layer, how to evaluate another model, and which repository cleanup remains before publication.
+## What changed in AIDA 4
 
-## Start on Windows
+| Area | Before | AIDA 4 |
+| --- | --- | --- |
+| Interpretation | One model call plus hand-written language rules and candidate lists | LLM-first pipeline: Prompt Guard screen → resolve names → plan → code validation, with one optional repair round |
+| Unresolved or ambiguous names | Refused, or failed silently | The resolver asks you to choose between catalog items and returns rewritten example questions |
+| Calculations | Only pre-approved measures | Ratios, differences, share of total, running totals and month-over-month change, computed in code after aggregation |
+| Time | Copied phrases parsed by code | Structured calendar, relative, trailing and range periods resolved against the dataset's as-of date; future periods are refused |
+| Model provider | Local Qwen3-4B only | Groq (default) or the local llama.cpp runtime |
+| Accounts | None | Sign-up, sign-in, onboarding, owner role, private uploads per account |
+| Abuse controls | Loopback only | Rate limits, lockouts, CSRF protection, misuse pauses, audit log, security headers |
+| Results | Chart and plain table | Chart types that follow the data (including calculations), plus table search, per-column filters, sorting, paging and CSV export of the filtered rows |
+| Website | Workspace only | Landing page, sign-in, sign-up, four-step onboarding, then the workspace at `/workspace` |
 
-Install Python 3.11+ and Node.js 22.9+, then run from this repository:
+## Run it on Windows
+
+Requirements: Python 3.11+, Node.js 22.9+ and a Groq API key.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+Copy-Item backend\.env.example backend\.env   # then put your key in GROQ_API_KEY
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open **http://127.0.0.1:3000**. The launcher installs dependencies, downloads and verifies the pinned local runtime and model, builds the frontend, and starts the model, API and website. The initial model download is approximately **2.5 GB**, plus the runtime and application dependencies. Setup requires internet access; inference runs on this computer without a hosted inference key.
-
-The default model is **Qwen3-4B-Instruct-2507**, using the **Q4_K_M** GGUF quantization with **llama.cpp**. Download revisions, SHA-256 hashes, licenses and upstream provenance are pinned in [scripts/model-runtime.json](scripts/model-runtime.json). The model weights come from the [LM Studio community quantization repository](https://huggingface.co/lmstudio-community/Qwen3-4B-Instruct-2507-GGUF), derived from [Qwen's upstream model](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507). The inference runtime is [llama.cpp](https://github.com/ggml-org/llama.cpp).
-
-Useful startup options:
+In a second terminal:
 
 ```powershell
-# Reuse installed dependencies, model files and the existing frontend build.
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -SkipInstall -SkipBuild
-
-# Use CPU inference if Vulkan/GPU initialization fails.
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -GpuLayers 0
-
-# Expose only the bundled demo sources through the application.
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -PublicDemo
-
-# Stop this demo's model, backend and frontend.
-powershell -ExecutionPolicy Bypass -File scripts/stop-demo.ps1
+Set-Location frontend
+npm ci
+npm run dev
 ```
 
-The services bind to loopback: website **3000**, backend **8000**, and local inference **8081**. Logs and process records are under `artifacts/`; model files are under `.runtime/`. CPU inference can take considerably longer than SQL execution. The launcher disables llama.cpp's auxiliary multi-prompt RAM cache (`--cache-ram 0`); AIDA still caches exact semantic plans. The interface reports model availability and separates model calls, token usage, interpretation cache hits and database execution.
+Open **http://localhost:3000**, create an account (the first account becomes the owner), complete onboarding and ask a question. If port 8000 is taken, start the backend on another port and set `BACKEND_URL`, for example `set BACKEND_URL=http://127.0.0.1:8010&& npm run dev`.
+
+`backend/.env` is gitignored. The settings that matter:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `AIDA_MODEL_PROVIDER` | `local` | `groq` for hosted inference, `local` for llama.cpp on `127.0.0.1:8081` |
+| `GROQ_API_KEY` | none | Your Groq key; never returned by the API |
+| `AIDA_GROQ_MODEL` | `openai/gpt-oss-120b` | Interpretation model; see the benchmark report before changing it |
+| `AIDA_PIPELINE` | `two_stage` | `two_stage` (resolve, then plan) or `single` |
+| `AIDA_REPAIR_ATTEMPTS` | `1` | Send the exact rejection back to the model once before asking you to rephrase |
+| `AIDA_GUARD_MODEL` | Prompt Guard 2 86M | Prompt-attack screen on Groq; empty disables it |
+| `AIDA_REQUIRE_AUTH` | `1` | Require accounts for every data endpoint |
+| `AIDA_COOKIE_SECURE` | `0` | Set to `1` behind HTTPS |
+| `AIDA_ALLOW_SIGNUP` | `1` | Set to `0` to stop new registrations |
+
+The previous local-model launcher (`scripts/start-demo.ps1`, Qwen3-4B through llama.cpp) is still present for `AIDA_MODEL_PROVIDER=local`. It has not been re-verified end to end with AIDA 4, and the benchmark numbers in this repository were measured on Groq.
+
+## Deploy the public landing page (preview mode)
+
+The landing page and `/benchmarks` can be published on their own, for example to link from a portfolio. Set `NEXT_PUBLIC_AIDA_MODE=preview` at build time: sign-in, sign-up, onboarding and the workspace show a private-beta notice, the landing calls to action point to the benchmarks, and the API proxy returns 503 instead of contacting a backend. No backend, database or model key is needed.
+
+On Vercel (free Hobby plan):
+
+1. **Add New → Project**, import this GitHub repository, and set **Root Directory** to `frontend`.
+2. Add the environment variable `NEXT_PUBLIC_AIDA_MODE` = `preview`.
+3. Deploy. To publish from a branch other than the default, set it under **Settings → Environments → Production → Branch Tracking**.
+4. Optionally add a subdomain such as `aida.yourdomain.com` under **Settings → Domains** and create the CNAME record Vercel shows at your DNS provider. Subdomains cost nothing beyond the domain itself.
+
+With the Vercel CLI instead: run `vercel login` once, then from `frontend/` run `vercel deploy --prod --build-env NEXT_PUBLIC_AIDA_MODE=preview --env NEXT_PUBLIC_AIDA_MODE=preview`. `frontend/.vercelignore` keeps local `.env` files out of the upload.
+
+Rebuild without the variable (or deploy the full stack) to enable accounts and the workspace.
 
 ## How a question becomes a result
 
 ```mermaid
 flowchart LR
-    Q[Question] --> M[Local 4B language model]
-    C[Approved business catalog] --> M
-    M --> I[Extracted fields and grounded unresolved spans]
-    I --> V[Code decides readiness and normalizes dates]
-    B[Visual builder / chart interaction / saved plan] --> V
-    V --> S[Code-owned SQL compiler]
-    S --> D[Read-only local SQLite]
-    D --> R[Chart / table / dashboard]
+    Q[Question] --> G[Prompt Guard 2]
+    G --> R[LLM: resolve names<br/>mentions with catalog ids]
+    C[Approved catalog<br/>labels, definitions, values] --> R
+    R --> P[LLM: plan<br/>structured intent]
+    P --> V[Code validation<br/>grounding, coverage, values, numbers]
+    V -- rejected once --> P
+    V --> S[Deterministic SQL compiler]
+    S --> D[Read-only SQLite]
+    D --> K[Calculations in code]
+    K --> O[Chart · table · SQL · lineage]
+    B[Visual builder / saved dashboard] --> S
 ```
 
-The model receives the question and an allowlisted projection of approved metric definitions, dimension labels, and explicitly approved categorical values and aliases. It receives no database rows, result samples, arbitrary schema dump, SQL connection details or filesystem paths. Metric and dimension identifiers become temporary tokens such as `m0` and `d0`. Constrained output permits canonical filter values grounded in the question and exact copied temporal spans; code resolves calendar dates. The question itself may contain sensitive text, so the configured inference endpoint is restricted to loopback, with proxies and redirects disabled.
+1. **Screen.** Prompt Guard 2 scores the question. Instruction-override attempts stop here.
+2. **Resolve.** The model lists every meaningful phrase with its role (measure, grouping, filter, threshold, time, sort, limit, calculation and so on), the catalog id it maps to, and whether the match was exact, a synonym or inferred. When a name is ambiguous or missing, it returns a clarification with options instead.
+3. **Plan.** The model turns the validated mentions into a structured intent.
+4. **Validate.** Code checks that each quoted phrase is in the question, that every phrase is represented and nothing was added, that ids and values are approved, that numbers were typed by the user, and that the request fits the source's capabilities. One repair round can fix a rejected reply.
+5. **Execute.** The existing compilers build parameterized SQL over approved tables and relationships. Calculations run in Python on the aggregated rows.
 
-Each uncached question uses at most one bounded model request. The model extracts measures, groupings, filters, time expression, sort and limit, plus any unresolved phrase copied from the question with an allowed reason. Relational catalogs also support aggregate thresholds, approved related-record checks, above-average comparisons and current/archive population selection. The model does not emit SQL, choose physical join keys, decide readiness or invent follow-up questions. Code validates all fields and unresolved spans, chooses the required approved table paths, and decides whether execution is allowed. Unsupported or malformed intent returns a code-owned clarification; model failure is visible and has no hidden hosted-model or regex fallback.
+The model receives the question and a compact projection of the approved catalog: temporary ids, labels, plain-language definitions, allowed values, the dataset date range and capability limits. It never receives rows, results, SQL, table or column names, file paths or credentials. With the Groq provider this projection and the question leave the server over HTTPS, which onboarding explains and asks consent for.
 
-Omitted dates and filters mean the full available source. Grouping by month does not require a date window. Fixed metric conditions still apply within the requested subset: average order value filtered to Pending is valid and returns null because that metric only includes completed orders.
+The visual builder, chart drilldowns and saved dashboards execute plans directly with no model call.
 
-**Deterministic execution does not make language interpretation infallible.** The model can still misunderstand a valid request. Temperature zero, a fixed seed and structural validation improve repeatability and constrain execution, but do not prove semantic correctness. Inspect the displayed metric definition, filters and date range. The verification report distinguishes actual model evaluations from stub-based API tests.
+## Sample sources
 
-The visual builder, chart interactions and saved dashboard plans bypass language interpretation. Accepted question interpretations and canonical execution plans use bounded caches. Cache hits reduce repeated inference; local hardware, electricity and hosting still cost money even though there are no hosted model API charges.
+| Source | Kind | Good questions to start with |
+| --- | --- | --- |
+| Commerce demo | Synthetic, single table | `Top 3 categories by revenue in Q3 2025` · `Share of revenue by region` |
+| Support operations | Synthetic, single table | `Tickets by team` · `Average resolution time by priority` |
+| Retail warehouse (`warehouse`) | Synthetic, multi-table with archives | `Revenue per unit by category, highest first` · `Units share by region` |
+| SaaS billing (`billing`) | Synthetic, multi-table | `Billed amount per seat by plan tier` |
+| Chinook music store (`chinook`) | Public 11-table sample | `Units sold by album for customer country USA` |
+| Logistics sample | Synthetic 12-table (fixtures/blind_logistics), installed privately during onboarding | `Handling charges by carrier for Express service` |
 
-## Five independent demo sources
+[docs/TEST_QUERIES.md](docs/TEST_QUERIES.md) lists the benchmark questions for each source with their measured outcomes.
 
-| Source | Approved metrics | Groupings | Relative-date reference |
-| --- | --- | --- | --- |
-| Commerce demo | Revenue, orders, average order value | Region, category, channel, status, month | December 31, 2025 |
-| Support operations demo | Tickets, average resolution time | Team, priority, state, month | June 30, 2026 |
-| Retail warehouse (`warehouse`) | Revenue, units, distinct orders, average line value, order lines | Region, category, order status, sales channel, customer segment, month | September 12, 2026 |
-| SaaS billing (`billing`) | Billed amount, seats, distinct invoices, average line amount, billing lines | Account segment, plan tier, invoice status, billing country, month | September 12, 2026 |
-| Chinook music store (`chinook`) | Units sold, average sale price, distinct invoices, invoice lines | Customer country, billing country, album, month | December 31, 2013 |
+## Upload your own SQLite snapshot
 
-Commerce revenue sums completed order amounts; other statuses contribute zero. Order count includes all statuses unless filtered. Average order value includes completed orders only. Monetary values are stored in cents and displayed in USD.
+Open **Data catalog**, upload a SQLite snapshot of up to 20 MB and approve a single-table mapping or a relational catalog. Inspection reads metadata only. Uploaded sources are visible only to the account that uploaded them and are unavailable until their catalog is approved. Columns whose names suggest personal identifiers are excluded by default; review the catalog before approving it, because name-based exclusion is not a privacy guarantee.
 
-Support ticket count includes open and resolved tickets. Average resolution time uses resolution hours from resolved tickets; open tickets are excluded. Switching sources changes the catalog, date reference, executed database and visible saved dashboard cards.
-
-Try `Revenue by region`, `Revenue in West last month`, and `Average order value by channel`. Then switch to Support operations and try `Tickets by team`, `Average resolution time by priority`, or `Tickets last month`. These are intended walkthrough examples; consult the live evaluation report for measured outcomes.
-
-The retail and billing fixtures contain multiple related tables, same-named status/amount columns, missing foreign keys, nullable measures, duplicate child events, and overlapping current/archive records. Retail revenue is the sum of **line totals across all order statuses unless filtered**, which differs from the original Commerce demo definition. Billing measures operate at invoice-line grain. Counts of orders or invoices use approved distinct identifiers, avoiding accidental multiplication across line items.
-
-Chinook is an unmodified public music-store sample with 11 tables, bundled with its [MIT license and pinned provenance](fixtures/chinook/README.md). Its reporting catalog approves selected relationships; it does not expose every physical column. `Average sale price by customer country where catalog price is greater than 1` deliberately uses the sale price from invoice lines and a filter on the track catalog price. `Units sold by album for customer country USA` requires two separate join paths. Result lineage shows the actual tables, columns and keys used.
-
-Relational examples include `Revenue and units by region`, `Revenue by region and category for completed orders`, `Categories with revenue above 30000`, `Revenue by category for lines with damaged returns`, `Regions with above-average revenue`, and `Revenue by month including current and archived records`. Each question still produces one semantic intent; the compiler owns joins, subqueries and set operations.
-
-## Onboard a local SQLite snapshot
-
-In local mode, open **Data catalog** and upload a standalone SQLite database snapshot, up to **20 MB**. Inspection reads table and column metadata without sampling rows. The application assigns an opaque source ID; the uploaded filename cannot choose a server path.
-
-Choose **Single table** to approve a reporting table, metric labels and business definitions, numeric measure columns, categorical dimensions, and an optional date column with an explicit reference date. For multiple tables, choose **Relational catalog**, inspect declared columns/keys, and paste an owner-reviewed version 2 catalog JSON. The server validates physical mappings and join cardinality against the snapshot. The source remains unavailable to queries until its catalog is accepted. All queries and dashboard cards carry its source ID and catalog version.
-
-Single-table mappings support `COUNT`, `SUM`, `AVG`, `MIN` and `MAX`. Relational manifests additionally support approved `COUNT_DISTINCT` measures. A scale divisor converts stored units, such as 100 for cents. See the explicit manifests in [relational_demo.py](backend/core/relational_demo.py) and [chinook.py](backend/core/chinook.py) for the version 2 contract. Relational mappings define one fact-row grain, directed many-to-one relationships with verified unique target keys, optional related-record populations for EXISTS, and an optional compatible archive table. The application never guesses that a numeric identifier is revenue or invents relationships from similar column names.
-
-Primary keys and columns whose names suggest personal identifiers, credentials or free text are excluded by default. This is a conservative naming heuristic plus explicit owner approval, **not an automatic guarantee that every permitted column is anonymous**. Review dimensions and prepare de-identified reporting tables where necessary. There is no minimum-group-size or differential-privacy mechanism.
-
-Snapshots must contain ordinary tables and indexes; views, triggers, virtual tables and generated columns are rejected. Date queries require ISO `YYYY-MM-DD` dates or ISO timestamps and compare their calendar date portion. Nonnumeric values in an approved numeric measure cause a controlled error.
-
-Private snapshots and their approved manifests persist in the configured data directory. They are static uploads, not live connections to an operational database. Authentication, tenant authorization, PostgreSQL/MySQL connectors, live refresh and shared server-side dashboards are not implemented.
-
-## Interactive analysis and boundaries
-
-The explorer provides charts, tables, CSV export, visible metric definitions, SQL, bound parameters and table/column lineage. Relational analysis supports up to **three measures and two groupings**, AND-combined equality/inequality/IN filters, numeric record comparisons, inclusive dates, ordering and up to 100 result groups. Aggregate thresholds compile to HAVING. Related-record inclusion/exclusion compiles to EXISTS/NOT EXISTS, so repeated child events do not multiply amounts. Above-average group comparisons use a subquery over grouped results. An approved current/archive population compiles to UNION ALL or whole-record UNION before aggregation. The original single-table builder remains available for simpler sources.
-
-Chart choices depend on the returned data: bars work for grouped results, multiple measures have separately labeled scales, monthly results support line and area charts, an explicitly additive, nonnegative single measure across at most 12 groups supports a donut, and two numeric measures support a scatter plot. Averages and distinct counts are excluded from donut charts because their group values cannot be summed into a meaningful total. Missing measures stay missing, temporal charts retain gaps, and charts with incompatible data are not offered. Saved dashboard cards retain the source ID, catalog version, query plan and chart choice in this browser and execute that plan again when refreshed. Chart drilldowns update a structured filter directly without model inference.
-
-The relational compiler is bounded to one approved fact grain and directed, verified relationships. Arbitrary SQL, arbitrary user-defined joins, unrestricted OR expressions, window functions, free-form nested subqueries, cross-database joins and unspecified calculations are outside this demo. Supported subqueries and set operations are explicit plan operations, not an open SQL-generation surface.
-
-Dashboard storage contains no result rows, but labels and filter values can still be sensitive. CSV export intentionally writes the displayed aggregate results to the user's device. Aggregates can also be sensitive; read-only execution prevents writes, not every possible inference about a dataset.
-
-SQL uses quoted identifiers from the approved source manifest and bound values. SQLite runs in read-only and query-only mode with an authorizer, restricted tables/columns/functions, a two-second execution deadline and a 100-row result bound. Uploaded snapshots have separate identities and cached plans include their source and catalog version.
-
-## Demonstration and deployment status
-
-Use [DEMO_GUIDE.md](docs/DEMO_GUIDE.md) for the product walkthrough. Run with `-PublicDemo` for a bundled-data demonstration: private sources are hidden, and upload/configuration endpoints are disabled. Bundled sources include synthetic fixtures and the public Chinook sample. That option still starts the services on loopback; it does not deploy a public website.
-
-A public deployment needs a configured hosting target, HTTPS and resource/rate controls. Keep the model and backend private. Docker packaging is present but its execution has not been verified here; it is not presented as a tested one-command deployment. No public URL is created by the local launcher.
-
-## Verify the current implementation
-
-From the repository root:
+## Verify
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend -q
+.\.venv\Scripts\python.exe -m pytest backend -q          # 323 tests, including 32 attack and misuse tests
 .\.venv\Scripts\python.exe validate_structure.py
+Set-Location frontend; npm run typecheck; npm run build; Set-Location ..
 ```
 
-In `frontend/`:
+Real-model benchmark (uses your Groq quota; resumable across rate-limit windows):
 
 ```powershell
-npm.cmd run build
-npm.cmd run typecheck
-node scripts/check-relational-presentation.cjs
+.\.venv\Scripts\python.exe scripts/benchmark_nl.py --label my-run --subset selection
+.\.venv\Scripts\python.exe scripts/benchmark_nl.py --label my-run --resume --patience 1800
 ```
 
-On Windows, stop the frontend before rebuilding if its running standalone server locks `.next/standalone`. The packaged stop/start commands below stop and restart only this demo's verified processes.
-
-With the local model running, execute the suites sequentially:
+Browser journey for accounts, onboarding and the workspace (backend and frontend running):
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite acceptance --output artifacts/semantic-acceptance.json
-.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite regression --output artifacts/semantic-evaluation.json
-.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite challenge-regression --output artifacts/semantic-challenge-regression.json
-.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite forward --output artifacts/semantic-forward.json
+$env:AIDA_BASE_URL = "http://localhost:3000"; node scripts/e2e-auth.cjs
 ```
 
-The acceptance suite covers all 16 starter questions plus six browser-workflow questions. For the browser test, restart the packaged demo to clear backend interpretation caches, then create the synthetic upload fixture:
+`scripts/e2e.cjs`, `scripts/e2e-blind.cjs` and `scripts/e2e-relational.cjs` are browser suites from the single-call local-model version. They have not been updated for accounts or the two-stage pipeline.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/stop-demo.ps1
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -SkipInstall -SkipBuild
-.\.venv\Scripts\python.exe scripts/create-e2e-source.py
-node scripts/e2e.cjs
-```
+## API
 
-To verify relational inference and complete browser workflows, run the actual model evaluator first. Its expected rows come from independently authored SQL; expected plans and oracle rows are never sent to the model:
-
-```powershell
-.\.venv\Scripts\python.exe scripts/evaluate_relational.py --suite all --output artifacts/relational-evaluation.json --label regression
-.\.venv\Scripts\python.exe scripts/prepare-relational-e2e.py
-
-# Clear interpretation caches before the relational browser journey.
-powershell -ExecutionPolicy Bypass -File scripts/stop-demo.ps1
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -SkipInstall -SkipBuild
-node scripts/e2e-relational.cjs
-```
-
-Keep the model evaluation and both browser suites sequential, with a fresh backend before each browser suite. The relational checks cover different join paths, misleading same-named columns, aggregation grain, record and aggregate filters, related-record subqueries, average comparisons, set operations, chart presentations and dashboard refresh. See the verification report for the current results and any failing cases; these fixed regression cases are not a general accuracy guarantee.
-
-Use local mode for the full browser journey because it includes SQLite onboarding. Add `-GpuLayers 0` to the restart command when using CPU inference. Keep the backend fresh until the browser test starts so its first-question cache assertion remains meaningful. Do not run model evaluations and browser tests concurrently; local inference admits one active request. The semantic evaluation checks real inference against expected plans and independently written SQL over both demo schemas. Parser-stub tests prove API wiring and failure handling only. Exact counts, timings, environment and remaining failures are maintained in [VERIFICATION.md](docs/VERIFICATION.md).
-
-## API examples
+All data endpoints require a session cookie when authentication is enabled, and every write needs the `X-AIDA-Request: 1` header.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/v1/health` | API health and current model status |
-| `GET /api/v1/sources` | Available sources and upload-mode status |
-| `POST /api/v1/sources` | Local-mode binary SQLite upload; `application/octet-stream` and optional `X-Source-Name` |
-| `GET /api/v1/sources/{id}` | Inspect uploaded schema metadata |
-| `POST /api/v1/sources/{id}/configure` | Save explicit reporting mappings |
-| `GET /api/v1/catalog?source_id=support` | Approved source catalog |
-| `POST /api/v1/query` | A source ID and either a question or a plan |
-| `GET /api/v1/examples?source_id=support` | Source-specific starter questions |
+| `GET /api/v1/health` | Health, model status and whether authentication is required |
+| `GET /api/v1/auth/session` | Current user and onboarding state |
+| `POST /api/v1/auth/signup`, `/auth/login`, `/auth/logout` | Accounts and sessions |
+| `POST /api/v1/onboarding` | Save onboarding; optionally installs the private logistics sample |
+| `GET /api/v1/security/events` | Owner-only security event log |
+| `GET /api/v1/sources` · `POST /api/v1/sources` | List sources · upload a SQLite snapshot |
+| `GET /api/v1/sources/{id}` · `POST /api/v1/sources/{id}/configure` | Inspect · approve a catalog |
+| `POST /api/v1/samples/logistics` | Install the logistics sample for this account |
+| `GET /api/v1/catalog?source_id=…` · `GET /api/v1/examples?source_id=…` | Approved catalog · starter questions |
+| `POST /api/v1/query` | `{"source_id", "question"}` or `{"source_id", "plan"}` |
 
-```json
-{"source_id":"support","question":"Average resolution time by priority"}
-```
+A successful interpreted answer includes `data`, `plan` (with any `calculations`), `sql`, `parameters`, `chart`, `lineage`, `interpretation` (notes and resolved mentions), `semantic_ir` and `meta` (model calls, tokens, latency and estimated cost). A clarification returns `success: false` with `clarification_reason` and `suggestions`. Rate limits and misuse pauses return HTTP 429 with `Retry-After`.
 
-```json
-{
-  "source_id": "commerce",
-  "plan": {
-    "metric": "revenue",
-    "dimension": "category",
-    "filters": {"region": "West"},
-    "date_from": "2025-10-01",
-    "date_to": "2025-12-31",
-    "sort": "value_desc",
-    "limit": 5
-  }
-}
-```
+---
 
-A successful response contains `source_id`, `data`, `plan`, `sql`, `parameters`, `chart`, `explanation` and `meta`; interpreted questions also include `semantic_ir`. Unsupported meaning returns `success:false` with a clarification. Missing inference returns `model_unavailable`; malformed request shapes use HTTP 422. Backend interactive API documentation is at `http://127.0.0.1:8000/docs`.
+Designed and built by Ghanashyam.

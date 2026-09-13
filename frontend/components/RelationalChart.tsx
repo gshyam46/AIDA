@@ -9,7 +9,7 @@ export function relationalChartTypes(result: QueryResponse, catalog?: Catalog | 
   const {metrics, dimensions} = result.plan, rows = result.data
   if (!dimensions.length) return ['stat']
   const types = ['bar'], metric = metrics[0]
-  if (metrics.length === 1 && dimensions.length === 1 && (dimensions[0] === 'month' || rows.every(row => /^\d{4}-\d{2}(?:-\d{2})?$/.test(String(row[dimensions[0]]))))) types.push('line', 'area')
+  if ((metrics.length === 1 || !!result.calculations?.length) && dimensions.length === 1 && (dimensions[0] === 'month' || rows.every(row => /^\d{4}-\d{2}(?:-\d{2})?$/.test(String(row[dimensions[0]]))))) types.push('line', 'area')
   if (catalog?.metrics.find(item => item.id === metric)?.additive === true && metrics.length === 1 && dimensions.length === 1 && rows.length <= 12 && rows.every(row => typeof row[metric] === 'number' && Number(row[metric]) >= 0) && rows.reduce((sum, row) => sum + Number(row[metric]), 0) > 0) types.push('donut')
   if (metrics.length === 2 && dimensions.length <= 2 && rows.filter(row => metrics.every(id => typeof row[id] === 'number' && Number.isFinite(row[id]))).length >= 2) types.push('scatter')
   return types
