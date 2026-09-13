@@ -292,6 +292,17 @@
 .bench-explorer{padding:0;overflow:hidden}
 .bench-method{margin-top:26px;display:grid;gap:12px;padding-left:20px;font-size:15px;line-height:1.7;color:#35493c;max-width:900px}
 .bench-empty{font-size:13px;color:#4f6356}
+.bench-dark{background:var(--forest);color:#e7f0e5}
+.bench-dark .section-eyebrow{color:#9fc0a8}
+.bench-dark .section-title{color:#f2f8ee}
+.bench-dark .section-lead,.bench-dark>.section-inner>.bench-note{color:#b8cbbd}
+.bench-dark>.section-inner>.bench-note code{font-size:12px;background:#ffffff12;border-radius:6px;padding:2px 6px;color:#dcebdf}
+.bench-table.compact{min-width:560px}
+.bench-table.compact td small{display:block}
+.eng-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.eng-stat{border:1px solid #e3eadf;border-radius:14px;padding:16px;background:#fbfdf9}
+.eng-stat strong{display:block;font-size:24px;font-weight:600;color:#1f5a47;font-variant-numeric:tabular-nums}
+.eng-stat span{display:block;font-size:13px;color:#4f6356;line-height:1.5;margin-top:4px}
 @media(max-width:1000px){.bench-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.bench-bar{grid-template-columns:1fr auto}.bench-bar .bench-track{grid-column:1/-1;order:3}.bench-suite{grid-template-columns:1fr}}
 @media(max-width:620px){.bench-facts{grid-template-columns:1fr}.bench-mini{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.bench-fill{transition:none}}

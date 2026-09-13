@@ -127,6 +127,12 @@ Open **Data catalog**, upload a SQLite snapshot of up to 20 MB and approve a sin
 Set-Location frontend; npm run typecheck; npm run build; Set-Location ..
 ```
 
+Engineering benchmark with no model calls: engine speed and correctness against independent SQL, replay of recorded model outputs through the current code, and test gates:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/benchmark_engine.py --runs aida4-two_stage-qwen3.8-27b-selection
+```
+
 Real-model benchmark (uses your Groq quota; resumable across rate-limit windows):
 
 ```powershell

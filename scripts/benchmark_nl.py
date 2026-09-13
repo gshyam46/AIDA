@@ -287,7 +287,7 @@ def main() -> int:
                 "notes": (result.get("interpretation") or {}).get("notes"),
                 "row_count": len(result.get("data") or []), "rows_sha256": hashlib.sha256(json.dumps(result.get("data"), sort_keys=True, default=str).encode()).hexdigest(),
                 "telemetry": {key: meta.get(key) for key in ("model_calls", "guard_calls", "repair_calls", "prompt_tokens", "completion_tokens", "model_latency_ms",
-                                                              "guard_latency_ms", "rate_limit_wait_seconds", "elapsed_ms", "interpretation_source", "model", "pipeline_stages", "estimated_model_cost_usd", "rejections")},
+                                                              "guard_latency_ms", "rate_limit_wait_seconds", "elapsed_ms", "interpretation_source", "model", "pipeline_stages", "estimated_model_cost_usd", "rejections", "model_inference_ms", "database_time_ms")},
                 "model_stages": (result.get("semantic_ir") or {}).get("stages"),
                 "rate_limit_wait_seconds": waited + (meta.get("rate_limit_wait_seconds") or 0), "wall_ms": round((time.perf_counter() - started) * 1000, 1)})
             report["summary"] = summarize(report["entries"], config.model)

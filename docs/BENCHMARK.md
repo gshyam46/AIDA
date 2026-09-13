@@ -75,6 +75,73 @@ Six questions are too few to claim an improvement; the resumed runs will fill in
 
 The cost of repair: gpt-oss-20b triggered a repair on about half of its logistics questions, raising those questions to about 8,000 tokens. Qwen3.8 27B needed no repairs on the same questions and stayed at about 5,200 tokens.
 
+## Engineering: latency, cost and the deterministic engine
+
+Both sources below are recorded measurements, not estimates:
+
+- **Model runs** (`scripts/benchmark_nl.py` telemetry). Groq's free tier made almost every question wait on rate limits, so waits are removed. Model time is the recorded model latency minus the recorded wait. AIDA's own time is total elapsed minus Prompt Guard minus model latency, because the waits sit inside the model latency.
+- **No-model engineering benchmark** (`scripts/benchmark_engine.py`). Every expected plan is run 5 times with result caches cleared and compared with independent SQL. Recorded model outputs are replayed through the current code. The backend tests, the latest browser journey and the configured limits are recorded too.
+
+### Where the time goes
+
+Average per question, with provider waits removed:
+
+| Run | Median answer | p95 answer | Prompt Guard | Model calls | AIDA code and SQL |
+| --- | --- | --- | --- | --- | --- |
+| gpt-oss-20b · prompt 1 (42 questions) | 1.54 s | 2.00 s | 154 ms | 1.34 s | 4.0 ms |
+| Qwen3.8 27B · prompt 1 (42 questions) | 1.75 s | 2.38 s | 155 ms | 1.51 s | 4.4 ms |
+| gpt-oss-20b · prompt 3, partial (9 questions) | 2.64 s | 21.96 s | 158 ms | 1.98 s | 7.7 ms |
+| Qwen3.8 27B · prompt 3, partial (6 questions) | 2.13 s | 2.40 s | 151 ms | 1.89 s | 8.7 ms |
+
+- **Model calls** take 89–92% of the measured answer time.
+- **AIDA's own code and SQL** take 0.3–0.4%.
+- **Resolve and plan** are recorded per stage, but for the older runs the split is only clean on the few questions that never waited. New runs record waits, inference time and database time per stage.
+
+### Cost and tokens
+
+| Run | Cost per 1,000 questions | Input tokens | Output tokens | Model calls per question | Questions with a repair round |
+| --- | --- | --- | --- | --- | --- |
+| gpt-oss-120b · previous pipeline | $0.48 | 2,281 | 235 | 0.95 | — |
+| gpt-oss-20b · prompt 1 | $0.33 | 3,151 | 318 | 1.60 | 0% |
+| Qwen3.8 27B · prompt 1 | $3.81 | 3,084 | 336 | 1.60 | 0% |
+| gpt-oss-20b · prompt 3, partial | $0.60 | 5,996 | 507 | 2.44 | 44% |
+| Qwen3.8 27B · prompt 3, partial | $5.44 | 4,790 | 402 | 2.00 | 0% |
+
+- **Input dominates.** Input tokens (instructions plus the approved catalog) are 90–92% of all tokens.
+- **Prompt 3 costs more.** The longer prompt and the repair round raised tokens per question from 3,469 to 6,502 for gpt-oss-20b and from 3,420 to 5,192 for Qwen3.8 27B, on the questions each partial run scored.
+- **Provider waits on the free tier:**
+
+  | Run | Questions that waited | Time lost |
+  | --- | --- | --- |
+  | gpt-oss-20b · prompt 1 | 39 of 42 | 13 min |
+  | Qwen3.8 27B · prompt 1 | 41 of 42 | 16 min |
+  | gpt-oss-20b · prompt 3, partial | 8 of 9 | 46 min |
+  | Qwen3.8 27B · prompt 3, partial | 5 of 6 | 3 min |
+
+### Deterministic engine and replay (no model)
+
+- **Engine correctness:** 129 of 129 expected plans returned the independent oracle rows (logistics 40, relational 31, semantic 55, name resolution 3).
+- **Engine speed:**
+  - uncached plan, request to result: median 2.3 ms, p95 8.6 ms;
+  - logistics plans: median 5.5 ms, p95 12.6 ms;
+  - time inside the database: median 2.2 ms;
+  - repeat from the result cache: median 0.13 ms.
+- **Replay:**
+  - all 56 recorded AIDA 4 answers (20 + 22 + 8 + 6) reproduced the identical plan and identical rows through today's code;
+  - code and SQL per question: median 4.3–7.7 ms, p95 about 13 ms;
+  - a repeated question: median 0.4–0.6 ms, with no model call in all 56 cases.
+- **Quality gates:**
+  - 323 backend tests passed, including 32 attack and misuse tests and 34 interpreter contract tests;
+  - the browser journey passed 9 of 9 steps.
+
+Reproduce the engineering figures and include them in the report and website data:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/benchmark_engine.py --runs aida4-two_stage-gpt-oss-20b-selection aida4-two_stage-qwen3.8-27b-selection aida4v3-two_stage-gpt-oss-20b-selection aida4v3-two_stage-qwen3.8-27b-selection
+```
+
+Then add `--engine artifacts/benchmark/engine.json` to the `report_benchmark.py` command below.
+
 ## Decision
 
 The **provisional default is `qwen/qwen3.8-27b` with the two-stage pipeline and one repair round**. It has the highest accuracy, the only perfect refusal record and zero wrong answers in the complete AIDA 4 runs, and it stays ahead in the partial prompt-3 run. For a data analyst, an answer with the wrong meaning is the costliest failure, so accuracy and refusal quality outweigh price here. At about $0.004 per question it is still inexpensive, although gpt-oss-20b is roughly ten times cheaper.
@@ -86,7 +153,7 @@ Constraints to plan for:
 - The decision becomes final when the three prompt-3 runs complete. Regenerate this report's data tables, `docs/TEST_QUERIES.md` and the website's `/benchmarks` page data with:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/report_benchmark.py --runs baseline-current-gpt-oss-120b aida4-two_stage-gpt-oss-20b-selection aida4-two_stage-qwen3.8-27b-selection aida4v3-two_stage-gpt-oss-20b-selection aida4v3-two_stage-qwen3.8-27b-selection --shared baseline-current-gpt-oss-120b aida4-two_stage-gpt-oss-20b-selection aida4-two_stage-qwen3.8-27b-selection --suites aida4v3-two_stage-qwen3.8-27b-selection --tables docs/BENCHMARK_DATA.md --queries-run aida4v3-two_stage-qwen3.8-27b-selection --web frontend/app/benchmarks/benchmark-data.json
+.\.venv\Scripts\python.exe scripts/report_benchmark.py --runs baseline-current-gpt-oss-120b aida4-two_stage-gpt-oss-20b-selection aida4-two_stage-qwen3.8-27b-selection aida4v3-two_stage-gpt-oss-20b-selection aida4v3-two_stage-qwen3.8-27b-selection --shared baseline-current-gpt-oss-120b aida4-two_stage-gpt-oss-20b-selection aida4-two_stage-qwen3.8-27b-selection --suites aida4v3-two_stage-qwen3.8-27b-selection --tables docs/BENCHMARK_DATA.md --queries-run aida4v3-two_stage-qwen3.8-27b-selection --web frontend/app/benchmarks/benchmark-data.json --engine artifacts/benchmark/engine.json
 ```
 
 Add `aida4v3-two_stage-gpt-oss-120b-selection` to `--runs` once it has scored questions, and switch `--shared` to the prompt-3 runs when they complete.

@@ -2,6 +2,7 @@
 import {useState} from 'react'
 import {ArrowLeft, ArrowRight} from 'lucide-react'
 import DataTable from '../../components/DataTable'
+import EngineeringBenchmarks from '../../components/EngineeringBenchmarks'
 import {benchmark, BenchmarkRun, BenchmarkSummary, isAida4, keyFacts, modelName, pct, runName} from '../../lib/benchmarks'
 import {PREVIEW} from '../../lib/mode'
 
@@ -110,6 +111,8 @@ export default function BenchmarksPage() {
           </div>)}
         </div>
       </div></section>}
+
+      <EngineeringBenchmarks data={data}/>
 
       {complete.length > 0 && <section className="landing-section" aria-labelledby="lost-title"><div className="section-inner">
         <div className="section-eyebrow">Where answers were lost</div>

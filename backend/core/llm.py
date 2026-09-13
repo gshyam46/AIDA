@@ -74,7 +74,7 @@ def empty_telemetry() -> dict[str, Any]:
     return {"model_calls": 0, "guard_calls": 0, "repair_calls": 0,
             "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "input_tokens": 0, "output_tokens": 0,
             "model": None, "provider": None, "pipeline": None, "pipeline_stages": [], "rejections": [],
-            "model_latency_ms": 0.0, "guard_latency_ms": 0.0, "rate_limit_wait_seconds": 0.0,
+            "model_latency_ms": 0.0, "model_inference_ms": 0.0, "guard_latency_ms": 0.0, "rate_limit_wait_seconds": 0.0,
             "semantic_cache_hit": False, "interpretation_cache_hit": False, "interpretation_source": "validation",
             "estimated_model_cost_usd": 0.0, "model_cost_basis": None, "inference_location": None, "external_requests": False}
 

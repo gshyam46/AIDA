@@ -856,9 +856,12 @@ class Interpreter:
         telemetry["input_tokens"], telemetry["output_tokens"] = telemetry["prompt_tokens"], telemetry["completion_tokens"]
         telemetry["total_tokens"] = telemetry["prompt_tokens"] + telemetry["completion_tokens"]
         telemetry["model_latency_ms"] = round(telemetry["model_latency_ms"] + reply.latency_ms, 2)
+        inference_ms = round(max(reply.latency_ms - reply.waited_seconds * 1000, 0.0), 2)
+        telemetry["model_inference_ms"] = round(telemetry.get("model_inference_ms", 0.0) + inference_ms, 2)
         telemetry["rate_limit_wait_seconds"] = round(telemetry["rate_limit_wait_seconds"] + reply.waited_seconds, 2)
         telemetry["model"] = reply.model
-        telemetry["pipeline_stages"].append({"stage": stage, "prompt_tokens": reply.prompt_tokens, "completion_tokens": reply.completion_tokens, "latency_ms": reply.latency_ms})
+        telemetry["pipeline_stages"].append({"stage": stage, "prompt_tokens": reply.prompt_tokens, "completion_tokens": reply.completion_tokens, "latency_ms": reply.latency_ms,
+                                          "waited_seconds": reply.waited_seconds, "inference_ms": inference_ms})
         if self.config.provider == "groq":
             telemetry["estimated_model_cost_usd"] = round(telemetry["estimated_model_cost_usd"] + estimate_cost(self.config.model, reply.prompt_tokens, reply.completion_tokens), 8)
         return reply
