@@ -14,8 +14,9 @@ import re
 import sqlite3
 import threading
 import uuid
+import weakref
 from contextlib import closing
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -235,7 +236,10 @@ class SourceRegistry:
                 record = json.loads(file.read_text(encoding="utf-8"))
                 if record.get("id") != file.stem or record.get("synthetic") is not False:
                     continue
-                path = self.directory / f"{file.stem}.sqlite"
+                snapshot = record.get("snapshot_file", f"{file.stem}.sqlite")
+                if not re.fullmatch(re.escape(file.stem) + r"(?:\.[a-f0-9]{32})?\.sqlite", snapshot):
+                    continue
+                path = self.directory / snapshot
                 if path.is_file() and not path.is_symlink():
                     record["path"] = path
                     self._entries[file.stem] = record
@@ -288,6 +292,60 @@ class SourceRegistry:
         record = self._entry(source_id)
         return {"id": record["id"], "name": record["name"], "configured": bool(record.get("manifest")), "synthetic": record["synthetic"], "tables": copy.deepcopy(record["tables"])}
 
+    def publish_snapshot(self, source_id: str | None, staged: Path, name: str) -> str:
+        """Publish a validated immutable generation; existing readers keep the old file.
+
+        Keep the catalog version stable for data-only refreshes. A new engine discards
+        result caches. Schema drift fails closed and preserves the previous snapshot.
+        """
+        if self.public_demo:
+            raise SourceError("Connections are disabled in public demo mode.")
+        tables = inspect_database(staged)
+        with self._lock:
+            previous = self._entry(source_id) if source_id else None
+            if previous and previous["synthetic"]:
+                raise SourceError("Built-in sources cannot be refreshed.")
+            if previous and previous["tables"] != tables:
+                raise SourceError("Selected schema changed. Create a new connection and review its catalog; the last good snapshot is still available.")
+            source_id = source_id or uuid.uuid4().hex
+            destination = self.directory / f"{source_id}.{uuid.uuid4().hex}.sqlite"
+            manifest = previous.get("manifest") if previous else None
+            if manifest:
+                validate_manifest(manifest, tables)
+            record = {"id": source_id, "name": previous["name"] if previous else _text(name, "source name", 80),
+                      "path": destination, "snapshot_file": destination.name, "synthetic": False,
+                      "snapshot_updated_at": datetime.now(timezone.utc).isoformat(),
+                      "tables": tables, "manifest": manifest}
+            os.replace(staged, destination)
+            try:
+                self._persist(record)
+            except Exception:
+                destination.unlink(missing_ok=True)
+                raise
+            self._entries[source_id] = record
+            old_engine = self._engines.pop(source_id, None)
+            if previous:
+                if old_engine:
+                    # A query keeps its engine alive until its SQLite handle closes.
+                    weakref.finalize(old_engine, self._remove_old_snapshot, previous["path"])
+                else:
+                    self._remove_old_snapshot(previous["path"])
+            return source_id
+
+    def _remove_old_snapshot(self, path: Path) -> None:
+        if path.parent == self.directory:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass  # Retry orphan-generation cleanup at the next exclusive startup.
+
+    def cleanup_snapshot_generations(self) -> None:
+        """Call only after the connector service holds its exclusive process lock."""
+        active = {record["path"] for record in self._entries.values()}
+        for path in self.directory.glob("*.sqlite"):
+            if re.fullmatch(r"[a-f0-9]{32}\.[a-f0-9]{32}\.sqlite", path.name) and path not in active:
+                self._remove_old_snapshot(path)
+
     def configure(self, source_id: str, config: dict[str, Any]) -> dict[str, Any]:
         if self.public_demo:
             raise SourceError("Source configuration is disabled in public demo mode.")
@@ -329,6 +387,7 @@ class SourceRegistry:
                 else:
                     engine_type = CatalogEngine
                 self._engines[source_id] = engine_type(record["path"], approved, source_id, record["synthetic"])
+                self._engines[source_id].snapshot_updated_at = record.get("snapshot_updated_at")
             return self._engines[source_id]
 
     def register_commerce_demo(self, path: str | Path) -> Any:

@@ -35,7 +35,7 @@ export type QueryMeta = {
   prompt_tokens?: number; completion_tokens?: number; total_tokens?: number;
   estimated_model_cost_usd?: number | null; estimated_cost_usd?: number | null;
   execution_time_ms?: number; elapsed_ms?: number; row_count?: number; synthetic?: boolean;
-  engine?: string; execution_id?: string; cache_hit?: boolean; source_id?: string;
+  engine?: string; execution_id?: string; cache_hit?: boolean; source_id?: string; snapshot_updated_at?: string | null;
   interpretation_source?: string; interpretation_cache_hit?: boolean; interpretation_time_ms?: number;
   usage?: {prompt_tokens?: number; completion_tokens?: number; total_tokens?: number};
 }
@@ -71,7 +71,7 @@ export type SourceMapping = {
   dimensions: {id: string; label: string; column: string; values?: string[]}[];
   date_column?: string; as_of?: string; currency?: string;
 }
-async function request(path: string, init?: RequestInit) {
+export async function request(path: string, init?: RequestInit) {
   const response = await fetch(`/api/v1/${path}`, {
     ...init, headers: {'Content-Type': 'application/json', ...init?.headers},
     signal: AbortSignal.timeout(120000), cache: 'no-store',

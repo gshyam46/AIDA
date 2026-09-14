@@ -3,6 +3,7 @@
 import {useEffect, useState} from 'react'
 import {Database, LoaderCircle, Plus, Trash2, Upload} from 'lucide-react'
 import {configureSource, getSource, labelFor, Source, SourceInspection, SourceMapping, uploadSource} from '../lib/api'
+import DatabaseConnections from './DatabaseConnections'
 
 type Measure = SourceMapping['metrics'][number]
 const identifier = (value: string) => value.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^([^a-z])/, 'field_$1')
@@ -65,7 +66,7 @@ export default function SourceSetup({enabled, pendingSource, onConfigured}: {ena
     } catch (err) {setError(err instanceof Error ? err.message : 'The catalog could not be saved.')}
     finally {setBusy(false)}
   }
-  return <section className="panel source-setup" aria-labelledby="source-setup-heading">
+  return <><DatabaseConnections enabled={enabled} onInspect={open} onOpen={onConfigured}/><section className="panel source-setup" aria-labelledby="source-setup-heading">
     <div className="setup-heading"><div><h2 id="source-setup-heading">Connect your SQLite database</h2><p>Choose a local file, then define the business fields AIDA is allowed to query. Schema inspection reads column definitions, without sampling rows.</p></div><Database size={23}/></div>
     {!enabled ? <p className="setup-notice">Database uploads are disabled on this public demo. Run AIDA locally to connect your own SQLite file.</p> : <>
       {!inspection && <label className={`button secondary upload-button ${busy ? 'is-disabled' : ''}`}><Upload size={15}/>{busy ? 'Inspecting database…' : 'Choose SQLite file'}<input type="file" accept=".db,.sqlite,.sqlite3" aria-label="Upload SQLite database" disabled={busy} onChange={event => {void upload(event.target.files?.[0]); event.target.value = ''}}/></label>}
@@ -88,5 +89,5 @@ export default function SourceSetup({enabled, pendingSource, onConfigured}: {ena
       </form></>}
     </>}
     {error && <p className="setup-error" role="alert">{error}</p>}
-  </section>
+  </section></>
 }

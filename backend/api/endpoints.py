@@ -7,6 +7,22 @@ from .models import QueryRequest
 
 router = APIRouter()
 
+@router.get("/connections")
+def connections(request: Request):
+    return request.app.state.connections.list()
+
+@router.post("/connections/inspect")
+def inspect_connection(request: Request, config: dict = Body(...)):
+    return request.app.state.connections.inspect(config)
+
+@router.post("/connections")
+def create_connection(request: Request, config: dict = Body(...)):
+    return JSONResponse(status_code=202, content=request.app.state.connections.create(config))
+
+@router.post("/connections/{connection_id}/{action}")
+def connection_action(connection_id: str, action: str, request: Request, config: dict = Body(default={})):
+    return request.app.state.connections.action(connection_id, action, config)
+
 @router.get("/health")
 def health(request: Request):
     state = request.app.state

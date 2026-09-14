@@ -15,7 +15,10 @@ class HybridAnalytics:
         self.relational_parser = RelationalSemanticParser(shared_parser=self.parser) if parser is None or isinstance(parser, SemanticParser) else parser
 
     def catalog(self, source_id: str = "commerce") -> dict[str, Any]:
-        return self.registry.engine(source_id).catalog()
+        engine = self.registry.engine(source_id)
+        catalog = engine.catalog()
+        catalog["dataset"]["snapshot_updated_at"] = getattr(engine, "snapshot_updated_at", None)
+        return catalog
 
     def query(self, question: str | None = None, plan: dict | None = None,
               source_id: str = "commerce", catalog_version: str | None = None) -> dict[str, Any]:
@@ -46,6 +49,7 @@ class HybridAnalytics:
                          "database_time_ms": database_ms,
                          "elapsed_ms": round((time.perf_counter() - started) * 1000, 2)})
             meta["execution_time_ms"] = meta["elapsed_ms"]
+            meta["snapshot_updated_at"] = getattr(engine, "snapshot_updated_at", None)
             result["meta"] = result["metadata"] = meta
             result["source_id"] = source_id
             if semantic_ir is not None:

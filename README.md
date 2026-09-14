@@ -86,6 +86,8 @@ Relational examples include `Revenue and units by region`, `Revenue by region an
 
 ## Onboard a local SQLite snapshot
 
+**Connect a database directly:** the local **Data catalog → Database connections** flow now implements PostgreSQL, MySQL and SQL Server extraction into managed reporting snapshots, encrypted credentials, manual/hourly/daily refresh and refresh history. The [connection guide](docs/CONNECTIONS.md) covers read-only accounts, TLS, operator host approval, key management and the full workflow, including where the LLM is called. SQL Server requires ODBC Driver 18 on the backend host. See [connector verification](docs/CONNECTOR_VERIFICATION.md) for tested boundaries and remaining live-vendor qualification.
+
 In local mode, open **Data catalog** and upload a standalone SQLite database snapshot, up to **20 MB**. Inspection reads table and column metadata without sampling rows. The application assigns an opaque source ID; the uploaded filename cannot choose a server path.
 
 Choose **Single table** to approve a reporting table, metric labels and business definitions, numeric measure columns, categorical dimensions, and an optional date column with an explicit reference date. For multiple tables, choose **Relational catalog**, inspect declared columns/keys, and paste an owner-reviewed version 2 catalog JSON. The server validates physical mappings and join cardinality against the snapshot. The source remains unavailable to queries until its catalog is accepted. All queries and dashboard cards carry its source ID and catalog version.
@@ -96,7 +98,7 @@ Primary keys and columns whose names suggest personal identifiers, credentials o
 
 Snapshots must contain ordinary tables and indexes; views, triggers, virtual tables and generated columns are rejected. Date queries require ISO `YYYY-MM-DD` dates or ISO timestamps and compare their calendar date portion. Nonnumeric values in an approved numeric measure cause a controlled error.
 
-Private snapshots and their approved manifests persist in the configured data directory. They are static uploads, not live connections to an operational database. Authentication, tenant authorization, PostgreSQL/MySQL connectors, live refresh and shared server-side dashboards are not implemented.
+Private snapshots and their approved manifests persist in the configured data directory. Uploaded files remain static. Connected sources can be manually or periodically refreshed through the workflow above. Application-user authentication, tenant authorization, continuous live queries, incremental extraction and shared server-side dashboards are not implemented.
 
 ## Interactive analysis and boundaries
 

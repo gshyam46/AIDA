@@ -6,9 +6,10 @@ async function proxy(request: NextRequest, context: RouteContext) {
   const endpoint = path.join('/')
   const sourcePath = /^sources\/[a-zA-Z0-9_-]+$/.test(endpoint)
   const configurePath = /^sources\/[a-zA-Z0-9_-]+\/configure$/.test(endpoint)
+  const connectionPath = endpoint === 'connections' || endpoint === 'connections/inspect' || /^connections\/[a-f0-9]{32}\/(refresh|schedule|disconnect)$/.test(endpoint)
   const allowed = request.method === 'GET'
-    ? ['catalog', 'examples', 'health', 'schema', 'sources'].includes(endpoint) || sourcePath
-    : request.method === 'POST' && (endpoint === 'query' || endpoint === 'sources' || configurePath)
+    ? ['catalog', 'examples', 'health', 'schema', 'sources', 'connections'].includes(endpoint) || sourcePath
+    : request.method === 'POST' && (endpoint === 'query' || endpoint === 'sources' || configurePath || connectionPath)
   if (!allowed) return NextResponse.json({error: 'Endpoint unavailable.'}, {status: 404})
   const publicDemo = process.env.AIDA_PUBLIC_DEMO === '1'
   const host = request.headers.get('host') || ''
@@ -27,7 +28,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
   try {
     let body: ArrayBuffer | undefined
     if (request.method === 'POST') {
-      const maximum = endpoint === 'sources' ? 20 * 1024 * 1024 : configurePath ? 65536 : 8192
+      const maximum = endpoint === 'sources' ? 20 * 1024 * 1024 : configurePath || connectionPath ? 65536 : 8192
       const oversized = () => NextResponse.json({error: 'Request exceeds the size limit.'}, {status: 413})
       if (Number(request.headers.get('content-length')) > maximum) return oversized()
       const reader = request.body?.getReader(), chunks: Uint8Array[] = []

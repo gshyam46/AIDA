@@ -4,6 +4,7 @@ $aidaRoot = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $aidaRoot
 $env:NEXT_TELEMETRY_DISABLED = '1'
 $env:AIDA_PUBLIC_DEMO = if ($PublicDemo) { '1' } else { '0' }
+if (-not $PublicDemo) { . (Join-Path $PSScriptRoot 'connector-env.ps1') }
 # This launcher owns a local topology. Do not inherit unrelated shell/server
 # settings that could expose the UI or forward private questions off-machine.
 $env:HOSTNAME = '127.0.0.1'

@@ -37,6 +37,7 @@ function QueryTelemetry({result}: {result: QueryResponse}) {
   const meta = result.meta, inputTokens = meta.prompt_tokens ?? meta.usage?.prompt_tokens, outputTokens = meta.completion_tokens ?? meta.usage?.completion_tokens
   const tokens = meta.total_tokens ?? meta.usage?.total_tokens
   return <div className="trust-metrics telemetry">
+    {meta.snapshot_updated_at && <div><RefreshCw size={16}/><span>Snapshot refreshed<strong>{new Date(meta.snapshot_updated_at).toLocaleString()}</strong></span></div>}
     <div><ShieldCheck size={16}/><span>Execution<strong>{result.success ? 'Validated, read-only SQL' : 'No result returned'}</strong></span></div>
     <div><Zap size={16}/><span>Interpretation<strong>{sourceLabel(meta.interpretation_source)}</strong></span></div>
     <div><Activity size={16}/><span>Model calls this request<strong>{meta.model_calls ?? 'Not reported'}</strong></span></div>

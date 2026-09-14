@@ -4,6 +4,8 @@ This document records which model AIDA uses, which databases are appropriate for
 
 ## Current model decision
 
+For the September 14 database-connection addition, see [Database connections and refresh](CONNECTIONS.md). Authentication, metadata inspection, selected-column extraction and scheduled snapshot refresh use no model calls. Natural-language questions continue to use the existing local model and deterministic compiler. [Connector verification](CONNECTOR_VERIFICATION.md) separates surrogate-based workflow tests from pending live-vendor qualification.
+
 AIDA currently uses **Qwen3-4B-Instruct-2507 Q4_K_M** through **llama.cpp b10809**. The GGUF is 2,497,280,448 bytes, approximately 2.5 GB. The exact upstream revision, URLs, licenses and SHA-256 hashes are pinned in [`scripts/model-runtime.json`](../scripts/model-runtime.json).
 
 The model weights and llama.cpp binaries are not committed to Git. `scripts/setup-model.ps1` downloads them into the ignored `.runtime/` directory and verifies their hashes. `scripts/start-demo.ps1` performs setup and starts the model, backend and frontend. The model server listens only on `127.0.0.1:8081`; the default runtime uses a 4,096-token context, one inference slot, four CPU threads, Vulkan layer offload when available and `--cache-ram 0`. `-GpuLayers 0` provides the CPU fallback.

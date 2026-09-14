@@ -17,6 +17,8 @@ services:
     environment:
       AIDA_DATA_DIR: /app/data
       AIDA_PUBLIC_DEMO: "${AIDA_PUBLIC_DEMO:-1}"
+      AIDA_CONNECTOR_KEY: "${AIDA_CONNECTOR_KEY:-}"
+      AIDA_CONNECTOR_HOSTS: "${AIDA_CONNECTOR_HOSTS:-}"
     network_mode: service:model
     depends_on:
       model:

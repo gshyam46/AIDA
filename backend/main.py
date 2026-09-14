@@ -15,6 +15,7 @@ if __package__:
     from .core.sources import SourceRegistry, SourceError, MAX_UPLOAD_BYTES
     from .core.relational_demo import ensure_relational_demos
     from .core.chinook import chinook_source
+    from .core.connectors import ConnectionService
 else:
     from api.endpoints import router
     from core.analytics import AnalyticsEngine
@@ -22,6 +23,7 @@ else:
     from core.sources import SourceRegistry, SourceError, MAX_UPLOAD_BYTES
     from core.relational_demo import ensure_relational_demos
     from core.chinook import chinook_source
+    from core.connectors import ConnectionService
 
 logger = logging.getLogger("aida")
 ROOT = Path(__file__).resolve().parent
@@ -43,8 +45,13 @@ def create_app(data_dir: Path | None = None, semantic_parser=None, public_demo: 
         app.state.registry = registry
         app.state.public_demo = demo_mode
         app.state.engine = HybridAnalytics(registry, semantic_parser)
+        app.state.connections = ConnectionService(registry)
+        app.state.connections.start()
         logger.info("AIDA ready: local semantic model plus validated source-scoped SQL")
-        yield
+        try:
+            yield
+        finally:
+            app.state.connections.close()
 
     application = FastAPI(title="AIDA Analytics", version="3.0.0",
         description="Private model interpretation with deterministic, source-scoped SQL and explicit catalog onboarding.", lifespan=lifespan)
@@ -64,10 +71,10 @@ def create_app(data_dir: Path | None = None, semantic_parser=None, public_demo: 
                     response = JSONResponse(status_code=403, content={"error": "Cross-origin changes are not allowed."})
             if response is None and request.method == "POST":
                 is_upload = request.url.path == "/api/v1/sources"
-                if demo_mode and (is_upload or request.url.path.endswith("/configure")):
+                if demo_mode and (is_upload or request.url.path.endswith("/configure") or request.url.path.startswith("/api/v1/connections")):
                     response = JSONResponse(status_code=403, content={"error": "Onboarding is disabled in public demo mode."})
                 else:
-                    limit = MAX_UPLOAD_BYTES if is_upload else 65536 if request.url.path.endswith("/configure") else MAX_BODY_BYTES
+                    limit = MAX_UPLOAD_BYTES if is_upload else 65536 if request.url.path.endswith("/configure") or request.url.path.startswith("/api/v1/connections") else MAX_BODY_BYTES
                     body = bytearray()
                     async for chunk in request.stream():
                         if len(body) + len(chunk) > limit:
