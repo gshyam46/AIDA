@@ -3,9 +3,9 @@ import {FormEvent, useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {ArrowLeft, ArrowRight, LoaderCircle} from 'lucide-react'
 import AuthShell from '../../components/AuthShell'
-import {getSession, signIn} from '../../lib/api'
-import {PREVIEW} from '../../lib/mode'
-import PreviewNotice from '../../components/PreviewNotice'
+import BackendGate from '../../components/BackendGate'
+import ComingSoon from '../../components/ComingSoon'
+import {getSession, isServiceUnavailable, signIn} from '../../lib/api'
 
 function nextPath() {
   const next = new URLSearchParams(window.location.search).get('next') || ''
@@ -18,11 +18,12 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [unavailable, setUnavailable] = useState(false)
   useEffect(() => {
     getSession().then(session => {
       if (!session.auth_required) router.replace('/workspace')
       else if (session.user) router.replace(session.onboarding ? nextPath() : '/onboarding')
-    }).catch(() => undefined)
+    }).catch(failure => {if (isServiceUnavailable(failure)) setUnavailable(true)})
   }, [router])
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -30,9 +31,14 @@ function LoginForm() {
     try {
       const session = await signIn({email, password})
       router.replace(session.onboarding ? nextPath() : '/onboarding')
-    } catch (failure) {setError(failure instanceof Error ? failure.message : 'Sign-in failed. Try again.')}
-    finally {setBusy(false)}
+    } catch (failure) {
+      if (isServiceUnavailable(failure)) setUnavailable(true)
+      else setError(failure instanceof Error ? failure.message : 'Sign-in failed. Try again.')
+    } finally {
+      setBusy(false)
+    }
   }
+  if (unavailable) return <ComingSoon source="login" draft={{email}}/>
   return <AuthShell title="Welcome back to your data." lead="Pick up where you left off: saved dashboards, approved catalogs and every answer's full lineage.">
     <a className="back-link" href="/"><ArrowLeft size={14}/>Back to AIDA</a>
     <h2>Sign in</h2>
@@ -48,5 +54,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return PREVIEW ? <PreviewNotice/> : <LoginForm/>
+  return <BackendGate source="login"><LoginForm/></BackendGate>
 }

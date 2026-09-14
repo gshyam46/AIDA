@@ -136,3 +136,18 @@ export function formatValue(value: number, metric: string, compact = false, cata
   }).format(value)
 }
 export function labelFor(value: string) {return value.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}
+// True only when the data service answers its health check, so account pages can be offered.
+export async function checkBackend(timeoutMs = 5000): Promise<boolean> {
+  try {
+    const response = await fetch('/api/v1/health', {cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(timeoutMs)})
+    if (!response.ok) return false
+    const body = await response.json().catch(() => null)
+    return body?.status === 'healthy'
+  } catch {
+    return false
+  }
+}
+// Network failures, timeouts and 5xx responses mean the service is unavailable, not that the input was wrong.
+export function isServiceUnavailable(error: unknown) {
+  return !(error instanceof ApiError) || error.status >= 500
+}

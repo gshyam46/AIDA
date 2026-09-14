@@ -62,7 +62,7 @@ The previous local-model launcher (`scripts/start-demo.ps1`, Qwen3-4B through ll
 
 ## Deploy the public landing page (preview mode)
 
-The landing page and `/benchmarks` can be published on their own, for example to link from a portfolio. Set `NEXT_PUBLIC_AIDA_MODE=preview` at build time: sign-in, sign-up, onboarding and the workspace show a private-beta notice, the landing calls to action point to the benchmarks, and the API proxy returns 503 instead of contacting a backend. No backend, database or model key is needed.
+The landing page and `/benchmarks` can be published on their own, for example to link from a portfolio. Set `NEXT_PUBLIC_AIDA_MODE=preview` at build time. Sign-in, sign-up, onboarding and the workspace then show a "Currently unavailable" page that records early-access interest, the landing call to action becomes "Request early access", and the API proxy returns 503 instead of contacting a backend. The same page appears in normal builds whenever the backend is not answering. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) covers the environment variables, storing interest in Supabase, and whether the backend can run on Vercel. No backend, database or model key is needed.
 
 On Vercel (free Hobby plan):
 

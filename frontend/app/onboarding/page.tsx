@@ -2,9 +2,9 @@
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {ArrowLeft, ArrowRight, Boxes, Check, Database, LoaderCircle, ShieldCheck, Upload} from 'lucide-react'
-import {getSession, Onboarding, saveOnboarding, SessionState} from '../../lib/api'
-import {PREVIEW} from '../../lib/mode'
-import PreviewNotice from '../../components/PreviewNotice'
+import {getSession, isServiceUnavailable, Onboarding, saveOnboarding, SessionState} from '../../lib/api'
+import BackendGate from '../../components/BackendGate'
+import ComingSoon from '../../components/ComingSoon'
 
 const TEAM_SIZES = ['1', '2-10', '11-50', '51-200', '201-1000', '1000+']
 const USE_CASES: [string, string][] = [['sales', 'Sales'], ['finance', 'Finance'], ['operations', 'Operations'], ['support', 'Customer support'], ['marketing', 'Marketing'], ['product', 'Product'], ['logistics', 'Logistics'], ['other', 'Something else']]
@@ -28,6 +28,7 @@ function OnboardingFlow() {
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [unavailable, setUnavailable] = useState(false)
   useEffect(() => {
     getSession().then(state => {
       if (!state.auth_required) {router.replace('/workspace'); return}
@@ -35,7 +36,7 @@ function OnboardingFlow() {
       setSession(state)
       const saved = state.onboarding
       if (saved) {setCompany(saved.company); setRole(saved.role_title); setTeam(saved.team_size); setUseCases(saved.use_cases); setGoal(saved.primary_goal || ''); setDataChoice(saved.data_choice); setConsent(saved.hosted_inference_consent)}
-    }).catch(() => setError('The workspace could not be reached. Start the backend and reload.'))
+    }).catch(failure => {if (isServiceUnavailable(failure)) setUnavailable(true); else setError('The workspace could not be reached. Please reload.')})
   }, [router])
   const hosted = !!session?.hosted_inference
   const ready = [company.trim() && role.trim() && team, useCases.length > 0, !!dataChoice, !hosted || consent][step]
@@ -44,8 +45,9 @@ function OnboardingFlow() {
     try {
       const result = await saveOnboarding({company: company.trim(), role_title: role.trim(), team_size: team, use_cases: useCases, primary_goal: goal.trim() || null, data_choice: dataChoice, hosted_inference_consent: consent})
       router.replace(result.sample_source ? `/workspace?source=${encodeURIComponent(result.sample_source.id)}` : dataChoice === 'upload_later' ? '/workspace?tab=data' : '/workspace')
-    } catch (failure) {setError(failure instanceof Error ? failure.message : 'Onboarding could not be saved.'); setBusy(false)}
+    } catch (failure) {if (isServiceUnavailable(failure)) {setUnavailable(true); return} setError(failure instanceof Error ? failure.message : 'Onboarding could not be saved.'); setBusy(false)}
   }
+  if (unavailable) return <ComingSoon source="onboarding" draft={{name: session?.user?.name, email: session?.user?.email, company, role, interest: goal}}/>
   if (!session) return <div className="onboarding"><div className="loading-panel"><LoaderCircle className="spin" size={24}/><strong>Preparing your workspace…</strong>{error && <span>{error}</span>}</div></div>
   return <div className="onboarding">
     <header className="onboarding-top"><a className="brand" href="/" aria-label="AIDA home"><span className="brand-mark"><i/><i/><i/></span><span className="brand-word">AIDA<span className="brand-dot">.</span></span></a><span className="demo-badge"><span/>Signed in as {session.user?.name}</span></header>
@@ -81,5 +83,5 @@ function OnboardingFlow() {
 }
 
 export default function OnboardingPage() {
-  return PREVIEW ? <PreviewNotice/> : <OnboardingFlow/>
+  return <BackendGate source="onboarding"><OnboardingFlow/></BackendGate>
 }

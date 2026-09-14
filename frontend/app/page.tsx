@@ -83,7 +83,7 @@ export default function Landing() {
   }, [])
   const chooseDemo = (index: number) => {setDemo(index); setStage(0); setTyped(0); setManual(false)}
   const signedIn = !!session?.user || session?.auth_required === false
-  const primary = PREVIEW ? {href: '/benchmarks', label: 'See the benchmarks'} : signedIn ? {href: session?.user && !session.onboarding ? '/onboarding' : '/workspace', label: session?.user && !session.onboarding ? 'Finish setup' : 'Open workspace'} : {href: '/signup', label: 'Get started free'}
+  const primary = PREVIEW ? {href: '/signup', label: 'Request early access'} : signedIn ? {href: session?.user && !session.onboarding ? '/onboarding' : '/workspace', label: session?.user && !session.onboarding ? 'Finish setup' : 'Open workspace'} : {href: '/signup', label: 'Get started free'}
   const max = current.answer ? Math.max(...current.answer.map(item => item[1])) : 1
   return <div className="landing" ref={root}>
     <header className="landing-nav">

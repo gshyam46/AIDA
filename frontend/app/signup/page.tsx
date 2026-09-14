@@ -3,9 +3,9 @@ import {FormEvent, useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {ArrowLeft, ArrowRight, LoaderCircle} from 'lucide-react'
 import AuthShell from '../../components/AuthShell'
-import {getSession, signUp} from '../../lib/api'
-import {PREVIEW} from '../../lib/mode'
-import PreviewNotice from '../../components/PreviewNotice'
+import BackendGate from '../../components/BackendGate'
+import ComingSoon from '../../components/ComingSoon'
+import {getSession, isServiceUnavailable, signUp} from '../../lib/api'
 
 function SignupForm() {
   const router = useRouter()
@@ -15,11 +15,12 @@ function SignupForm() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [unavailable, setUnavailable] = useState(false)
   useEffect(() => {
     getSession().then(session => {
       if (!session.auth_required) router.replace('/workspace')
       else if (session.user) router.replace(session.onboarding ? '/workspace' : '/onboarding')
-    }).catch(() => undefined)
+    }).catch(failure => {if (isServiceUnavailable(failure)) setUnavailable(true)})
   }, [router])
   const local = email.split('@')[0].toLowerCase()
   const checks = [password.length >= 10, /[A-Za-z]/.test(password) && /\d/.test(password), new Set(password).size >= 5, !(local.length >= 4 && password.toLowerCase().includes(local))]
@@ -32,9 +33,15 @@ function SignupForm() {
     try {
       await signUp({name, email, password})
       router.replace('/onboarding')
-    } catch (failure) {setError(failure instanceof Error ? failure.message : 'The account could not be created.')}
-    finally {setBusy(false)}
+    } catch (failure) {
+      if (isServiceUnavailable(failure)) setUnavailable(true)
+      else setError(failure instanceof Error ? failure.message : 'The account could not be created.')
+    } finally {
+      setBusy(false)
+    }
   }
+  // The password is never carried over: the interest form only receives name and email.
+  if (unavailable) return <ComingSoon source="signup" draft={{name, email}}/>
   return <AuthShell title="Ask your data. Verify every answer." lead="Create your AIDA account, tell us about your team, and ask your first question in about two minutes.">
     <a className="back-link" href="/"><ArrowLeft size={14}/>Back to AIDA</a>
     <h2>Create your account</h2>
@@ -55,5 +62,5 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
-  return PREVIEW ? <PreviewNotice/> : <SignupForm/>
+  return <BackendGate source="signup"><SignupForm/></BackendGate>
 }

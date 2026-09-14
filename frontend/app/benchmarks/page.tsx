@@ -197,7 +197,7 @@ export default function BenchmarksPage() {
           {data.runs.some(run => run.status !== 'complete') && <li>Runs marked partial were stopped by the provider&apos;s daily token quota and cover fewer questions.</li>}
           {unmeasured.length > 0 && <li>No AIDA 4 results are recorded yet for {unmeasured.map(modelName).join(', ')}.</li>}
         </ul>
-        <div className="final-cta" style={{marginTop: 48}}><div><h2>See the answers for yourself.</h2><p>Every answer in AIDA shows its plan, SQL and lineage.</p></div><div className="hero-cta"><a className="pill-button pill-lime" href={PREVIEW ? '/' : '/signup'}>{PREVIEW ? 'Explore AIDA' : 'Get started free'}<ArrowRight size={15}/></a></div></div>
+        <div className="final-cta" style={{marginTop: 48}}><div><h2>See the answers for yourself.</h2><p>Every answer in AIDA shows its plan, SQL and lineage.</p></div><div className="hero-cta"><a className="pill-button pill-lime" href="/signup">{PREVIEW ? 'Request early access' : 'Get started free'}<ArrowRight size={15}/></a></div></div>
       </div></section>
     </main>
     <footer className="landing-footer"><span><strong style={{color: 'var(--ink)'}}>AIDA</strong> · Artificial Intelligence Data Analyst</span><span>Designed and built by Ghanashyam</span></footer>

@@ -11,8 +11,7 @@ import DataTable from '../../components/DataTable'
 import {relationalChartTypes} from '../../components/RelationalChart'
 import {ApiError, Catalog, executeQuery, formatValue, getCatalog, getSession, getSources, isRelational, labelFor, LegacyQueryPlan, newRelationalPlan, planDimensions, planMetrics, QueryPlan, QueryRequest, QueryResponse, RelationalQueryPlan, SessionState, signOut, SourcesResponse} from '../../lib/api'
 import {columnLabel, presentationView} from '../../lib/presentation'
-import {PREVIEW} from '../../lib/mode'
-import PreviewNotice from '../../components/PreviewNotice'
+import BackendGate from '../../components/BackendGate'
 
 type SavedCard = {id: string; source_id: string; catalog_version?: string; title: string; plan: QueryPlan; chartType: string}
 type Tab = 'explorer' | 'dashboards' | 'data'
@@ -265,5 +264,5 @@ function WorkspaceApp() {
 }
 
 export default function Workspace() {
-  return PREVIEW ? <PreviewNotice/> : <WorkspaceApp/>
+  return <BackendGate source="workspace"><WorkspaceApp/></BackendGate>
 }
