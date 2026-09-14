@@ -42,10 +42,10 @@ function SignupForm() {
   }
   // The password is never carried over: the interest form only receives name and email.
   if (unavailable) return <ComingSoon source="signup" draft={{name, email}}/>
-  return <AuthShell title="Ask your data. Verify every answer." lead="Create your AIDA account, tell us about your team, and ask your first question in about two minutes.">
+  return <AuthShell title="A clearer view starts here." lead="Bring your data together. Follow a question through to an answer you can understand.">
     <a className="back-link" href="/"><ArrowLeft size={14}/>Back to AIDA</a>
     <h2>Create your account</h2>
-    <p>The first account becomes the workspace owner and can review security events.</p>
+    <p>A workspace for your data and the decisions ahead.</p>
     {error && <div className="form-error" role="alert">{error}</div>}
     <form onSubmit={submit}>
       <label className="field">Full name<input autoComplete="name" required maxLength={80} value={name} onChange={event => setName(event.target.value)}/></label>

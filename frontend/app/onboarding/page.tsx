@@ -1,4 +1,5 @@
 'use client'
+import BrandLogo from '../../components/BrandLogo'
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {ArrowLeft, ArrowRight, Boxes, Check, Database, LoaderCircle, ShieldCheck, Upload} from 'lucide-react'
@@ -50,7 +51,7 @@ function OnboardingFlow() {
   if (unavailable) return <ComingSoon source="onboarding" draft={{name: session?.user?.name, email: session?.user?.email, company, role, interest: goal}}/>
   if (!session) return <div className="onboarding"><div className="loading-panel"><LoaderCircle className="spin" size={24}/><strong>Preparing your workspace…</strong>{error && <span>{error}</span>}</div></div>
   return <div className="onboarding">
-    <header className="onboarding-top"><a className="brand" href="/" aria-label="AIDA home"><span className="brand-mark"><i/><i/><i/></span><span className="brand-word">AIDA<span className="brand-dot">.</span></span></a><span className="demo-badge"><span/>Signed in as {session.user?.name}</span></header>
+    <header className="onboarding-top"><a className="brand" href="/" aria-label="AIDA home"><BrandLogo/></a><span className="demo-badge"><span/>Signed in as {session.user?.name}</span></header>
     <section className="onboarding-card" aria-labelledby="onboarding-title">
       <nav className="onboarding-steps" aria-label="Onboarding steps"><h2>Set up AIDA for your team</h2>{STEPS.map((label, index) => <button key={label} type="button" aria-current={index === step ? 'step' : undefined} className={index < step ? 'done' : ''} disabled={index > step} onClick={() => setStep(index)}><b>{index < step ? <Check size={13}/> : index + 1}</b><span>{label}</span></button>)}</nav>
       <div className="onboarding-body">

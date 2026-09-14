@@ -1,9 +1,10 @@
 'use client'
 import {useEffect, useRef, useState} from 'react'
-import {ArrowRight, Ban, Boxes, Calculator, CalendarRange, Check, Database, Eye, EyeOff, Fingerprint, GitBranch, KeyRound, LayoutDashboard, LockKeyhole, MessageSquareText, ScanSearch, ShieldCheck, Sparkles, Table2, Timer, UserPlus, Workflow, X} from 'lucide-react'
+import {ArrowRight, Ban, Boxes, Calculator, CalendarRange, Check, Database, Eye, EyeOff, Fingerprint, GitBranch, KeyRound, LayoutDashboard, LockKeyhole, MessageSquareText, ScanSearch, ShieldCheck, Table2, Timer, UserPlus, Workflow, X} from 'lucide-react'
 import {getSession, SessionState} from '../lib/api'
 import {keyFacts, pct, runName} from '../lib/benchmarks'
 import {PREVIEW} from '../lib/mode'
+import BrandLogo from '../components/BrandLogo'
 
 const FACTS = keyFacts()
 const ACRONYM: [string, string][] = [['A', 'rtificial'], ['I', 'ntelligence'], ['D', 'ata'], ['A', 'nalyst']]
@@ -83,27 +84,26 @@ export default function Landing() {
   }, [])
   const chooseDemo = (index: number) => {setDemo(index); setStage(0); setTyped(0); setManual(false)}
   const signedIn = !!session?.user || session?.auth_required === false
-  const primary = PREVIEW ? {href: '/signup', label: 'Request early access'} : signedIn ? {href: session?.user && !session.onboarding ? '/onboarding' : '/workspace', label: session?.user && !session.onboarding ? 'Finish setup' : 'Open workspace'} : {href: '/signup', label: 'Get started free'}
+  const primary = !PREVIEW && signedIn ? {href: session?.user && !session.onboarding ? '/onboarding' : '/workspace', label: session?.user && !session.onboarding ? 'Finish setup' : 'Open workspace'} : {href: '/signup', label: 'Sign up'}
   const max = current.answer ? Math.max(...current.answer.map(item => item[1])) : 1
   return <div className="landing" ref={root}>
     <header className="landing-nav">
-      <a className="brand" href="/" aria-label="AIDA home"><span className="brand-mark"><i/><i/><i/></span><span className="brand-word">AIDA<span className="brand-dot">.</span></span></a>
+      <a className="brand" href="/" aria-label="AIDA home"><BrandLogo/></a>
       <nav className="landing-links" aria-label="Landing sections"><a href="#how">How it works</a><a href="#trust">Security</a><a href="#capabilities">Capabilities</a><a href="/benchmarks">Benchmarks</a><a href="#start">Get started</a></nav>
-      <div className="landing-actions">{PREVIEW ? <span className="beta-chip">Private beta</span> : !signedIn && <a className="pill-button pill-ghost" href="/login">Sign in</a>}<a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={14}/></a></div>
+      <div className="landing-actions">{!signedIn && <a className="pill-button pill-ghost" href="/login">Sign in</a>}<a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={14}/></a></div>
     </header>
     <main>
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-grid" aria-hidden="true"/><span className="hero-orb one" aria-hidden="true"/><span className="hero-orb two" aria-hidden="true"/><span className="hero-orb three" aria-hidden="true"/>
         <div className="hero-inner">
           <div>
             <button type="button" className={`acronym ${open ? 'open' : ''}`} onClick={() => setOpen(!open)} aria-label="AIDA stands for Artificial Intelligence Data Analyst" aria-expanded={open}>{ACRONYM.map(([letter, rest], index) => <span key={index}><b>{letter}</b><i>{rest}</i></span>)}</button>
-            <h1 id="hero-title">Ask your data anything. <em>Verify</em> every answer.</h1>
-            <p className="hero-lead">AIDA, your Artificial Intelligence Data Analyst, uses a language model to understand what you mean and deterministic code to decide what runs. Every phrase is traced, every calculation is exact, and your rows never leave the database.</p>
-            <div className="hero-cta"><a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={15}/></a><a className="pill-button pill-ghost" href="#how">See how it works</a></div>
-            <div className="hero-facts"><div><strong>0</strong><span>database rows sent to the model</span></div><div><strong>5</strong><span>pipeline stages, each one inspectable</span></div><div><strong>100%</strong><span>of answers show their SQL and lineage</span></div></div>
+            <h1 id="hero-title">A clearer view<br/><em>of your business.</em></h1>
+            <p className="hero-lead">Good decisions begin with a good question. Ask yours in plain language, explore the answer, and keep the view that matters. Your business data, thoughtfully understood.</p>
+            <div className="hero-cta"><a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={15}/></a><a className="hero-demo-link" href="#demo">Explore a question <ArrowRight size={15}/></a></div>
+            <div className="hero-facts"><div><strong>Private by design</strong><span>Your rows stay out of model prompts.</span></div><div><strong>Open to inspection</strong><span>See the query behind every answer.</span></div></div>
           </div>
-          <div className="console" aria-label="Interactive walkthrough of one question">
-            <div className="console-bar"><i/><i/><i/><span>{current.source}</span></div>
+          <div className="demo-frame" id="demo"><div className="demo-caption"><span>A question, explored</span><span>Interactive demo <ArrowRight size={12}/></span></div><div className="console" aria-label="Interactive walkthrough of one question">
+            <div className="console-bar"><BrandLogo compact/><span>{current.source}</span></div>
             <div className="console-question" aria-live="polite">{current.question.slice(0, typed)}<span className="caret" aria-hidden="true"/></div>
             <div className="console-examples">{DEMOS.map((item, index) => <button key={item.label} type="button" aria-pressed={demo === index} onClick={() => chooseDemo(index)}>{item.label}</button>)}</div>
             <div className="stage-rail" role="tablist" aria-label="Pipeline stage">{STAGES.map((label, index) => <button key={label} type="button" role="tab" aria-selected={stage === index} aria-current={stage === index ? 'step' : undefined} onClick={() => {setStage(index); setTyped(current.question.length); setManual(true)}}>{label}</button>)}</div>
@@ -115,21 +115,22 @@ export default function Landing() {
               {stage === 4 && <><h4>{current.answer ? 'Answer with lineage' : 'Safe outcome'}</h4>{current.answer ? <div className="mini-bars">{current.answer.map(([label, value, text], index) => <div key={label}><span style={{width: `${value / max * 100}%`, animationDelay: `${index * .1}s`, display: 'block'}} aria-hidden="true"/><em style={{fontStyle: 'normal', order: -1}}>{label}</em><strong>{text}</strong></div>)}</div> : <div className="attack-result"><ShieldCheck size={16}/><span>{current.outcome}</span></div>}</>}
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       <section className="landing-section" id="how" aria-labelledby="how-title"><div className="section-inner">
         <div className="section-eyebrow reveal">How AIDA works</div>
-        <h2 className="section-title reveal" id="how-title">Language understands. Code verifies.</h2>
-        <p className="section-lead reveal">Most text-to-SQL tools let a model write the query. AIDA splits the job: the model only interprets, and a deterministic compiler builds the SQL from definitions your team approved.</p>
+        <h2 className="section-title reveal" id="how-title">From a question to a point of view.</h2>
+        <p className="section-lead reveal">Start with the words your team uses. AIDA connects them to definitions you approve, checks the query, and gives you an answer you can explore.</p>
         <div className="flow-grid">
-          {[[MessageSquareText, 'Ask in plain words', 'Type the question the way you would ask an analyst, including nicknames, ratios and relative dates.'], [Sparkles, 'The LLM resolves names', 'It maps each phrase to an approved measure, grouping, value or time period, or asks you to choose when a name is ambiguous.'], [Workflow, 'Code checks every link', 'Grounding, coverage, approved values and capability limits are verified before anything runs.'], [Database, 'Exact, traceable answers', 'Read-only SQL runs inside AIDA. Charts, tables, SQL and lineage show exactly how the answer was produced.']].map(([Icon, title, body]) => {const Glyph = Icon as typeof Database; return <article className="flow-card reveal" key={title as string}><span className="mint-icon"><Glyph size={19}/></span><h3>{title as string}</h3><p>{body as string}</p></article>})}
+          {[[MessageSquareText, 'Ask in plain words', 'Type the question the way you would ask an analyst, including nicknames, ratios and relative dates.'], [ScanSearch, 'A shared understanding', 'It maps each phrase to an approved measure, grouping, value or time period, or asks you to choose when a name is ambiguous.'], [Workflow, 'A carefully checked query', 'Grounding, coverage, approved values and capability limits are verified before anything runs.'], [Database, 'An answer you can explore', 'Read-only SQL runs inside AIDA. Charts, tables, SQL and lineage show exactly how the answer was produced.']].map(([Icon, title, body]) => {const Glyph = Icon as typeof Database; return <article className="flow-card reveal" key={title as string}><span className="mint-icon"><Glyph size={19}/></span><h3>{title as string}</h3><p>{body as string}</p></article>})}
         </div>
       </div></section>
 
       <section className="landing-section trust" id="trust" aria-labelledby="trust-title"><div className="section-inner">
         <div className="section-eyebrow reveal">Security by design</div>
-        <h2 className="section-title reveal" id="trust-title">Six layers between a question and your data.</h2>
+        <h2 className="section-title reveal" id="trust-title">Confidence, with a paper trail.</h2>
         <p className="section-lead reveal">Pick a layer to see a real attack it is tested against. Each scenario is covered by an automated test in the AIDA backend suite.</p>
         <div className="trust-layout">
           <div className="layer-stack reveal">{LAYERS.map((item, index) => <button key={item.title} type="button" aria-pressed={layer === index} onClick={() => setLayer(index)}><span>{String(index + 1).padStart(2, '0')}</span>{item.title}</button>)}</div>
@@ -139,21 +140,21 @@ export default function Landing() {
 
       <section className="landing-section" aria-labelledby="sees-title"><div className="section-inner">
         <div className="section-eyebrow reveal">Privacy you can inspect</div>
-        <h2 className="section-title reveal" id="sees-title">What the model sees, and what it never will.</h2>
-        <p className="section-lead reveal">The interpretation model works from a compact catalog of approved labels. Everything that identifies your data or your people stays inside AIDA.</p>
+        <h2 className="section-title reveal" id="sees-title">Your data deserves discretion.</h2>
+        <p className="section-lead reveal">AIDA shares your question and an approved business vocabulary with the model. Database rows, query results and connection credentials stay inside AIDA. Explore exactly what is shared below.</p>
         <div className="sees-toggle" role="group" aria-label="Model visibility"><button type="button" aria-pressed={sees === 'yes'} onClick={() => setSees('yes')}><Eye size={13} style={{verticalAlign: '-2px', marginRight: 6}}/>Shared with the model</button><button type="button" aria-pressed={sees === 'no'} onClick={() => setSees('no')}><EyeOff size={13} style={{verticalAlign: '-2px', marginRight: 6}}/>Never leaves AIDA</button></div>
         <div className="sees-grid" key={sees}>{SEES[sees].map((item, index) => <div key={item} className={sees} style={{animationDelay: `${index * .05}s`}}>{sees === 'yes' ? <Check size={16}/> : <X size={16}/>}<span>{item}</span></div>)}</div>
       </div></section>
 
-      <section className="landing-section" id="capabilities" aria-labelledby="capabilities-title" style={{background: '#fbfcf7', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)'}}><div className="section-inner">
+      <section className="landing-section" id="capabilities" aria-labelledby="capabilities-title" style={{background: 'var(--surface)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)'}}><div className="section-inner">
         <div className="section-eyebrow reveal">Capabilities</div>
-        <h2 className="section-title reveal" id="capabilities-title">An analyst’s toolkit, without an analyst’s backlog.</h2>
+        <h2 className="section-title reveal" id="capabilities-title">Follow the question. Find the useful detail.</h2>
         <div className="capability-grid">{CAPABILITIES.map(item => <article className="capability reveal" key={item.title}><item.icon size={22}/><h3>{item.title}</h3><p>{item.body}</p></article>)}</div>
       </div></section>
 
       <section className="landing-section" id="benchmarks" aria-labelledby="benchmarks-title"><div className="section-inner">
         <div className="section-eyebrow reveal">Benchmarks</div>
-        <h2 className="section-title reveal" id="benchmarks-title">Measured, not claimed.</h2>
+        <h2 className="section-title reveal" id="benchmarks-title">The detail behind the answers.</h2>
         <p className="section-lead reveal">Real questions through the real pipeline, scored against independently written SQL. These figures are read directly from the recorded benchmark runs.</p>
         <div className="proof reveal">
           {FACTS.shared && <div><strong>{pct(FACTS.shared.beforeSummary.overall_accuracy)} → {pct(FACTS.shared.afterSummary.overall_accuracy)}</strong><span>correct on the {FACTS.shared.questions} questions every compared run answered: {runName(FACTS.shared.before)} → {runName(FACTS.shared.after)}</span></div>}
@@ -161,18 +162,18 @@ export default function Landing() {
           <div><strong>{FACTS.rows}/{FACTS.plan}</strong><span>answers with a correct plan that also returned the correct rows, across {FACTS.runCount} runs</span></div>
           {FACTS.bestRun && <div><strong>{FACTS.bestRun.summary.correct_refusals}/{FACTS.bestRun.summary.refusal_cases}</strong><span>requests correctly refused or clarified by {runName(FACTS.bestRun)}</span></div>}
         </div>
-        <p className="proof-note reveal">These questions are a regression set, not a blind test. <a href="/benchmarks" style={{color: '#1f6a4f', fontWeight: 600}}>See every run, chart and question →</a></p>
+        <p className="proof-note reveal">These questions are a regression set, not a blind test. <a href="/benchmarks" style={{color: 'var(--olive)', fontWeight: 600}}>See every run, chart and question →</a></p>
       </div></section>
 
       <section className="landing-section" id="start" aria-labelledby="start-title"><div className="section-inner">
         <div className="section-eyebrow reveal">Onboarding</div>
-        <h2 className="section-title reveal" id="start-title">From sign-up to first answer in about two minutes.</h2>
+        <h2 className="section-title reveal" id="start-title">Make room for your next question.</h2>
         <div className="steps reveal">
-          {[[UserPlus, 'Create your account', 'The first account becomes the workspace owner and can review security events.'], [Boxes, 'Tell us about your team', 'Company, role and the areas you care about shape your starting point.'], [Database, 'Choose your data', 'Explore the demos, add a private logistics sample, or upload SQLite and approve its fields.'], [ShieldCheck, 'Ask and verify', 'Review what is shared with the model, then ask. Every answer shows its plan, SQL and lineage.']].map(([Icon, title, body], index) => {const Glyph = Icon as typeof Database; return <div key={title as string}><b>{index + 1}</b><Glyph size={16} style={{color: '#2f8f73', marginLeft: 10, verticalAlign: '-3px'}}/><h3>{title as string}</h3><p>{body as string}</p></div>})}
+          {[[UserPlus, 'Create your account', 'Sign up and make a home for the questions your team asks.'], [Boxes, 'Tell us about your team', 'Company, role and the areas you care about shape your starting point.'], [Database, 'Choose your data', 'Start with a sample, connect a database, or upload a reporting snapshot.'], [ShieldCheck, 'Ask and verify', 'Review what is shared with the model, then ask. Every answer shows its plan, SQL and lineage.']].map(([Icon, title, body], index) => {const Glyph = Icon as typeof Database; return <div key={title as string}><b>{index + 1}</b><Glyph size={16} style={{color: 'var(--olive)', marginLeft: 10, verticalAlign: '-3px'}}/><h3>{title as string}</h3><p>{body as string}</p></div>})}
         </div>
         <div className="final-cta reveal" style={{marginTop: 56}}>
-          <div><h2>Give your team answers they can check.</h2><p>Start with the demo sources, or bring a SQLite snapshot of your own.</p></div>
-          <div className="hero-cta"><a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={15}/></a>{!signedIn && !PREVIEW && <a className="pill-button pill-ghost" href="/login">I already have an account</a>}</div>
+          <div><h2>A little more clarity.<br/><em>A better next step.</em></h2><p>Explore a sample, or connect your own reporting data.</p></div>
+          <div className="hero-cta"><a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={15}/></a>{!signedIn && <a className="pill-button pill-ghost" href="/login">Sign in</a>}</div>
         </div>
       </div></section>
     </main>

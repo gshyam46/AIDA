@@ -1,4 +1,5 @@
 'use client'
+import BrandLogo from '../../components/BrandLogo'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {Activity, ArrowRight, ArrowUpRight, BarChart3, CalendarDays, Check, ChevronRight, Code2, Database, LayoutDashboard, LineChart, LoaderCircle, LockKeyhole, LogOut, PanelLeftClose, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Sparkles, Table2, Trash2, X, Zap} from 'lucide-react'
@@ -216,7 +217,7 @@ function WorkspaceApp() {
     <a className="skip-link" href="#main">Skip to main content</a>
     {sidebarOpen && <button className="sidebar-backdrop" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
     <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
-      <a className="brand" href="/" aria-label="AIDA home"><span className="brand-mark"><i/><i/><i/></span><span className="brand-word">AIDA<span className="brand-dot">.</span></span></a>
+      <a className="brand" href="/" aria-label="AIDA home"><BrandLogo/></a>
       <div className="workspace-switch"><div className="workspace-icon"><Database size={17}/></div><label className="source-select">Data source<select aria-label="Data source" value={sourceId} disabled={booting} onChange={event => {if (sources) void loadSource(event.target.value, sources)}}>{sources?.sources.map(source => <option key={source.id} value={source.id}>{source.name}{source.configured ? '' : ' · needs mapping'}</option>)}</select></label></div>
       <div className="nav-caption">WORKSPACE</div>
       <nav aria-label="Main navigation"><button onClick={() => navigate('explorer')} className={tab === 'explorer' ? 'active' : ''}><Search size={18}/>Explorer<ArrowUpRight size={14} className="nav-shortcut"/></button><button onClick={() => navigate('dashboards')} className={tab === 'dashboards' ? 'active' : ''}><LayoutDashboard size={18}/>Dashboards{activeCards.length > 0 && <span className="nav-badge">{activeCards.length}</span>}</button><button onClick={() => navigate('data')} className={tab === 'data' ? 'active' : ''}><Database size={18}/>Data catalog</button></nav>

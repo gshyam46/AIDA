@@ -5,12 +5,15 @@
  */
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const {randomUUID} = require('node:crypto');
 const {createRequire} = require('node:module');
 const {chromium} = createRequire(path.join(__dirname, '../frontend/package.json'))('playwright');
 
 const base = process.env.AIDA_BASE_URL || 'http://localhost:3000';
+const artifacts = path.join(__dirname, '../artifacts/e2e-availability');
+fs.mkdirSync(artifacts, {recursive: true});
 const unavailable = {status: 503, contentType: 'application/json', body: JSON.stringify({error: 'The data service is unavailable. Start the backend, then try again.'})};
 
 async function step(name, action) {
@@ -41,12 +44,13 @@ async function step(name, action) {
     await context.close();
   });
 
-  for (const [route, heading] of [['/signup', 'Sign-ups are coming soon'], ['/login', 'Sign-in is paused for now'], ['/onboarding', 'Sign-ups are coming soon'], ['/workspace', 'Sign-ups are coming soon']]) {
-    await step(`backend down: ${route} shows the interest page`, async () => {
+  for (const [route, heading] of [['/signup', 'Sign up'], ['/login', 'Sign in'], ['/onboarding', 'Sign up'], ['/workspace', 'Sign up']]) {
+    await step(`backend down: ${route} keeps registration available`, async () => {
       const {context, page} = await open({'**/api/v1/health': request => request.fulfill(unavailable)});
       await page.goto(base + route);
       await page.getByRole('heading', {name: heading}).waitFor({timeout: 30000});
       assert.equal(await page.locator('input[type=password]').count(), 0, 'no password field on the interest page');
+      assert.equal(await page.getByText(/Currently unavailable|Sign-ups are coming soon/).count(), 0);
       await context.close();
     });
   }
@@ -67,12 +71,13 @@ async function step(name, action) {
     await passwords.nth(0).fill(password);
     await passwords.nth(1).fill(password);
     await page.getByRole('button', {name: 'Create account'}).click();
-    await page.getByRole('heading', {name: 'Sign-ups are coming soon'}).waitFor();
+    await page.getByRole('heading', {name: 'Sign up'}).waitFor();
     assert.equal(await page.getByLabel('Full name').inputValue(), 'Asha Mehta');
     assert.equal(await page.getByLabel('Work email').inputValue(), 'asha.mehta@example.com');
     await page.getByRole('checkbox').check();
-    await page.getByRole('button', {name: 'Keep me posted'}).click();
-    await page.getByRole('heading', {name: 'Thank you, Asha.'}).waitFor();
+    await page.getByRole('button', {name: 'Sign up', exact: true}).click();
+    await page.waitForURL(/\/waitlist$/);
+    await page.getByRole('heading', {name: 'You’re on the list.'}).waitFor();
     assert(captured, 'interest request was sent');
     assert.equal(captured.source, 'signup');
     assert.equal(captured.consent, true);
@@ -82,18 +87,63 @@ async function step(name, action) {
     return `payload fields: ${Object.keys(captured).join(', ')}`;
   });
 
-  await step('storage failure: an honest error, no thank-you', async () => {
+  await step('registration saved: redirect without personal details in URL or browser storage', async () => {
+    let captured = null;
     const {context, page} = await open({
       '**/api/v1/health': request => request.fulfill(unavailable),
-      '**/api/interest': request => request.fulfill({status: 503, contentType: 'application/json', body: JSON.stringify({stored: false, error: 'We could not save your details right now. Please try again a little later.'})}),
+      '**/api/interest': route => {captured = route.request().postDataJSON(); return route.fulfill({status: 200, contentType: 'application/json', body: '{"stored":true}'});},
     });
     await page.goto(`${base}/signup`);
     await page.getByLabel('Full name').fill('Asha Mehta');
     await page.getByLabel('Work email').fill('asha.mehta@example.com');
     await page.getByRole('checkbox').check();
-    await page.getByRole('button', {name: 'Keep me posted'}).click();
+    await page.screenshot({path: path.join(artifacts, 'signup-desktop.png'), fullPage: true});
+    await page.setViewportSize({width: 390, height: 844});
+    await page.screenshot({path: path.join(artifacts, 'signup-mobile.png'), fullPage: true});
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'signup fits mobile viewport');
+    await page.setViewportSize({width: 1280, height: 860});
+    await page.getByRole('button', {name: 'Sign up', exact: true}).click();
+    await page.waitForURL(/\/waitlist$/);
+    await page.getByRole('heading', {name: 'You’re on the list.'}).waitFor();
+    await page.screenshot({path: path.join(artifacts, 'waitlist-desktop.png'), fullPage: true});
+    await page.setViewportSize({width: 390, height: 844});
+    await page.screenshot({path: path.join(artifacts, 'waitlist-mobile.png'), fullPage: true});
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'waitlist fits mobile viewport');
+    assert.equal(new URL(page.url()).search, '');
+    assert.equal(captured.email, 'asha.mehta@example.com');
+    assert.equal(captured.consent, true);
+    assert(!/password/i.test(JSON.stringify(captured)));
+    const stored = await page.evaluate(() => JSON.stringify({local: {...localStorage}, session: {...sessionStorage}}));
+    assert(!stored.includes('asha.mehta') && !stored.includes('Asha Mehta'), 'no PII persisted in browser storage');
+    await page.reload();
+    await page.getByRole('heading', {name: 'You’re on the list.'}).waitFor();
+    await context.close();
+  });
+
+  for (const status of [200, 503]) await step(`storage response ${status} with stored:false: preserve details and do not confirm`, async () => {
+    const {context, page} = await open({
+      '**/api/v1/health': request => request.fulfill(unavailable),
+      '**/api/interest': request => request.fulfill({status, contentType: 'application/json', body: JSON.stringify({stored: false, error: 'We could not save your details right now. Please try again a little later.'})}),
+    });
+    await page.goto(`${base}/signup`);
+    await page.getByLabel('Full name').fill('Asha Mehta');
+    await page.getByLabel('Work email').fill('asha.mehta@example.com');
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', {name: 'Sign up', exact: true}).click();
     await page.getByRole('alert').filter({hasText: 'could not save your details'}).waitFor();
-    assert.equal(await page.getByRole('heading', {name: /Thank you/}).count(), 0);
+    assert.equal(await page.getByRole('heading', {name: 'You’re on the list.'}).count(), 0);
+    assert.equal(new URL(page.url()).pathname, '/signup');
+    assert.equal(await page.getByLabel('Full name').inputValue(), 'Asha Mehta');
+    assert.equal(await page.getByLabel('Work email').inputValue(), 'asha.mehta@example.com');
+    assert.equal(await page.getByRole('checkbox').isChecked(), true);
+    await context.close();
+  });
+
+  await step('direct waitlist visit does not claim a registration was saved', async () => {
+    const {context, page} = await open();
+    await page.goto(`${base}/waitlist`);
+    await page.getByRole('heading', {name: 'Make a start.'}).waitFor();
+    assert.equal(await page.getByRole('heading', {name: 'You’re on the list.'}).count(), 0);
     await context.close();
   });
 

@@ -1,6 +1,6 @@
 'use client'
 
-import {useId, useState} from 'react'
+import {useState} from 'react'
 import {Catalog, formatValue, isRelational, QueryResponse} from '../lib/api'
 import RelationalChart from './RelationalChart'
 
@@ -8,7 +8,6 @@ export default function QueryChart({result, catalog, type, onSelect, compact = f
   result: QueryResponse; catalog?: Catalog | null; type?: string; onSelect?: (dimension: string, value: string) => void; compact?: boolean
 }) {
   const [active, setActive] = useState<number | null>(null)
-  const gradientId = useId().replace(/:/g, '')
   if (isRelational(result.plan)) return <RelationalChart result={result} catalog={catalog} type={type} onSelect={onSelect} compact={compact}/>
   const dimension = result.plan?.dimension
   const metric = result.plan?.metric || 'value'
@@ -50,20 +49,19 @@ export default function QueryChart({result, catalog, type, onSelect, compact = f
   return <div className={`line-chart ${compact ? 'compact' : ''}`} data-testid="query-chart">
     <div className="chart-readout" aria-live="polite">{selected ? <><span>{labels[active!]}</span><strong>{format(Number(selected.value))}</strong></> : <span>Hover or select a point to see its value</span>}</div>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${metric.replace(/_/g, ' ')} by ${dimension}, ${rows.length} data points`}>
-      <defs><linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#248b79" stopOpacity="0.17"/><stop offset="100%" stopColor="#248b79" stopOpacity="0.015"/></linearGradient></defs>
       {[0, .25, .5, .75, 1].map(ratio => {
         const y = top + (1 - ratio) * (height - top - bottom)
-        return <g key={ratio}><line x1={left} x2={width-right} y1={y} y2={y} stroke="#e9ede9" strokeDasharray="4 5"/><text x={left-12} y={y+4} textAnchor="end" fill="#81908b" fontSize="11">{format(min + span*ratio, true)}</text></g>
+        return <g key={ratio}><line x1={left} x2={width-right} y1={y} y2={y} stroke="#DEDCCD" strokeDasharray="4 5"/><text x={left-12} y={y+4} textAnchor="end" fill="#6D705E" fontSize="11">{format(min + span*ratio, true)}</text></g>
       })}
-      <path d={area} fill={`url(#${gradientId})`}/>
-      <polyline points={points} fill="none" stroke="#248b79" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={area} fill="#555D38" fillOpacity="0.08"/>
+      <polyline points={points} fill="none" stroke="#555D38" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
       {coords.map((point, index) => <g key={labels[index]}>
-        <circle cx={point.x} cy={point.y} r={active === index ? 6 : 4} fill="white" stroke="#248b79" strokeWidth="2"/>
+        <circle cx={point.x} cy={point.y} r={active === index ? 6 : 4} fill="#FAF7EF" stroke="#555D38" strokeWidth="2"/>
         <circle role="button" tabIndex={0} aria-label={`${labels[index]}: ${format(Number(rows[index].value))}`} cx={point.x} cy={point.y} r="13" fill="transparent" className="chart-point"
           onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)} onClick={() => pick(index)} onKeyDown={event => {if (event.key === 'Enter' || event.key === ' ') {event.preventDefault(); pick(index)}}}>
           <title>{labels[index]}: {format(Number(rows[index].value))}</title>
         </circle>
-        {(rows.length <= 12 || index % Math.ceil(rows.length / 12) === 0) && <text x={point.x} y={height-9} textAnchor="middle" fill="#81908b" fontSize="11">{fmtLabel(labels[index])}</text>}
+        {(rows.length <= 12 || index % Math.ceil(rows.length / 12) === 0) && <text x={point.x} y={height-9} textAnchor="middle" fill="#6D705E" fontSize="11">{fmtLabel(labels[index])}</text>}
       </g>)}
     </svg>
     <p className="chart-hint">{canDrill ? 'Select a point to filter this group and explore another breakdown.' : 'Select any point for the exact value. Use Table to see every row.'}</p>

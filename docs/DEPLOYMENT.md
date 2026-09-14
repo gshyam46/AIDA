@@ -9,7 +9,7 @@ This guide covers:
 
 ## 1. Frontend on Vercel
 
-The frontend deploys on its own. With `NEXT_PUBLIC_AIDA_MODE=preview` it serves the landing page and `/benchmarks`, while sign-in, sign-up, onboarding and the workspace show a "Currently unavailable" page that records early-access interest. No backend, database or model key is needed for that.
+The frontend deploys on its own. With `NEXT_PUBLIC_AIDA_MODE=preview` it serves the landing page and `/benchmarks` with normal **Sign up** and **Sign in** navigation. Sign-up records registration details and opens `/waitlist` after storage confirms success. The confirmation explains that account setup follows workspace availability; it does not claim an authenticated account was created. Sign-in states that access is paused and offers availability updates. No Python backend or model key is needed to serve these pages; configure Supabase or a webhook to save registrations. The [shared theme guide](THEME.md) covers typography, brand assets and this flow.
 
 ### Import the repository
 
@@ -48,18 +48,18 @@ Accounts, sessions, onboarding answers and security events are stored by the bac
 
 ### When accounts are unavailable
 
-Every account page first calls `/api/v1/health`. The page switches to **Currently unavailable** when any of these happen:
+Outside preview mode, every account page first calls `/api/v1/health`. The page switches to the registration or availability-update form when any of these happen:
 
 - the build is in preview mode;
 - the backend is not deployed or does not answer within five seconds;
 - a request fails with a network error or a 5xx response, including a sign-up, sign-in or onboarding submission that fails part-way.
 
-The page thanks the visitor for their interest and offers a short form. Name and email are carried over from the form they were filling in. The form sends its data to `POST /api/interest`, a Next.js route that runs on Vercel itself:
+Sign-up starts with name, email and email consent, with optional team details. The sign-in fallback explains that access is paused before offering updates. Name and email are carried over from interrupted forms; passwords are discarded. The form sends its data to `POST /api/interest`, a Next.js route that runs on the frontend host:
 
 - **Stored fields:** email, name, company, role, what they want to analyze, the page they came from (`signup`, `login`, `onboarding` or `workspace`), consent to be emailed, and the time.
 - **Passwords are never sent or stored.** The test in `scripts/e2e-availability.cjs` checks this.
-- **Storage:** Supabase via its REST API using the server-side key, otherwise the webhook. A repeat submission with the same email updates the existing row.
-- **Honest confirmation:** the visitor sees "Thank you" only after the save succeeds. If storage is not configured or fails, they see "We could not save your details right now."
+- **Storage:** Supabase via its REST API using the server-side key, otherwise the webhook. With Supabase, a repeat submission with the same email updates the existing row; webhook consumers must handle their own persistence and deduplication.
+- **Confirmation:** normal submissions continue only on a successful HTTP response with `stored === true`. Sign-up then opens `/waitlist` and explains staged workspace availability. Missing or failed storage keeps the form visible with an error and preserves entered details. The session marker contains only the source page, with no personal data. If browser storage is unavailable, the saved confirmation appears inline. A direct `/waitlist` visit without the marker offers sign-up instead of claiming a registration exists.
 - **Protections:**
   - same-origin submissions only;
   - bodies up to 4 KB;

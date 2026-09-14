@@ -1,10 +1,10 @@
 'use client'
+import BrandLogo from '../../components/BrandLogo'
 import {useState} from 'react'
-import {ArrowLeft, ArrowRight} from 'lucide-react'
+import {ArrowRight} from 'lucide-react'
 import DataTable from '../../components/DataTable'
 import EngineeringBenchmarks from '../../components/EngineeringBenchmarks'
 import {benchmark, BenchmarkRun, BenchmarkSummary, isAida4, keyFacts, modelName, pct, runName} from '../../lib/benchmarks'
-import {PREVIEW} from '../../lib/mode'
 
 const SUITE_LABELS: Record<string, string> = {logistics: 'Logistics regression', relational: 'Relational demos', semantic: 'Semantic regression', capabilities: 'Calculations', resolution: 'Name resolution'}
 const REASON_LABELS: Record<string, string> = {code_rejected: 'Reply rejected by code checks', unsupported: 'Model judged it unsupported', ambiguous: 'Model asked to disambiguate',
@@ -66,9 +66,9 @@ export default function BenchmarksPage() {
 
   return <div className="landing bench">
     <header className="landing-nav">
-      <a className="brand" href="/" aria-label="AIDA home"><span className="brand-mark"><i/><i/><i/></span><span className="brand-word">AIDA<span className="brand-dot">.</span></span></a>
+      <a className="brand" href="/" aria-label="AIDA home"><BrandLogo/></a>
       <nav className="landing-links" aria-label="Site"><a href="/#how">How it works</a><a href="/#trust">Security</a><a href="/benchmarks" aria-current="page">Benchmarks</a></nav>
-      <div className="landing-actions"><a className="pill-button pill-ghost" href="/"><ArrowLeft size={14}/>Back to AIDA</a>{PREVIEW ? <span className="beta-chip">Private beta</span> : <a className="pill-button pill-lime" href="/signup">Get started free<ArrowRight size={14}/></a>}</div>
+      <div className="landing-actions"><a className="pill-button pill-ghost" href="/login">Sign in</a><a className="pill-button pill-lime" href="/signup">Sign up<ArrowRight size={14}/></a></div>
     </header>
     <main>
       <section className="bench-hero" aria-labelledby="bench-title"><div className="section-inner">
@@ -197,7 +197,7 @@ export default function BenchmarksPage() {
           {data.runs.some(run => run.status !== 'complete') && <li>Runs marked partial were stopped by the provider&apos;s daily token quota and cover fewer questions.</li>}
           {unmeasured.length > 0 && <li>No AIDA 4 results are recorded yet for {unmeasured.map(modelName).join(', ')}.</li>}
         </ul>
-        <div className="final-cta" style={{marginTop: 48}}><div><h2>See the answers for yourself.</h2><p>Every answer in AIDA shows its plan, SQL and lineage.</p></div><div className="hero-cta"><a className="pill-button pill-lime" href="/signup">{PREVIEW ? 'Request early access' : 'Get started free'}<ArrowRight size={15}/></a></div></div>
+        <div className="final-cta" style={{marginTop: 48}}><div><h2>See the answers for yourself.</h2><p>Every answer in AIDA shows its plan, SQL and lineage.</p></div><div className="hero-cta"><a className="pill-button pill-lime" href="/signup">Sign up<ArrowRight size={15}/></a></div></div>
       </div></section>
     </main>
     <footer className="landing-footer"><span><strong style={{color: 'var(--ink)'}}>AIDA</strong> · Artificial Intelligence Data Analyst</span><span>Designed and built by Ghanashyam</span></footer>

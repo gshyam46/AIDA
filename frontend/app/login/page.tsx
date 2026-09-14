@@ -39,7 +39,7 @@ function LoginForm() {
     }
   }
   if (unavailable) return <ComingSoon source="login" draft={{email}}/>
-  return <AuthShell title="Welcome back to your data." lead="Pick up where you left off: saved dashboards, approved catalogs and every answer's full lineage.">
+  return <AuthShell title="Good to have you back." lead="Your questions, saved views, and the work you want to come back to. All in one place.">
     <a className="back-link" href="/"><ArrowLeft size={14}/>Back to AIDA</a>
     <h2>Sign in</h2>
     <p>Use the account you created for this workspace.</p>
@@ -49,7 +49,7 @@ function LoginForm() {
       <label className="field">Password<input type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={event => setPassword(event.target.value)}/></label>
       <button className="pill-button pill-dark auth-submit" disabled={busy}>{busy ? <LoaderCircle className="spin" size={16}/> : <ArrowRight size={16}/>}Sign in</button>
     </form>
-    <p className="auth-switch">New to AIDA? <a href="/signup">Create an account</a></p>
+    <p className="auth-switch">New to AIDA? <a href="/signup">Sign up</a></p>
   </AuthShell>
 }
 

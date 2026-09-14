@@ -34,11 +34,20 @@ async function launch() {
   page.on('console', message => {if (message.type() === 'error') report.browser_errors.push(message.text());});
   page.on('pageerror', error => report.browser_errors.push(error.message));
   page.on('response', response => {if (response.url().includes('/api/v1/') && response.status() >= 500) report.failed_requests.push(`${response.status()} ${response.url()}`);});
+  const queryRequests = [];
+  page.on('request', request => {if (request.url().endsWith('/api/v1/query')) queryRequests.push(request.postDataJSON());});
   const shot = name => page.screenshot({path: path.join(artifacts, `${name}.png`), fullPage: false});
+  const fullShot = async name => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    return page.screenshot({path: path.join(artifacts, `${name}.png`), fullPage: true, animations: 'disabled'});
+  };
+  const mainNavigation = () => page.getByRole('navigation', {name: 'Main navigation'});
+  const waitForPlan = () => page.waitForResponse(response => response.url().endsWith('/api/v1/query') && response.request().postDataJSON()?.plan, {timeout: 30000});
+  let inspectedPlan;
   try {
     await step('landing explains AIDA and credits the author', async () => {
       await page.goto(base, {waitUntil: 'networkidle'});
-      await page.getByRole('heading', {level: 1, name: /Ask your data anything/}).waitFor();
+      await page.getByRole('heading', {level: 1, name: /A clearer view/}).waitFor();
       assert.equal(await page.getByRole('button', {name: 'AIDA stands for Artificial Intelligence Data Analyst'}).count(), 1);
       assert.match(await page.locator('.watermark').innerText(), /ghanashyam/i);
       await page.getByRole('tab', {name: 'Validate'}).click();
@@ -102,7 +111,7 @@ async function launch() {
       await page.locator('[data-testid="result-panel"]').waitFor({timeout: 60000});
       assert.match(await page.locator('.user-menu').innerText(), /Journey Tester/);
       assert.match(await page.locator('select[aria-label="Data source"] option:checked').innerText(), /Logistics sample/);
-      assert.equal(await page.locator('.brand-word').first().innerText(), 'AIDA.');
+      assert.equal(await page.getByRole('link', {name: 'AIDA home'}).first().innerText(), 'AIDA');
       await shot('05-workspace');
     });
     await step('result table supports search, filter and sort', async () => {
@@ -122,6 +131,144 @@ async function launch() {
       await firstFilter.fill('');
       await shot('06-table');
       return {rows: before};
+    });
+    await step('every offered chart type renders without a new query', async () => {
+      await page.getByRole('tab', {name: 'Chart', exact: true}).click();
+      const before = queryRequests.length;
+      const options = await page.locator('.chart-type button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
+      assert(options.length >= 2, 'The logistics sample offers multiple chart views');
+      for (const option of options) {
+        const type = option.replace(/ chart$/, '').toLowerCase();
+        const button = page.getByRole('button', {name: option, exact: true});
+        await button.click();
+        assert.equal(await button.getAttribute('aria-pressed'), 'true');
+        const chart = page.getByTestId('result-panel').getByTestId('query-chart');
+        await chart.waitFor();
+        assert.equal(await chart.getAttribute('data-chart-type'), type, `${type} renderer selected`);
+        if (type === 'bar') assert((await chart.getByTestId('chart-bar').count()) > 0);
+        if (type === 'line' || type === 'area') {
+          assert((await chart.locator('svg polyline').count()) > 0);
+          assert.equal((await chart.locator('svg path').count()) > 0, type === 'area');
+        }
+        if (type === 'donut') assert((await chart.getByTestId('donut-segment').count()) > 0);
+        await chart.scrollIntoViewIfNeeded();
+        await shot(`07-chart-${type}`);
+      }
+      assert.equal(queryRequests.length, before, 'Changing chart presentation must not execute a query');
+      await fullShot('07-workspace-full');
+      return {chart_types: options};
+    });
+    await step('SQL and trust exposes compiled SQL, lineage and the validated plan', async () => {
+      await page.getByRole('tab', {name: 'SQL & trust'}).click();
+      const sql = page.locator('.sql-content');
+      assert.match(await sql.locator(':scope > pre').first().innerText(), /\bSELECT\b/i);
+      assert((await sql.getByTestId('query-lineage').locator('.lineage-tables > span').count()) > 0);
+      assert((await sql.locator('.lineage-columns tbody tr').count()) > 0);
+      const plan = sql.locator('details').filter({has: page.locator('summary', {hasText: 'View the validated query plan'})});
+      await plan.locator('summary').click();
+      inspectedPlan = JSON.parse(await plan.locator('pre').innerText());
+      assert.equal(inspectedPlan.version, 2);
+      assert(inspectedPlan.metrics.length > 0);
+      assert.match(await page.locator('.result-footer').innerText(), /0 model calls/);
+      await sql.scrollIntoViewIfNeeded();
+      await shot('08-sql-trust');
+      return {metrics: inspectedPlan.metrics, dimensions: inspectedPlan.dimensions};
+    });
+    await step('saved dashboard refreshes and reopens its exact plan without a model', async () => {
+      await page.getByRole('button', {name: 'Save to dashboard'}).click();
+      await page.getByRole('status').filter({hasText: 'Saved to this source'}).waitFor();
+      const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('aida:dashboard:v2') || '[]'));
+      assert.equal(saved.length, 1);
+      assert.deepEqual(saved[0].plan, inspectedPlan);
+      const refreshed = waitForPlan();
+      await mainNavigation().getByRole('button', {name: /^Dashboards/}).click();
+      const result = await (await refreshed).json();
+      assert.equal(result.success, true);
+      assert.equal(result.meta.model_calls, 0);
+      const card = page.getByTestId('dashboard-card');
+      assert.equal(await card.count(), 1);
+      await card.getByTestId('query-chart').waitFor();
+      await shot('09-dashboard');
+      await fullShot('09-dashboard-full');
+      const reopened = waitForPlan();
+      await card.getByRole('button', {name: 'Open in explorer'}).click();
+      const reopenedResult = await (await reopened).json();
+      assert.equal(reopenedResult.success, true);
+      assert.equal(reopenedResult.meta.model_calls, 0);
+      assert.deepEqual(reopenedResult.plan, inspectedPlan);
+      await page.getByTestId('result-panel').waitFor();
+      await page.getByRole('tab', {name: 'Chart', exact: true}).click();
+      return {saved_cards: saved.length, model_calls: reopenedResult.meta.model_calls};
+    });
+    await step('data catalog shows the connected source and approved definitions', async () => {
+      await mainNavigation().getByRole('button', {name: 'Data catalog', exact: true}).click();
+      await page.getByRole('heading', {name: 'Measures with explicit definitions'}).waitFor();
+      assert.match(await page.locator('.dataset-banner h2').innerText(), /logistics/i);
+      assert((await page.locator('.catalog-metric').count()) > 0);
+      assert((await page.locator('.catalog-dimension').count()) > 0);
+      await shot('10-data-catalog');
+      await fullShot('10-data-catalog-full');
+      await mainNavigation().getByRole('button', {name: 'Explorer', exact: true}).click();
+      await page.getByTestId('result-panel').waitFor();
+    });
+    await step('workspace metrics fit tablet and mobile; navigation works at 390px and 320px', async () => {
+      const measurements = [];
+      const assertMetricsFit = async width => {
+        const metrics = await page.locator('.kpi-card > strong').evaluateAll(elements => elements.map(element => ({value: element.textContent.trim(), width: element.clientWidth, contentWidth: element.scrollWidth})));
+        assert(metrics.length > 0, 'Overview metrics are present');
+        assert(metrics.every(metric => metric.contentWidth <= metric.width + 1), `KPI values are clipped at ${width}px: ${JSON.stringify(metrics)}`);
+        return metrics;
+      };
+      const waitForClosedNavigation = () => page.waitForFunction(() => {
+        const sidebar = document.querySelector('.sidebar');
+        return sidebar && !sidebar.classList.contains('is-open') && sidebar.getBoundingClientRect().right <= 1;
+      });
+      if (await page.getByRole('button', {name: 'Dismiss notification'}).count()) await page.getByRole('button', {name: 'Dismiss notification'}).click();
+      await page.setViewportSize({width: 768, height: 1024});
+      const tabletMetrics = await assertMetricsFit(768);
+      await fullShot('11-workspace-768-full');
+      for (const width of [390, 320]) {
+        await page.setViewportSize({width, height: 844});
+        await waitForClosedNavigation();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        const overflow = await page.evaluate(() => ({viewport: window.innerWidth, page: document.documentElement.scrollWidth,
+          elements: [...document.querySelectorAll('.main-shell *')].filter(element => element.getBoundingClientRect().right > window.innerWidth + 1 && getComputedStyle(element).position !== 'fixed').slice(0, 12).map(element => ({tag: element.tagName, class: element.className, right: element.getBoundingClientRect().right}))}));
+        measurements.push({...overflow, metrics: await assertMetricsFit(width)});
+        await shot(`11-workspace-${width}`);
+        await fullShot(`11-workspace-${width}-full`);
+        assert(overflow.page <= width, `Workspace overflows at ${width}px: ${JSON.stringify(overflow)}`);
+        await page.getByRole('button', {name: 'Open navigation', exact: true}).click();
+        await page.locator('.sidebar.is-open').waitFor();
+        await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().x >= -1);
+        const sidebar = await page.locator('.sidebar').boundingBox();
+        assert(sidebar.x >= -1 && sidebar.x + sidebar.width <= width, 'Open navigation fits viewport');
+        await shot(`12-navigation-${width}`);
+        // The sidebar covers the left part of the backdrop; click the exposed right edge.
+        await page.getByRole('button', {name: 'Close navigation', exact: true}).click({position: {x: width - 8, y: 40}});
+        await page.locator('.sidebar.is-open').waitFor({state: 'detached'});
+        await waitForClosedNavigation();
+        await page.getByRole('button', {name: 'Open navigation', exact: true}).click();
+        await mainNavigation().getByRole('button', {name: 'Data catalog', exact: true}).click();
+        await page.getByRole('heading', {name: 'Measures with explicit definitions'}).waitFor();
+        assert.equal(await page.locator('.sidebar.is-open').count(), 0, 'Selecting a page closes navigation');
+        await waitForClosedNavigation();
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `Catalog fits ${width}px viewport`);
+        await shot(`13-catalog-${width}`);
+        await page.getByRole('button', {name: 'Open navigation', exact: true}).click();
+        const refreshed = waitForPlan();
+        await mainNavigation().getByRole('button', {name: /^Dashboards/}).click();
+        assert.equal((await (await refreshed).json()).meta.model_calls, 0);
+        await page.getByTestId('dashboard-card').getByTestId('query-chart').waitFor();
+        await waitForClosedNavigation();
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `Dashboard fits ${width}px viewport`);
+        await fullShot(`14-dashboard-${width}-full`);
+        await page.getByRole('button', {name: 'Open navigation', exact: true}).click();
+        await mainNavigation().getByRole('button', {name: 'Explorer', exact: true}).click();
+        await page.getByTestId('result-panel').waitFor();
+      }
+      await page.setViewportSize({width: 1366, height: 900});
+      assert(queryRequests.every(request => request.plan && !request.question), 'All presentation journeys execute explicit plans only');
+      return {tablet_metrics: tabletMetrics, viewports: measurements, question_requests: 0};
     });
     if (process.env.AIDA_E2E_ASK === '1') await step('a real question returns an interpreted answer', async () => {
       await page.getByRole('tab', {name: 'Ask a question'}).click();

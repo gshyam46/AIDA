@@ -1,0 +1,240 @@
+{
+  "change": "Parchment + Olive frontend and registration flow",
+  "production_build": "passed",
+  "total_browser_checks": 50,
+  "suites": [
+    {
+      "suite": "theme",
+      "status": "passed",
+      "started_at": "2026-09-14T19:44:20.839Z",
+      "finished_at": "2026-09-14T19:44:55.406Z",
+      "checks": [
+        {
+          "name": "interactive question examples and all five pipeline tabs",
+          "status": "passed"
+        },
+        {
+          "name": "all six security layers work with the keyboard",
+          "status": "passed"
+        },
+        {
+          "name": "privacy toggle displays shared and private information",
+          "status": "passed"
+        },
+        {
+          "name": "favicon loads from this deployment",
+          "status": "passed"
+        },
+        {
+          "name": "/ at 1440px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/signup at 1440px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/login at 1440px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/benchmarks at 1440px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/ at 1024px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/signup at 1024px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/login at 1024px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/benchmarks at 1024px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/ at 768px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/signup at 768px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/login at 768px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/benchmarks at 768px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/ at 390px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/signup at 390px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/login at 390px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/benchmarks at 390px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/ at 320px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/signup at 320px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/login at 320px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "/benchmarks at 320px: fonts, content and horizontal overflow",
+          "status": "passed"
+        },
+        {
+          "name": "no page errors, external font requests or mutating API calls",
+          "status": "passed"
+        }
+      ],
+      "checks_passed": 25
+    },
+    {
+      "suite": "auth",
+      "status": "passed",
+      "started_at": "2026-09-14T19:00:25.906Z",
+      "finished_at": "2026-09-14T19:00:42.333Z",
+      "checks": [
+        {
+          "name": "landing explains AIDA and credits the author",
+          "status": "passed"
+        },
+        {
+          "name": "workspace requires a session",
+          "status": "passed"
+        },
+        {
+          "name": "sign-up validates passwords, then creates the account",
+          "status": "passed"
+        },
+        {
+          "name": "onboarding collects organization, goals, data and consent",
+          "status": "passed"
+        },
+        {
+          "name": "workspace opens the private logistics sample",
+          "status": "passed"
+        },
+        {
+          "name": "result table supports search, filter and sort",
+          "status": "passed"
+        },
+        {
+          "name": "every offered chart type renders without a new query",
+          "status": "passed"
+        },
+        {
+          "name": "SQL and trust exposes compiled SQL, lineage and the validated plan",
+          "status": "passed"
+        },
+        {
+          "name": "saved dashboard refreshes and reopens its exact plan without a model",
+          "status": "passed"
+        },
+        {
+          "name": "data catalog shows the connected source and approved definitions",
+          "status": "passed"
+        },
+        {
+          "name": "workspace metrics fit tablet and mobile; navigation works at 390px and 320px",
+          "status": "passed"
+        },
+        {
+          "name": "sign-out ends the session",
+          "status": "passed"
+        },
+        {
+          "name": "wrong password is rejected without detail; correct password signs in",
+          "status": "passed"
+        },
+        {
+          "name": "no browser errors or server failures",
+          "status": "passed"
+        }
+      ],
+      "checks_passed": 14
+    },
+    {
+      "suite": "availability",
+      "status": "passed",
+      "checks": [
+        {
+          "name": "backend up: sign-up shows the account form",
+          "status": "passed"
+        },
+        {
+          "name": "backend down: /signup keeps registration available",
+          "status": "passed"
+        },
+        {
+          "name": "backend down: /login keeps registration available",
+          "status": "passed"
+        },
+        {
+          "name": "backend down: /onboarding keeps registration available",
+          "status": "passed"
+        },
+        {
+          "name": "backend down: /workspace keeps registration available",
+          "status": "passed"
+        },
+        {
+          "name": "backend fails mid-submit: details carry over, the password is never sent (payload fields: name, email, company, role, interest, source, consent, website)",
+          "status": "passed"
+        },
+        {
+          "name": "registration saved: redirect without personal details in URL or browser storage",
+          "status": "passed"
+        },
+        {
+          "name": "storage response 200 with stored:false: preserve details and do not confirm",
+          "status": "passed"
+        },
+        {
+          "name": "storage response 503 with stored:false: preserve details and do not confirm",
+          "status": "passed"
+        },
+        {
+          "name": "direct waitlist visit does not claim a registration was saved",
+          "status": "passed"
+        },
+        {
+          "name": "interest API rejects bad input before storage",
+          "status": "passed"
+        }
+      ],
+      "checks_passed": 11
+    }
+  ],
+  "scope": "Frontend presentation and account journeys. Availability submissions are mocked. Auth creates a synthetic local account; this verification does not evaluate natural-language model accuracy.",
+  "additional_check": "Sign up and Sign in both visible at 320px. All KPI values fit at 768,390,320px.",
+  "hero_followup": {
+    "description": "Brighter leafy olive hero, fresh sage accents, readable white labels, static contour texture and Newsreader 400 display type.",
+    "production_build": "passed",
+    "public_browser_checks": 25,
+    "linework_asset_http_status": 200
+  }
+}

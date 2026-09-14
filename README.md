@@ -8,6 +8,7 @@ AIDA answers business questions over approved databases. A language model interp
 - [Test data and queries](docs/TEST_QUERIES.md): the sample databases and questions to try, with measured pass/fail.
 - [Security controls and attack tests](docs/SECURITY.md).
 - [Model, test data and repository status](docs/MODEL_TEST_DATA_AND_REPOSITORY.md).
+- [Parchment + Olive theme](docs/THEME.md): shared palette, typography, brand assets and registration flow.
 
 ## What changed in AIDA 4
 
@@ -62,7 +63,7 @@ The previous local-model launcher (`scripts/start-demo.ps1`, Qwen3-4B through ll
 
 ## Deploy the public landing page (preview mode)
 
-The landing page and `/benchmarks` can be published on their own, for example to link from a portfolio. Set `NEXT_PUBLIC_AIDA_MODE=preview` at build time. Sign-in, sign-up, onboarding and the workspace then show a "Currently unavailable" page that records early-access interest, the landing call to action becomes "Request early access", and the API proxy returns 503 instead of contacting a backend. The same page appears in normal builds whenever the backend is not answering. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) covers the environment variables, storing interest in Supabase, and whether the backend can run on Vercel. No backend, database or model key is needed.
+The landing page and `/benchmarks` can be published on their own, for example to link from a portfolio. Set `NEXT_PUBLIC_AIDA_MODE=preview` at build time. Navigation keeps **Sign up** and **Sign in**. Sign-up records a name, email and consent, then opens `/waitlist` only after the storage endpoint confirms `stored: true`; this registers interest and does not create an authenticated account. Sign-in explains that workspace access is paused and offers availability updates. Onboarding and workspace routes use the same registration fallback, as do normal builds when the backend is unavailable. The API proxy returns 503 instead of contacting a backend in preview mode. No Python backend or model key is needed to serve the site; configure Supabase or a webhook to save registrations. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) covers that setup, and [docs/THEME.md](docs/THEME.md) describes the shared theme and account flow.
 
 On Vercel (free Hobby plan):
 

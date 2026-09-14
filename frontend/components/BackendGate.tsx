@@ -5,7 +5,7 @@ import ComingSoon, {InterestSource} from './ComingSoon'
 import {checkBackend} from '../lib/api'
 import {PREVIEW} from '../lib/mode'
 
-// Accounts need the data service. When it is not deployed or not answering, offer the interest form instead.
+// Keep registration open in the public preview and when the account service is offline.
 export default function BackendGate({source, children}: {source: InterestSource; children: ReactNode}) {
   const [status, setStatus] = useState<'checking' | 'up' | 'down'>(PREVIEW ? 'down' : 'checking')
   useEffect(() => {
@@ -15,6 +15,6 @@ export default function BackendGate({source, children}: {source: InterestSource;
     return () => {active = false}
   }, [])
   if (status === 'down') return <ComingSoon source={source}/>
-  if (status === 'checking') return <div className="loading-panel" style={{minHeight: '100vh'}} role="status"><LoaderCircle className="spin" size={24}/><strong>Checking AIDA availability…</strong></div>
+  if (status === 'checking') return <div className="loading-panel" style={{minHeight: '100vh'}} role="status"><LoaderCircle className="spin" size={24}/><strong>Opening your workspace…</strong></div>
   return <>{children}</>
 }
