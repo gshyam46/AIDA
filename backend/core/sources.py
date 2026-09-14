@@ -2,7 +2,8 @@
 
 Inspection reads schema metadata only. A source becomes queryable only after its
 owner approves mappings and business definitions; neither SQL nor file paths are
-accepted from query requests. Uploaded snapshots are owned by this registry.
+accepted from query requests. Uploaded snapshots are owned by this registry and,
+when accounts are enabled, visible only to the account that uploaded them.
 """
 from __future__ import annotations
 
@@ -21,6 +22,8 @@ from pathlib import Path
 from typing import Any
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+MAX_SOURCES_PER_OWNER = 20
+SAMPLE_LOGISTICS_NAME = "Logistics sample (synthetic)"
 _ID = re.compile(r"[a-z][a-z0-9_]{0,63}\Z")
 BUILTIN_SOURCE_IDS = {"commerce", "support", "warehouse", "billing", "chinook"}
 _SOURCE_ID = re.compile(r"(?:[a-f0-9]{32}|commerce|support|warehouse|billing|chinook)\Z")
@@ -246,12 +249,26 @@ class SourceRegistry:
             except (ValueError, OSError):
                 continue
 
-    def _entry(self, source_id: str) -> dict[str, Any]:
+    @staticmethod
+    def _owns(record: dict[str, Any], principal: dict[str, Any]) -> bool:
+        # Sources uploaded before accounts existed belong to the workspace owner.
+        owner = record.get("owner_id")
+        return owner == principal.get("id") or (owner is None and principal.get("role") == "owner")
+
+    def _visible(self, record: dict[str, Any], principal: dict[str, Any] | None) -> bool:
+        if self.public_demo and not record["synthetic"]:
+            return False
+        return principal is None or record["synthetic"] or self._owns(record, principal)
+
+    def _entry(self, source_id: str, principal: dict[str, Any] | None = None) -> dict[str, Any]:
         if not isinstance(source_id, str) or not _SOURCE_ID.fullmatch(source_id) or source_id not in self._entries:
             raise SourceError("Unknown data source. Select an available source.")
         entry = self._entries[source_id]
         if self.public_demo and not entry["synthetic"]:
             raise SourceError("Private sources are unavailable in public demo mode.")
+        if principal is not None and not self._visible(entry, principal):
+            # Identical to a missing source, so other accounts' sources cannot be enumerated.
+            raise SourceError("Unknown data source. Select an available source.")
         return entry
 
     def _persist(self, record: dict[str, Any]) -> None:
@@ -263,36 +280,43 @@ class SourceRegistry:
         finally:
             temporary.unlink(missing_ok=True)
 
-    def list_sources(self) -> list[dict[str, Any]]:
+    def list_sources(self, principal: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         with self._lock:
-            return [{"id": record["id"], "name": record["name"], "configured": bool(record.get("manifest")), "synthetic": record["synthetic"]} for record in self._entries.values() if not self.public_demo or record["synthetic"]]
+            return [{"id": record["id"], "name": record["name"], "configured": bool(record.get("manifest")), "synthetic": record["synthetic"]}
+                    for record in self._entries.values() if self._visible(record, principal)]
 
-    def inspect_upload(self, content: bytes, name: str) -> dict[str, Any]:
+    def inspect_upload(self, content: bytes, name: str, principal: dict[str, Any] | None = None) -> dict[str, Any]:
         if self.public_demo:
             raise SourceError("Database upload is disabled in public demo mode. Run AIDA locally to onboard private sources.")
         name = _text(name, "source name", 80)
         if not isinstance(content, bytes) or len(content) > MAX_UPLOAD_BYTES or len(content) < 100 or not content.startswith(b"SQLite format 3\x00"):
             raise SourceError("Upload a valid SQLite snapshot no larger than 20 MB.")
+        if principal is not None:
+            with self._lock:
+                owned = sum(1 for record in self._entries.values() if not record["synthetic"] and record.get("owner_id") == principal.get("id"))
+            if owned >= MAX_SOURCES_PER_OWNER:
+                raise SourceError(f"This account already has {MAX_SOURCES_PER_OWNER} uploaded sources, the maximum for this workspace.")
         source_id = uuid.uuid4().hex
         path = self.directory / f"{source_id}.sqlite"
         try:
             with path.open("xb") as file:
                 file.write(content)
             tables = inspect_database(path)
-            record = {"id": source_id, "name": name, "path": path, "synthetic": False, "tables": tables, "manifest": None}
+            record = {"id": source_id, "name": name, "path": path, "synthetic": False, "tables": tables, "manifest": None,
+                      "owner_id": principal.get("id") if principal else None}
             with self._lock:
                 self._persist(record)
                 self._entries[source_id] = record
         except Exception:
             path.unlink(missing_ok=True)
             raise
-        return self.inspect_source(source_id)
+        return self.inspect_source(source_id, principal)
 
-    def inspect_source(self, source_id: str) -> dict[str, Any]:
-        record = self._entry(source_id)
+    def inspect_source(self, source_id: str, principal: dict[str, Any] | None = None) -> dict[str, Any]:
+        record = self._entry(source_id, principal)
         return {"id": record["id"], "name": record["name"], "configured": bool(record.get("manifest")), "synthetic": record["synthetic"], "tables": copy.deepcopy(record["tables"])}
 
-    def publish_snapshot(self, source_id: str | None, staged: Path, name: str) -> str:
+    def publish_snapshot(self, source_id: str | None, staged: Path, name: str, owner_id: str | None = None) -> str:
         """Publish a validated immutable generation; existing readers keep the old file.
 
         Keep the catalog version stable for data-only refreshes. A new engine discards
@@ -303,6 +327,12 @@ class SourceRegistry:
         tables = inspect_database(staged)
         with self._lock:
             previous = self._entry(source_id) if source_id else None
+            if previous and previous.get("owner_id") != owner_id:
+                raise SourceError("Snapshot owner does not match its connection.")
+            if not previous and owner_id is not None:
+                owned = sum(1 for r in self._entries.values() if not r["synthetic"] and r.get("owner_id") == owner_id)
+                if owned >= MAX_SOURCES_PER_OWNER:
+                    raise SourceError("This account has reached its source limit.")
             if previous and previous["synthetic"]:
                 raise SourceError("Built-in sources cannot be refreshed.")
             if previous and previous["tables"] != tables:
@@ -315,7 +345,7 @@ class SourceRegistry:
             record = {"id": source_id, "name": previous["name"] if previous else _text(name, "source name", 80),
                       "path": destination, "snapshot_file": destination.name, "synthetic": False,
                       "snapshot_updated_at": datetime.now(timezone.utc).isoformat(),
-                      "tables": tables, "manifest": manifest}
+                      "tables": tables, "manifest": manifest, "owner_id": owner_id}
             os.replace(staged, destination)
             try:
                 self._persist(record)
@@ -346,11 +376,11 @@ class SourceRegistry:
             if re.fullmatch(r"[a-f0-9]{32}\.[a-f0-9]{32}\.sqlite", path.name) and path not in active:
                 self._remove_old_snapshot(path)
 
-    def configure(self, source_id: str, config: dict[str, Any]) -> dict[str, Any]:
+    def configure(self, source_id: str, config: dict[str, Any], principal: dict[str, Any] | None = None) -> dict[str, Any]:
         if self.public_demo:
             raise SourceError("Source configuration is disabled in public demo mode.")
         with self._lock:
-            record = self._entry(source_id)
+            record = self._entry(source_id, principal)
             if record["synthetic"]:
                 raise SourceError("Built-in demo definitions cannot be changed.")
             manifest = validate_manifest(config, record["tables"])
@@ -358,7 +388,21 @@ class SourceRegistry:
             self._persist(record)
             self._entries[source_id] = record
             self._engines.pop(source_id, None)
-            return self.engine(source_id).catalog()
+            return self.engine(source_id, principal).catalog()
+
+    def install_logistics_sample(self, principal: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Give an account its own configured copy of the synthetic logistics fixture."""
+        with self._lock:
+            for record in self._entries.values():
+                if (record["name"] == SAMPLE_LOGISTICS_NAME and record.get("manifest") and not record["synthetic"]
+                        and (principal is None or record.get("owner_id") == principal.get("id"))):
+                    return {"id": record["id"], "name": SAMPLE_LOGISTICS_NAME, "created": False}
+        fixture = Path(__file__).resolve().parents[2] / "fixtures" / "blind_logistics"
+        inspection = self.inspect_upload((fixture / "logistics.sqlite").read_bytes(), SAMPLE_LOGISTICS_NAME, principal)
+        manifest = json.loads((fixture / "catalog.json").read_text(encoding="utf-8-sig"))
+        manifest["name"] = SAMPLE_LOGISTICS_NAME
+        self.configure(inspection["id"], manifest, principal)
+        return {"id": inspection["id"], "name": SAMPLE_LOGISTICS_NAME, "created": True}
 
     def register_source(self, path: str | Path, manifest: dict[str, Any], source_id: str) -> Any:
         """Internal bootstrap only; never expose server paths in HTTP input."""
@@ -372,10 +416,10 @@ class SourceRegistry:
             self._engines.pop(source_id, None)
         return self.engine(source_id)
 
-    def engine(self, source_id: str = "commerce") -> Any:
+    def engine(self, source_id: str = "commerce", principal: dict[str, Any] | None = None) -> Any:
         from .catalog_engine import CatalogEngine
         with self._lock:
-            record = self._entry(source_id)
+            record = self._entry(source_id, principal)
             if not record.get("manifest"):
                 raise SourceError("Approve the source's metrics, dimensions and date mapping before querying it.")
             if source_id not in self._engines:
@@ -398,7 +442,7 @@ class SourceRegistry:
             {"id": "average_order_value", "aggregate": "AVG", "column": "amount_cents", "scale": 100, "where": {"status": "Completed"}},
         ]
         for metric in metric_mappings:
-            metric.update({key: value for key, value in METRICS[metric["id"]].items() if key != "sql"})
+            metric.update(METRICS[metric["id"]])
         aliases = {"region": {"western": "West", "eastern": "East", "northern": "North", "southern": "South"}, "channel": {"web": "Online", "in store": "Retail"}, "status": {"canceled": "Cancelled", "complete": "Completed"}}
         return self.register_source(path, {"name": "Commerce demo", "table": "analytics_orders", "metrics": metric_mappings, "dimensions": [{"id": key, "column": key, **value, **({"aliases": aliases[key]} if key in aliases else {})} for key, value in DIMENSIONS.items() if key != "month"], "date_column": "order_date", "as_of": "2025-12-31", "date_from": "2025-01-01", "date_to": "2025-12-31", "currency": "USD", "examples": EXAMPLES}, "commerce")
 

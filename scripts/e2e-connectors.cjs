@@ -34,7 +34,7 @@ async function until(page, predicate) {
     const health = await page.request.get(`${base}/api/v1/health`);
     assert(health.ok() && (await health.json()).status === 'healthy', 'Start the isolated AIDA test services first');
     await step('Open database connection form', async () => {
-      await page.goto(base);
+      await page.goto(`${base}/workspace`);
       await page.getByRole('button', {name: 'Data catalog', exact: true}).click();
       await page.getByRole('button', {name: 'Connect database', exact: true}).click();
       await page.getByLabel('Connection name', {exact: true}).fill('Browser inventory');

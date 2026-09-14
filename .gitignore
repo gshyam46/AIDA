@@ -35,3 +35,6 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/tsconfig.tsbuildinfo
 .runtime/
+archive/
+backend/.env
+*.env.local

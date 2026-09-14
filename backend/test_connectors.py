@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 from backend.core import connectors as c
 from backend.core.sources import SourceError, SourceRegistry
 from backend.main import create_app
-from backend.test_hybrid_api import StubParser
+from backend.test_hybrid_api import StubInterpreter
 start_worker = c.ConnectionService.start
 
 
@@ -33,7 +33,7 @@ def setup(tmp_path, monkeypatch):
         conn.exec_driver_sql("INSERT INTO stock VALUES (1, 'Garden', 11, 'private@example.test'), (2, 'Tools', 8, 'hidden@example.test')")
 
     @contextmanager
-    def surrogate(spec):
+    def surrogate(spec, settings=None):
         with remote.connect() as conn:
             yield conn
     monkeypatch.setattr(c, "remote_session", surrogate)
@@ -62,8 +62,8 @@ def create_ready(service, config):
 
 def test_api_onboard_refresh_cache_and_disconnect(setup):
     root, remote, config = setup
-    parser = StubParser()
-    with TestClient(create_app(root / "app", semantic_parser=parser, public_demo=False)) as client:
+    parser = StubInterpreter()
+    with TestClient(create_app(root / "app", interpreter=parser, public_demo=False)) as client:
         service = client.app.state.connections
         inspected = client.post("/api/v1/connections/inspect", json=config["connection"])
         assert inspected.status_code == 200
@@ -212,11 +212,11 @@ def test_limits_and_numeric_precision_fail_closed(setup, monkeypatch):
 
 def test_public_demo_and_cross_origin_block_connections(setup):
     root, _, config = setup
-    with TestClient(create_app(root / "public", semantic_parser=StubParser(), public_demo=True)) as client:
+    with TestClient(create_app(root / "public", interpreter=StubInterpreter(), public_demo=True)) as client:
         assert client.get("/api/v1/connections").json()["connections"] == []
         for endpoint in ["connections", "connections/inspect", "connections/abc/refresh"]:
             assert client.post(f"/api/v1/{endpoint}", json=config).status_code == 403
-    with TestClient(create_app(root / "local", semantic_parser=StubParser(), public_demo=False)) as client:
+    with TestClient(create_app(root / "local", interpreter=StubInterpreter(), public_demo=False)) as client:
         assert client.post("/api/v1/connections", json=config, headers={"Origin": "https://evil.example"}).status_code == 403
         assert client.post("/api/v1/connections", content=b"x" * 65537).status_code == 413
 
@@ -274,3 +274,47 @@ def test_worker_lock_and_crash_generation_cleanup(setup):
         first.close()
     start_worker(second)
     second.close()
+
+
+def test_authenticated_connections_and_snapshots_are_account_scoped(setup):
+    from backend.test_security import H, signup, second_client
+    root, remote, config = setup
+    with TestClient(create_app(root / "accounts", interpreter=StubInterpreter(), public_demo=False, require_auth=True)) as owner:
+        assert owner.get('/api/v1/connections').status_code == 401
+        assert owner.post('/api/v1/connections', json=config, headers=H).status_code == 401
+        signup(owner)
+        member = second_client(owner)
+        created = member.post('/api/v1/connections', json=config, headers=H)
+        assert created.status_code == 202, created.text
+        cid = created.json()['id']
+        service = owner.app.state.connections
+        service.tick()
+        record = member.get('/api/v1/connections').json()['connections'][0]
+        sid = record['source_id']
+        assert owner.get('/api/v1/connections').json()['connections'] == []
+        for action, body in [('refresh', {}), ('schedule', {'schedule':'manual'}), ('disconnect', {})]:
+            assert owner.post(f'/api/v1/connections/{cid}/{action}', json=body, headers=H).status_code == 400
+        assert owner.get(f'/api/v1/sources/{sid}').status_code == 400
+        assert member.post(f'/api/v1/sources/{sid}/configure', json=mapping(), headers=H).status_code == 200
+        assert owner.post('/api/v1/query', json={'source_id':sid,'plan':{'metric':'quantity'}}, headers=H).status_code == 400
+        assert member.post(f'/api/v1/connections/{cid}/refresh', json={}).status_code == 403
+        assert member.post(f'/api/v1/connections/{cid}/refresh', json={}, headers=H).status_code == 200
+        service.tick()
+        assert owner.get(f'/api/v1/sources/{sid}').status_code == 400
+        assert member.post('/api/v1/query', json={'source_id':sid,'plan':{'metric':'quantity'}}, headers=H).json()['data'] == [{'value':19}]
+        member_id = member.get('/api/v1/auth/session').json()['user']['id']
+        reopened = SourceRegistry(root / 'accounts')
+        assert reopened.inspect_source(sid, {'id':member_id,'role':'member'})['id'] == sid
+        assert member.post(f'/api/v1/connections/{cid}/disconnect', json={}, headers=H).status_code == 200
+        assert member.get(f'/api/v1/sources/{sid}').status_code == 200
+        member.close()
+
+
+def test_explicit_runtime_settings_enable_connector_key_and_destination(setup, monkeypatch):
+    root, _, config = setup
+    settings = {'AIDA_CONNECTOR_KEY': Fernet.generate_key().decode(), 'AIDA_CONNECTOR_HOSTS':'127.0.0.1:5432', 'AIDA_CONNECTOR_LOCAL_TEST':'1'}
+    monkeypatch.delenv('AIDA_CONNECTOR_KEY')
+    monkeypatch.delenv('AIDA_CONNECTOR_HOSTS')
+    service = c.ConnectionService(SourceRegistry(root / 'configured'), settings=settings)
+    record = create_ready(service, config)
+    assert record['status'] == 'succeeded'

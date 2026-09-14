@@ -1,8 +1,20 @@
 # Connector verification — September 14, 2026
 
-This change implements PostgreSQL, MySQL and SQL Server adapters, explicit reporting-column selection, encrypted saved connection settings, background full-snapshot extraction, manual/hourly/daily refresh, status/history, disconnect and source-scoped cache replacement. It preserves the existing local-LLM interpretation and deterministic query compiler.
+This change implements PostgreSQL, MySQL and SQL Server adapters, explicit reporting-column selection, encrypted saved connection settings, background full-snapshot extraction, manual/hourly/daily refresh, status/history, disconnect and source-scoped cache replacement. The integration preserves the freshly pulled AIDA 4 interpreter, calculations, accounts, CSRF/rate-limit protections and redesigned workspace. Connection operations and published snapshots now enforce per-account ownership.
 
-## Executed checks
+## Executed checks before the AIDA 4 merge
+
+### Fresh-pull integration with `172115c`
+
+After pulling the three new `mvp2.0` commits, the connectors were adapted to AIDA 4's interpreter interface, runtime settings, account ownership, request guards, audit events and `/workspace` route. The remote landing/account/benchmark work remains intact.
+
+- Full merged backend suite: **347 passed, 3 live-vendor tests skipped**. This suite differs from the older baseline below because the upstream AIDA 4 commits replaced the legacy parser and its tests.
+- Connector plus security subset: **56 passed**, including new denial of cross-account connection listing/actions and snapshot queries, ownership preservation through refresh/reopen, CSRF checks, and loading connector settings from the explicit runtime environment.
+- Repository structure check: passed (46 Python files).
+- TypeScript and production build: passed, including landing, login, signup, onboarding, benchmarks and workspace routes.
+- Connector browser workflow on the merged `/workspace`: all four stages passed, no page errors, zero model calls; finished `2026-09-14T10:54:38Z`. It still uses the explicitly documented SQLite remote-session surrogate; live-vendor qualification remains pending.
+
+### Original pre-merge baseline
 
 | Check | Result | Evidence / command |
 | --- | --- | --- |
@@ -25,7 +37,7 @@ Backend tests cover encrypted persistence/redaction, metadata-only inspection, s
 
 The machine had no running Docker daemon or local vendor database servers. Only the legacy Windows SQL Server ODBC driver was present, not Microsoft ODBC Driver 18. The three adapters therefore need the live test matrix described in [CONNECTIONS.md](CONNECTIONS.md#run-vendor-integration-tests) against disposable PostgreSQL, MySQL and SQL Server instances with verified TLS and read-only accounts before a customer rollout. Add real-server write-during-extraction and certificate/permission-failure scenarios during that qualification.
 
-This is still a single-user local workspace. It does not add hosted user authentication, tenant isolation, shared dashboards, encrypted snapshot files, secret-key rotation, incremental extraction/CDC, distributed scheduling or fixes for the [known natural-language transfer failures](BLIND_EVALUATION.md).
+The merged AIDA 4 branch provides accounts, sessions and per-account source ownership. Connector integration adds ownership checks, rate limits and audit events to connection operations and preserves owner IDs across scheduled refresh. This remains a single-process service; shared dashboards, encrypted snapshot files, secret-key rotation, incremental extraction/CDC, distributed scheduling and live-vendor qualification remain outstanding. Refer to the current benchmark docs for AIDA 4 language results; connector work does not establish new language-accuracy evidence.
 
 ## Reproduce the browser walkthrough
 

@@ -1,99 +1,109 @@
 # Model, test data and repository status
 
-This document records which model AIDA uses, which databases are appropriate for each kind of test, what the model can see, and which repository cleanup remains. It reflects the `mvp2.0` branch as reviewed on September 13, 2026.
+This document records which model AIDA uses, what the model can see, which databases to use for each kind of test, and which repository cleanup remains. It reflects the `mvp2.0` branch with the AIDA 4 pipeline, as reviewed on September 13, 2026.
 
-## Current model decision
+## Model decision
 
-For the September 14 database-connection addition, see [Database connections and refresh](CONNECTIONS.md). Authentication, metadata inspection, selected-column extraction and scheduled snapshot refresh use no model calls. Natural-language questions continue to use the existing local model and deterministic compiler. [Connector verification](CONNECTOR_VERIFICATION.md) separates surrogate-based workflow tests from pending live-vendor qualification.
+The [database connector addition](CONNECTIONS.md) is integrated with AIDA 4 accounts, ownership and interpretation. Database inspection/extraction and scheduled refresh make no model calls. [Connector verification](CONNECTOR_VERIFICATION.md) records integration checks and pending live-vendor qualification.
 
-AIDA currently uses **Qwen3-4B-Instruct-2507 Q4_K_M** through **llama.cpp b10809**. The GGUF is 2,497,280,448 bytes, approximately 2.5 GB. The exact upstream revision, URLs, licenses and SHA-256 hashes are pinned in [`scripts/model-runtime.json`](../scripts/model-runtime.json).
+<!-- model-decision -->
+AIDA 4 interprets questions with a hosted Groq model by default (`AIDA_MODEL_PROVIDER=groq`). Three Groq models were benchmarked on the same 42-question selection with real inference and independent SQL oracles: `openai/gpt-oss-120b`, `openai/gpt-oss-20b` and `qwen/qwen3.8-27b`. The provisional default is **`qwen/qwen3.8-27b`, two-stage, one repair round**. In the complete AIDA 4 runs it scored 22/32 supported and 10/10 refusals with zero wrong answers, compared with 18/32, 9/10 and two wrong answers for gpt-oss-20b. gpt-oss-120b could not be measured on AIDA 4 because its daily quota was exhausted. The final prompt-3 runs are still resuming; [BENCHMARK.md](BENCHMARK.md) has the method, the numbers and the regeneration command.
+<!-- /model-decision -->
 
-The model weights and llama.cpp binaries are not committed to Git. `scripts/setup-model.ps1` downloads them into the ignored `.runtime/` directory and verifies their hashes. `scripts/start-demo.ps1` performs setup and starts the model, backend and frontend. The model server listens only on `127.0.0.1:8081`; the default runtime uses a 4,096-token context, one inference slot, four CPU threads, Vulkan layer offload when available and `--cache-ram 0`. `-GpuLayers 0` provides the CPU fallback.
+Provider constraints observed on the free tier during benchmarking, which shape the choice as much as accuracy does:
 
-The 4B model remains the development baseline because it fits the tested local machine and has no hosted inference charge. It is not approved as sufficiently accurate for customer use: the first new-database assessment answered 19/40 supported questions correctly and incorrectly executed 6/10 unsupported or ambiguous requests.
+| Model | Tokens per minute | Other limits observed | List price (input / output per million tokens) |
+| --- | --- | --- | --- |
+| `openai/gpt-oss-120b` | 8,000 | 200,000 tokens per day (rolling), which a full benchmark run exhausts | $0.15 / $0.60 |
+| `openai/gpt-oss-20b` | 8,000 | 1,000 requests per day | $0.075 / $0.30 |
+| `qwen/qwen3.8-27b` | 8,000 | 1,000 output tokens per minute | see `GROQ_PRICES` in `backend/core/llm.py` |
+| `meta-llama/llama-prompt-guard-2-86m` | 15,000 | 14,400 requests per day | $0.04 / $0.04 |
 
-Changing to a larger model is not the first fix. Post-outcome review found seven false refusals after a correct-looking model interpretation and five cases where deterministic candidate construction made the intended operation unavailable. A larger model cannot repair those code restrictions. Fix semantic candidate coverage, clause preservation and unsupported-intent validation first. Then compare the pinned 4B baseline with an 8B-class local instruct model on the same regression suite and a separate unseen suite. A 14B-class model should be considered only after measuring memory, latency and concurrency on the actual deployment hardware.
+An AIDA 4 question costs one guard call plus two model calls (resolve, then plan), and one more when a repair round runs. That is about 3,000–8,000 tokens per question, depending on the catalog size and whether a repair is needed. On free-tier limits, a single user can therefore ask only one or two questions a minute per model; a paid tier is required for team use.
+
+The local provider (`AIDA_MODEL_PROVIDER=local`, llama.cpp on `127.0.0.1:8081` with a JSON-schema grammar) remains available for deployments where question text must not leave the server. The earlier Qwen3-4B baseline answered 19/40 supported logistics questions correctly with the previous pipeline ([BLIND_EVALUATION.md](BLIND_EVALUATION.md)); it has not been re-measured with AIDA 4.
 
 ## What the model sees
 
-The model does not connect to SQLite and does not generate SQL. For one uncached question, it receives:
+The model never connects to a database and never generates SQL. For one uncached question it receives:
 
-- the user's question;
-- opaque temporary IDs for approved metrics, dimensions, filter fields and related-record checks;
-- owner-approved business labels and definitions;
-- bounded approved categorical values and aliases; and
-- candidate time phrases copied from the question.
+- the question text, marked as untrusted data;
+- a compact catalog projection: temporary ids (`m#` measures, `d#` groupings, `f#` record fields, `r#` related record sets and `r#f#` their fields), owner-approved labels, plain-language definitions, allowed values, the data date range, the reference date, the currency and the source's capability limits;
+- in the planning step, the mentions it resolved in the first step; and
+- in a repair round, its own rejected reply and the exact rejection reason.
 
-It does not receive customer rows, query results, physical table or column mappings, connection strings, database paths, SQL, credentials or filesystem paths. After the model returns structured intent, deterministic code validates every selected business ID, maps it through the reviewed catalog, selects approved join paths, compiles parameterized read-only SQL and executes it under the SQLite authorizer and timeout.
+It does not receive rows, query results, SQL, physical table or column names, join keys, file paths, connection details, credentials, account details or onboarding answers. Code maps the returned ids through the approved catalog, selects join paths, compiles parameterized read-only SQL and runs calculations after aggregation.
 
-Users should therefore ask in business language without table names. Conflicting physical names are resolved by explicit business mappings. For example, **Average sale price** and **Catalog price** can map to different `UnitPrice` columns. An unclear request such as “price” should be clarified rather than guessed.
+With the Groq provider, this payload leaves the server over HTTPS. Onboarding shows exactly what is sent and requires consent. Prompt Guard 2 screens the question before the planning model sees it.
 
-Business calculations must exist in the approved catalog. “What is profit?” is correctly refused when profit is absent. The current metric contract supports approved `COUNT`, `COUNT_DISTINCT`, `SUM`, `AVG`, `MIN` and `MAX` measures at one fact grain. It cannot define a general formula such as revenue minus cost or a ratio of aggregates. Supporting profit requires an owner-approved definition and a deterministic calculated-metric extension; the model must never invent the formula.
+Ask in business language. Conflicting physical names are resolved by explicit business mappings: for example, **Average sale price** and **Catalog price** map to different `UnitPrice` columns. When a phrase could mean more than one approved item, AIDA asks you to choose.
+
+Calculations on top of approved measures are now supported: ratio, difference, share of total, running total and percent change. They use only measures that exist in the catalog, so "profit" works only when the catalog has both a revenue measure and a cost measure and the question asks for their difference. The model never invents a business formula.
 
 ## Databases to use for testing
 
-No production customer database is required for product development or a public demonstration.
+No production customer database is required for development or a demonstration.
 
 | Source | Data status | Best use | Availability |
 | --- | --- | --- | --- |
-| Commerce demo | Generated synthetic data | Fast single-table questions, dates, filters and basic charts | Created automatically at startup |
-| Support operations | Generated synthetic data with a different schema | Source switching and independent business definitions | Created automatically at startup |
-| Retail warehouse (`warehouse`) | Generated synthetic multi-table data | Join paths, same-named fields, fact grain, EXISTS and archive operations | Created automatically at startup |
-| SaaS billing (`billing`) | Generated synthetic multi-table data | A second unrelated relational schema, distinct counts, HAVING and child checks | Created automatically at startup |
-| Chinook (`chinook`) | Public third-party sample with retained MIT license and checksum | Independently produced 11-table schema and conflicting price/country meanings | Tracked under `fixtures/chinook/` |
-| Blind synthetic logistics | Generated synthetic 12-table data | Difficult joins, filters, HAVING, subqueries, UNION, nulls, empty results and refusal cases | Tracked under `fixtures/blind_logistics/`; uploaded through local onboarding |
+| Commerce demo | Generated synthetic data | Single-table questions, dates, filters, share and running-total calculations | Created at startup |
+| Support operations | Generated synthetic data with a different schema | Source switching and independent definitions | Created at startup |
+| Retail warehouse (`warehouse`) | Generated synthetic multi-table data | Join paths, same-named fields, fact grain, EXISTS, archives, ratio calculations | Created at startup |
+| SaaS billing (`billing`) | Generated synthetic multi-table data | A second relational schema, distinct counts, HAVING and per-seat ratios | Created at startup |
+| Chinook (`chinook`) | Public third-party sample with retained MIT license and checksum | Independently produced 11-table schema with conflicting price and country meanings | Tracked under `fixtures/chinook/` |
+| Logistics sample | Generated synthetic 12-table data | Difficult joins, filters, HAVING, subqueries, UNION, nulls, empty results and refusals | `fixtures/blind_logistics/`; installed privately per account from onboarding or `POST /api/v1/samples/logistics` |
 
-The 50 logistics questions are no longer an unseen benchmark because their outcomes have been inspected. Keep them as regression tests. After fixes, create another independently authored database/question set, freeze the product and oracles before inference, and report that result separately.
+The 50 logistics questions are no longer an unseen benchmark, because their outcomes have been inspected and the prompt was improved using the failures. They are regression tests. A genuine transfer claim needs a new, independently authored database and question set, frozen before inference.
 
-For a private customer pilot, use a de-identified SQLite snapshot and an owner-reviewed catalog. Confirm the fact grain, metrics, field meanings, join cardinalities, date basis, allowed values and archive behavior before running questions. Do not use customer data in public-demo mode or publish it as test evidence.
+For a private customer pilot, use a de-identified SQLite snapshot and an owner-reviewed catalog. Confirm the fact grain, metrics, field meanings, join cardinalities, date basis, allowed values and archive behaviour before running questions. Do not publish customer data as test evidence.
 
 ## Verification order
 
-Use the deterministic checks before model inference:
+Deterministic checks first:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest backend -q
 .\.venv\Scripts\python.exe validate_structure.py
-Set-Location frontend
-npm.cmd run build
-npm.cmd run typecheck
-node scripts/check-relational-presentation.cjs
+Set-Location frontend; npm run typecheck; npm run build; Set-Location ..
 ```
 
-Start the pinned local model and run inference suites sequentially because the current runtime has one inference slot:
+Then real inference, which uses provider quota and can be resumed across rate-limit windows:
 
 ```powershell
-Set-Location ..
-powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1 -SkipInstall -SkipBuild
-.\.venv\Scripts\python.exe scripts/evaluate_semantics.py --suite acceptance --output artifacts/semantic-acceptance.json
-.\.venv\Scripts\python.exe scripts/evaluate_relational.py --suite all --output artifacts/relational-evaluation.json --label regression
+.\.venv\Scripts\python.exe scripts/benchmark_nl.py --label candidate --subset selection --model openai/gpt-oss-20b
+.\.venv\Scripts\python.exe scripts/benchmark_nl.py --label candidate --resume --patience 1800
+.\.venv\Scripts\python.exe scripts/report_benchmark.py --runs candidate --suites candidate
 ```
 
-Use `scripts/evaluate_blind.py` only to reproduce or regress the existing logistics assessment. A repeat must not be described as a new blind result. Model answers must be scored against independently written SQL and intended structured plans; a plausible chart is not correctness evidence.
+Then the browser journey, with the backend and frontend running:
 
-The next model/customer gate should require:
+```powershell
+$env:AIDA_BASE_URL = "http://localhost:3000"; node scripts/e2e-auth.cjs
+```
 
-- no accepted answer with changed meaning;
-- no execution of unsupported or ambiguous intent;
+Score model answers only against independently written SQL and intended plans; a plausible chart is not evidence of correctness. `scripts/evaluate_blind.py` reproduces the sealed pre-AIDA 4 logistics assessment and must not be described as a new blind result.
+
+The next customer gate should require:
+
+- no accepted answer with changed meaning, and no execution of unsupported or ambiguous intent;
 - at least 90% correct supported answers on a newly sealed transfer set;
-- at most one model call per initial question;
-- acceptable p95 latency on target hardware; and
-- zero observed prohibited model-payload fields or sensitive-value canaries.
+- at most three model calls and one guard call per question;
+- acceptable p95 latency on the paid provider tier or target hardware; and
+- zero prohibited fields (rows, SQL, physical names, secrets) in captured model payloads.
 
 ## Repository cleanup status
 
-The active Python modules and frontend components are referenced by the application, tests or verification tools. The obsolete V1 backend pipeline modules and old frontend query/upload/result components were removed in `mvp2.0`. Runtime output is excluded by `.gitignore`, including `.runtime/`, `.venv/`, `node_modules/`, `backend/data/`, `artifacts/`, caches and frontend build output.
+AIDA 4 removed the previous interpretation modules (`backend/core/semantic.py`, `backend/core/relational_semantic.py`), their tests and `scripts/evaluate_semantics.py` / `scripts/evaluate_relational.py`. The earlier V1 leftovers (chat UI, V1 compiler and LLM modules, old stores and components) were moved into the gitignored `archive/v1-untracked/` folder. `docs/VERIFICATION.md` and `docs/RELATIONAL_VERIFICATION.md` are kept as clearly labelled historical records.
 
-Cleanup is not complete. The following items remain intentionally visible until a separate cleanup commit decides their final home:
-
-| Item | Current status | Recommended publication action |
+| Item | Current status | Recommended action |
 | --- | --- | --- |
-| Three PDFs under `Research/` | Tracked, about 2.4 MB, and not referenced by the product or current documentation | Remove from the product branch, or document their provenance and purpose if they are required research sources |
-| `docs/evidence/` | 68 files, about 12 MB | Keep compact final summaries and representative screenshots in Git; move bulky raw responses to a GitHub release asset or evidence branch |
-| Intermediate and failed-run evidence | Useful development history but not required to run the product | Retain only where it proves an important correction; otherwise archive outside the main product tree |
-| Local machine metadata in raw evidence | Eight evidence files contain local Windows paths or test-host information | Sanitize before publishing a release artifact; preserve hashes only for the original internal evidence set |
-| Historical verification totals | Documents correctly record earlier 269-test and 443-test stages plus the current 455-test stage | Add a single current-status table and clearly label older counts as historical to prevent confusion |
+| `archive/` | 200 untracked, gitignored files (1.5 MB) of V1 code | Delete once nobody needs to consult the V1 implementation |
+| `backend/venv/` | Old, unused, gitignored virtual environment (149 MB); the project uses `.venv/` | Delete locally |
+| `Research/` | Three tracked PDFs (2.4 MB) not referenced by the product | Remove from the product branch, or document their provenance and purpose |
+| `docs/evidence/` | 68 tracked files (12 MB) from the pre-AIDA 4 pipeline | Keep compact summaries and screenshots; move bulky raw responses to a release asset or evidence branch; sanitize local paths before publishing |
+| `scripts/e2e.cjs`, `e2e-blind.cjs`, `e2e-relational.cjs` | Browser suites for the single-call local-model version; not updated for accounts or the two-stage pipeline | Port to authenticated sessions or retire in favour of `scripts/e2e-auth.cjs` plus new journeys |
+| `scripts/start-demo.ps1` | Starts the local-model stack; not re-verified with AIDA 4 or accounts | Re-verify with `AIDA_MODEL_PROVIDER=local`, or document Groq-only startup |
+| `frontend/.env` | Gitignored; its only key, `NEXT_PUBLIC_API_URL`, is not read by any code | Remove the unused key |
+| Untracked `pictures/`, `query.md` | Personal working files | Keep out of commits |
 
-Do not delete the SQLite fixtures, reviewed catalogs, licenses, tests, startup scripts or final blind-assessment summary merely because they are not used in the production request path. They provide reproducibility, onboarding examples and licensing evidence. Do not commit downloaded model weights, generated customer snapshots, customer dashboard state, credentials or local process logs. Synthetic browser evidence may be retained according to the evidence policy above.
-
-Before a public release, complete the cleanup above, run a secret and local-metadata scan, verify every documentation link, build from a fresh clone, and confirm that the repository can recreate its generated fixtures and download only hash-pinned runtime assets.
+Do not delete the SQLite fixtures, reviewed catalogs, licenses, tests or startup scripts merely because they are not in the request path; they provide reproducibility and onboarding examples. Never commit `backend/.env`, downloaded model weights, customer snapshots, dashboard state or local process logs. Before a public release, run a secret and local-metadata scan, verify every documentation link, build from a fresh clone and rotate any API key that has appeared in logs or transcripts.

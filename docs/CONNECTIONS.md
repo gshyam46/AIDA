@@ -1,6 +1,6 @@
 # Database connections, snapshots and refresh
 
-Implemented September 14, 2026 for the single-user local workspace. Customers can connect a database and let AIDA create its reporting snapshot; they do not need to manufacture a SQLite file. This is not a hosted multi-tenant release. Database authentication is implemented; application user authentication and tenant authorization are still absent.
+Implemented September 14, 2026 and integrated with the freshly pulled AIDA 4 accounts and workspace. Customers connect a database and let AIDA create its reporting snapshot. Authenticated connections, status/history and generated snapshots belong to the creating account, following the existing source ownership rules. Legacy connections without an owner are visible to the workspace owner. This remains a single-backend-process deployment; hosted production qualification is incomplete.
 
 ## End-to-end workflow and model calls
 
@@ -11,13 +11,13 @@ Implemented September 14, 2026 for the single-user local workspace. Customers ca
 | Select | Owner explicitly selects tables and columns to copy. Nothing is selected automatically. | 0 |
 | Extract | A background job streams the selected rows into a bounded local SQLite snapshot. Rows stay in the database/backend boundary. | 0 |
 | Define | Owner approves metric definitions, dimensions and physical join mappings in the existing single-table or relational catalog screen. | 0 |
-| Ask | Local Qwen interprets a business question using approved semantic definitions. | At most 1 per uncached question |
+| Ask | The configured AIDA 4 interpreter resolves names and plans using approved semantic definitions. | Depends on pipeline: normally two interpretation calls, optional guard and bounded repair |
 | Execute | Code validates the interpretation, resolves approved join paths, compiles parameterized read-only SQL and executes it locally. | 0 |
 | Visualize | Code renders aggregates as charts/tables. Chart interactions and the builder modify structured plans. | 0 |
 | Save/refresh dashboard | Browser stores a plan and catalog version; refresh executes the saved plan against the latest successful snapshot. | 0 |
 | Refresh source | A background job repeats the approved extraction, validates the replacement and publishes it atomically. | 0 |
 
-The LLM receives no connection credentials, physical schema mappings, customer rows or query results. It receives the question, owner-approved business labels/definitions and permitted semantic values. The local model remains necessary for natural language. These connectors do not improve the previously measured [language accuracy](BLIND_EVALUATION.md). For example, profit still needs an approved supported business measure; the model cannot invent revenue-minus-cost logic.
+The LLM receives no connection credentials, physical schema mappings, customer rows or query results. It receives the question, owner-approved business labels/definitions and permitted semantic values. Natural-language questions retain the remote branch's AIDA 4 interpreter: local or Groq provider, configurable one/two-stage planning, optional guard and bounded repair. Hosted inference sends the question and approved semantic context off-machine with the existing consent flow; connectors never add credentials, physical metadata or rows to that context. See [current model/benchmark status](MODEL_TEST_DATA_AND_REPOSITORY.md). AIDA 4 can calculate differences and ratios over approved measures, but no new customer-approved definition proposal workflow was added by this connector change.
 
 ## Supported connections
 
@@ -60,11 +60,11 @@ The Windows launcher calls `scripts/connector-env.ps1`. It creates a random 32-b
 
 For another platform or an operator-managed secret store, supply `AIDA_CONNECTOR_KEY` as a Fernet key before starting the backend. Existing supplied keys take precedence over Windows key generation. Generate it with `Fernet.generate_key()` from Python's cryptography package and place it in the deployment secret manager. Do not rotate the key by simply replacing it: there is no bulk re-encryption operation yet. Restore the original key or disconnect and recreate affected connections.
 
-The complete connection settings, password, selected columns and expected schema are Fernet-encrypted in `AIDA_DATA_DIR/connections/<opaque-id>.json`. The status/history envelope contains the connection display name, engine, opaque source ID, timestamps and row counts. Driver exception strings and SQL parameter values are never returned or logged by this workflow. Passwords are cleared from React state after creation/cancel and are not stored in browser local storage.
+The complete connection settings, password, selected columns and expected schema are Fernet-encrypted in `AIDA_DATA_DIR/connections/<opaque-id>.json`. The status/history envelope contains the internal owner ID, connection display name, engine, opaque source ID, timestamps and row counts. The API returns status only for the current account and never exposes its internal owner ID. Driver exception strings and SQL parameter values are never returned or logged by this workflow. Passwords are cleared from React state after creation/cancel and are not stored in browser local storage.
 
 Snapshot rows are ordinary local SQLite files, not encrypted by this change. Use an encrypted, access-controlled disk/volume and a customer-controlled backend when data must remain within the customer's environment. Copying data is an extraction workload: prefer an appropriate reporting replica, and size/schedule extraction with the database owner. Snapshotting reduces dashboard query load on the source; it does not eliminate extraction load or make customer data anonymous.
 
-The supplied Docker backend supports the Python PostgreSQL/MySQL dependencies. SQL Server additionally needs the OS ODBC runtime and Microsoft ODBC Driver 18 in a derived image; follow the [Microsoft installation instructions](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server). The default compose mode remains public demo, with all connections disabled. For a local private workspace set `AIDA_PUBLIC_DEMO=0`, supply the connector key and allowlist, and bind the UI to loopback. Private shared hosting still requires application authentication and tenant isolation.
+The supplied Docker backend supports the Python PostgreSQL/MySQL dependencies. SQL Server additionally needs the OS ODBC runtime and Microsoft ODBC Driver 18 in a derived image; follow the [Microsoft installation instructions](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server). The default compose mode remains public demo, with all connections disabled. For a local private workspace set `AIDA_PUBLIC_DEMO=0`, supply the connector key and allowlist, and bind the UI to loopback. Keep the existing account/session, CSRF and per-account source checks enabled. The integrated connector routes also apply rate limits and audit events; shared hosting still needs the broader deployment qualification described in DEPLOYMENT.md.
 
 ## Read-only database account preparation
 
@@ -105,7 +105,7 @@ For PostgreSQL CA handling, see the [SQLAlchemy PostgreSQL driver documentation]
 
 ## API
 
-All routes are local-mode only except the empty/disabled public-demo connection list. Body limits and same-origin write checks apply. Credentials never appear in responses.
+All routes are local-mode only except the empty/disabled public-demo connection list. Session authentication, account ownership, rate limits, body limits and same-origin write checks apply. With accounts enabled, include the session cookie and `X-AIDA-Request: 1` header on writes. Credentials never appear in responses.
 
 | Method and path | Body / outcome |
 | --- | --- |

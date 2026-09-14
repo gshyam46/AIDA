@@ -1,5 +1,7 @@
 # AIDA hybrid verification
 
+> **Historical record.** This evidence was produced by the pre-AIDA 4 single-call pipeline (`backend/core/semantic.py`, `scripts/evaluate_semantics.py`), which has been removed. Current behaviour is measured by `scripts/benchmark_nl.py`; see [BENCHMARK.md](BENCHMARK.md) and [SECURITY.md](SECURITY.md).
+
 The subsequent multi-table expansion is documented separately in [RELATIONAL_VERIFICATION.md](RELATIONAL_VERIFICATION.md). The evidence below records the earlier single-table baseline and is retained for comparison.
 
 Verification date: September 12, 2026. Windows, Python 3.13.14, Node 24.20.0, Intel Core Ultra 7 266V, 16 GB RAM and Intel Arc 140V Vulkan acceleration.
@@ -60,4 +62,4 @@ Median HTTP latency was **3,072.74 ms for requests requiring inference** and **1
 
 The model's interpretation is probabilistic. Valid SQL does not prove that an interpretation matches every possible question. The evaluated corpus is small and synthetic. Hardware and electricity still have a cost despite no hosted API token fee.
 
-This report's original onboarding baseline covered static SQLite uploads up to 20 MB and a single approved reporting table. Subsequent [relational support](RELATIONAL_VERIFICATION.md) and [database connector work](CONNECTOR_VERIFICATION.md) have their own verification reports. The current [connection workflow](CONNECTIONS.md) adds authenticated PostgreSQL/MySQL/SQL Server adapters and scheduled snapshot replacement, with live-vendor qualification still pending. Application-user authentication, tenant authorization and shared server-side dashboards remain absent. Private-data use is confined to local mode; public-demo mode hides private sources and disables onboarding/connections. Aggregate-only access does not itself provide differential privacy or minimum-group-size guarantees.
+This report's original onboarding baseline covered static SQLite uploads up to 20 MB and a single approved reporting table. Subsequent [relational support](RELATIONAL_VERIFICATION.md) and [database connector work](CONNECTOR_VERIFICATION.md) have their own verification reports. The current [connection workflow](CONNECTIONS.md) adds authenticated PostgreSQL/MySQL/SQL Server adapters and scheduled snapshot replacement, with live-vendor qualification still pending. AIDA 4 now adds application accounts and per-account source ownership, also enforced for connections and generated snapshots. Shared server-side dashboards and production multi-tenant qualification remain outstanding. Private-data use is confined to local mode; public-demo mode hides private sources and disables onboarding/connections. Aggregate-only access does not itself provide differential privacy or minimum-group-size guarantees.

@@ -29,7 +29,7 @@ with remote.begin() as db:
 
 
 @contextmanager
-def test_session(spec):
+def test_session(spec, settings=None):
     with remote.connect() as db:
         yield db
 

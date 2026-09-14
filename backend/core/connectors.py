@@ -38,7 +38,8 @@ def utcnow():
     return datetime.now(timezone.utc).isoformat()
 
 
-def validate_connection(raw):
+def validate_connection(raw, settings=None):
+    env = os.environ if settings is None else settings
     if not isinstance(raw, dict) or set(raw) - {"engine", "host", "port", "database", "schema", "username", "password", "tls"}:
         raise SourceError("Provide the database engine, host, port, database, schema, username, password and TLS option.")
     engine = raw.get("engine")
@@ -51,13 +52,13 @@ def validate_connection(raw):
     port = raw.get("port", ENGINES[engine])
     if type(port) is not int or not 1 <= port <= 65535:
         raise SourceError("Port must be an integer between 1 and 65535.")
-    allowed = {item.strip().lower() for item in os.environ.get("AIDA_CONNECTOR_HOSTS", "").split(",") if item.strip()}
+    allowed = {item.strip().lower() for item in env.get("AIDA_CONNECTOR_HOSTS", "").split(",") if item.strip()}
     if f"{host}:{port}" not in allowed:
         raise SourceError("This database destination is not approved. The operator must add host:port to AIDA_CONNECTOR_HOSTS.")
     tls = raw.get("tls", True)
     if type(tls) is not bool:
         raise SourceError("TLS must be true or false.")
-    if not tls and not (host in {"127.0.0.1", "localhost"} and os.environ.get("AIDA_CONNECTOR_LOCAL_TEST") == "1"):
+    if not tls and not (host in {"127.0.0.1", "localhost"} and env.get("AIDA_CONNECTOR_LOCAL_TEST") == "1"):
         raise SourceError("Verified TLS is required. Plaintext is available only for operator-enabled loopback test databases.")
     password = raw.get("password")
     if not isinstance(password, str) or not 1 <= len(password) <= 1024 or "\x00" in password:
@@ -69,11 +70,12 @@ def validate_connection(raw):
     return result
 
 
-def create_remote_engine(spec):
+def create_remote_engine(spec, settings=None):
     """Passwords are structured driver parameters and never interpolated into SQL."""
-    spec = validate_connection(spec)  # Recheck policy on every scheduled attempt.
+    env = os.environ if settings is None else settings
+    spec = validate_connection(spec, env)  # Recheck policy on every scheduled attempt.
     common = dict(host=spec["host"], port=spec["port"], database=spec["database"], username=spec["username"], password=spec["password"])
-    ca = os.environ.get("AIDA_CONNECTOR_CA_FILE")
+    ca = env.get("AIDA_CONNECTOR_CA_FILE")
     if spec["engine"] == "postgresql":
         url = sa.URL.create("postgresql+psycopg", **common)
         args = {"connect_timeout": 10, "sslmode": "verify-full" if spec["tls"] else "disable",
@@ -99,8 +101,8 @@ def create_remote_engine(spec):
 
 
 @contextmanager
-def remote_session(spec):
-    engine = create_remote_engine(spec)
+def remote_session(spec, settings=None):
+    engine = create_remote_engine(spec, settings)
     try:
         with engine.connect() as connection:
             if spec["engine"] == "postgresql":
@@ -215,13 +217,16 @@ def scalar(value):
 
 
 class DatabaseAdapter:
+    def __init__(self, settings=None):
+        self.settings = settings
+
     def inspect(self, spec):
-        with remote_session(spec) as connection:
+        with remote_session(spec, self.settings) as connection:
             return metadata(connection, spec["schema"])
 
     def extract(self, spec, selection, expected, destination):
         started, count = time.monotonic(), 0
-        with remote_session(spec) as remote:
+        with remote_session(spec, self.settings) as remote:
             chosen = selected_metadata(metadata(remote, spec["schema"]), selection)
             if chosen != expected:
                 raise SourceError("Selected schema changed. Create a new connection and review its catalog; the last good snapshot is still available.")
@@ -262,18 +267,19 @@ class DatabaseAdapter:
 
 
 class ConnectionService:
-    def __init__(self, registry, adapter=None):
+    def __init__(self, registry, adapter=None, settings=None):
         self.registry = registry
         self.directory = registry.directory.parent / "connections"
         self.directory.mkdir(exist_ok=True)
-        self.adapter = adapter or DatabaseAdapter()
+        self.settings = os.environ if settings is None else settings
+        self.adapter = adapter or DatabaseAdapter(self.settings)
         self.lock = threading.RLock()
         self.stop_event = threading.Event()
         self.records = {}
         self.thread = None
         self.process_lock = None
         self.cipher = None
-        key = os.environ.get("AIDA_CONNECTOR_KEY")
+        key = self.settings.get("AIDA_CONNECTOR_KEY")
         if key:
             try:
                 self.cipher = Fernet(key.encode("ascii"))
@@ -342,8 +348,8 @@ class ConnectionService:
         temporary.write_text(json.dumps(record), encoding="utf-8")
         os.replace(temporary, path)
 
-    def _record(self, id):
-        if not isinstance(id, str) or id not in self.records:
+    def _record(self, id, principal=None):
+        if not isinstance(id, str) or id not in self.records or (principal is not None and not self.registry._owns(self.records[id], principal)):
             raise SourceError("Unknown database connection.")
         return self.records[id]
 
@@ -353,17 +359,17 @@ class ConnectionService:
         except (InvalidToken, ValueError):
             raise SourceError("Stored credentials cannot be unlocked. Restore the original connector key or recreate the connection.") from None
 
-    def list(self):
+    def list(self, principal=None):
         with self.lock:
             return {"enabled": not self.registry.public_demo and self.cipher is not None,
-                    "engines": list(ENGINES), "connections": [] if self.registry.public_demo else [self._public(r) for r in self.records.values()]}
+                    "engines": list(ENGINES), "connections": [] if self.registry.public_demo else [self._public(r) for r in self.records.values() if principal is None or self.registry._owns(r, principal)]}
 
     def _public(self, record):
-        return copy.deepcopy({k: v for k, v in record.items() if k != "encrypted"})
+        return copy.deepcopy({k: v for k, v in record.items() if k not in {"encrypted", "owner_id"}})
 
     def inspect(self, config):
         self._enabled()
-        spec = validate_connection(config)
+        spec = validate_connection(config, self.settings)
         try:
             return {"tables": self.adapter.inspect(spec)}
         except SourceError:
@@ -371,7 +377,7 @@ class ConnectionService:
         except Exception:
             raise SourceError(FAILURE) from None
 
-    def create(self, config):
+    def create(self, config, principal=None):
         self._enabled()
         if not isinstance(config, dict) or set(config) != {"name", "connection", "selection", "schedule"}:
             raise SourceError("Provide name, connection, selection and schedule.")
@@ -379,7 +385,7 @@ class ConnectionService:
         schedule = config["schedule"]
         if not isinstance(schedule, str) or schedule not in SCHEDULES:
             raise SourceError("Choose manual, hourly or daily refresh.")
-        spec = validate_connection(config["connection"])
+        spec = validate_connection(config["connection"], self.settings)
         expected = selected_metadata(self.inspect(spec)["tables"], config["selection"])
         secret = {"connection": spec, "selection": config["selection"], "expected": expected}
         with self.lock:
@@ -388,15 +394,16 @@ class ConnectionService:
             record = {"id": uuid.uuid4().hex, "name": name, "engine": spec["engine"], "source_id": None,
                       "schedule": schedule, "next_refresh": None, "status": "queued", "last_success": None,
                       "error": None, "rows": None, "history": [], "created_at": utcnow(),
+                      "owner_id": principal.get("id") if principal else None,
                       "encrypted": self.cipher.encrypt(json.dumps(secret).encode()).decode()}
             self._persist(record)
             self.records[record["id"]] = record
             return self._public(record)
 
-    def action(self, id, action, config):
+    def action(self, id, action, config, principal=None):
         self._enabled()
         with self.lock:
-            record = self._record(id)
+            record = self._record(id, principal)
             if record["status"] in {"queued", "running"}:
                 raise SourceError("A refresh is already queued or running. Wait for it to finish.")
             if action == "refresh":
@@ -435,11 +442,11 @@ class ConnectionService:
         started = utcnow()
         try:
             secret = self._secret(record)
-            validate_connection(secret["connection"])
+            validate_connection(secret["connection"], self.settings)
             rows = self.adapter.extract(secret["connection"], secret["selection"], secret["expected"], staged)
             if self.stop_event.is_set():
                 raise SourceError("Refresh stopped during backend shutdown; the last good snapshot is unchanged.")
-            source_id = self.registry.publish_snapshot(record["source_id"], staged, record["name"])
+            source_id = self.registry.publish_snapshot(record["source_id"], staged, record["name"], record.get("owner_id"))
             outcome = {"status": "succeeded", "source_id": source_id, "rows": rows, "last_success": utcnow(), "error": None}
         except Exception as exc:
             outcome = {"status": "failed", "error": str(exc) if isinstance(exc, SourceError) else FAILURE}

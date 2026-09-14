@@ -166,15 +166,23 @@ def test_count_and_averages_have_defined_empty_semantics(tmp_path, snapshot, con
         assert engine.query(plan={"metric": metric, "filters": {"warehouse": "Absent"}})["data"] == [{"value": value}]
 
 
-def test_builtin_commerce_compiler_matches_existing_business_definitions(tmp_path):
-    legacy = AnalyticsEngine(tmp_path / "commerce.sqlite")
-    legacy.ensure_demo_data()
-    registry = SourceRegistry(tmp_path / "data")
-    engine = registry.register_commerce_demo(legacy.database_path)
-    for metric in ("revenue", "orders", "average_order_value"):
-        for dimension in (None, "status", "region", "month"):
+def test_builtin_commerce_compiler_matches_independent_business_definitions(tmp_path):
+    seed = AnalyticsEngine(tmp_path / "commerce.sqlite")
+    seed.ensure_demo_data()
+    engine = SourceRegistry(tmp_path / "data").register_commerce_demo(seed.database_path)
+    expressions = {"revenue": "ROUND(COALESCE(SUM(CASE WHEN status='Completed' THEN amount_cents END),0)/100.0,2)", "orders": "COUNT(*)",
+                   "average_order_value": "ROUND(AVG(CASE WHEN status='Completed' THEN amount_cents END)/100.0,2)"}
+    groups = {None: None, "status": "status", "region": "region", "month": "substr(order_date,1,7)"}
+    for metric, expression in expressions.items():
+        for dimension, group in groups.items():
+            sql = (f"SELECT {group} AS {dimension}, " if group else "SELECT ") + f"{expression} AS value FROM analytics_orders WHERE order_date >= '2025-02-01' AND order_date <= '2025-06-30'"
+            if group:
+                sql += f" GROUP BY {group} ORDER BY " + (f"{dimension} ASC" if dimension == "month" else f"value DESC, {dimension} ASC")
+            with closing(sqlite3.connect(seed.database_path)) as connection:
+                connection.row_factory = sqlite3.Row
+                expected = [dict(row) for row in connection.execute(sql)]
             plan = {"metric": metric, "dimension": dimension, "date_from": "2025-02-01", "date_to": "2025-06-30"}
-            assert engine.query(plan=plan)["data"] == legacy.query(plan=plan)["data"]
+            assert engine.query(plan=plan)["data"] == expected
 
 
 def test_second_builtin_schema_uses_own_metrics_dates_and_cache(tmp_path):
