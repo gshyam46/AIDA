@@ -53,10 +53,10 @@ export default function QueryChart({result, catalog, type, onSelect, compact = f
         const y = top + (1 - ratio) * (height - top - bottom)
         return <g key={ratio}><line x1={left} x2={width-right} y1={y} y2={y} stroke="#DEDCCD" strokeDasharray="4 5"/><text x={left-12} y={y+4} textAnchor="end" fill="#6D705E" fontSize="11">{format(min + span*ratio, true)}</text></g>
       })}
-      <path d={area} fill="#555D38" fillOpacity="0.08"/>
-      <polyline points={points} fill="none" stroke="#555D38" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={area} fill="#526b23" fillOpacity="0.08"/>
+      <polyline points={points} fill="none" stroke="#526b23" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
       {coords.map((point, index) => <g key={labels[index]}>
-        <circle cx={point.x} cy={point.y} r={active === index ? 6 : 4} fill="#FAF7EF" stroke="#555D38" strokeWidth="2"/>
+        <circle cx={point.x} cy={point.y} r={active === index ? 6 : 4} fill="#ffffff" stroke="#526b23" strokeWidth="2"/>
         <circle role="button" tabIndex={0} aria-label={`${labels[index]}: ${format(Number(rows[index].value))}`} cx={point.x} cy={point.y} r="13" fill="transparent" className="chart-point"
           onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)} onClick={() => pick(index)} onKeyDown={event => {if (event.key === 'Enter' || event.key === ' ') {event.preventDefault(); pick(index)}}}>
           <title>{labels[index]}: {format(Number(rows[index].value))}</title>

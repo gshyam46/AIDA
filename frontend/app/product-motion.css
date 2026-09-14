@@ -1,0 +1,157 @@
+/* Motion follows an action: arriving, choosing, checking and returning.
+   Keep chart geometry, scrolling containers and the sidebar drawer in place. */
+:root {
+  --product-ease: cubic-bezier(.2, .75, .2, 1);
+  --product-fast: 160ms;
+  --product-settle: 280ms;
+}
+
+:is(.app-shell, .auth-shell, .onboarding, .bench)
+  :is(.button, .auth-submit, .icon-button, .text-button, .back-link,
+      .sidebar nav button, .user-menu button, .query-mode button,
+      .result-tabs button, .chart-type button, .mapping-mode button,
+      .chip-group button, .onboarding-steps button, .choice,
+      .bench-toggle button, .table-pager button) {
+  transition: color var(--product-fast), background-color var(--product-fast),
+    border-color var(--product-fast), box-shadow var(--product-settle),
+    translate var(--product-settle) var(--product-ease);
+}
+
+:is(.app-shell, .auth-shell, .onboarding, .bench)
+  :is(.button, .auth-submit, .icon-button, .text-button, .back-link,
+      .sidebar nav button, .onboarding-steps button, .choice) > svg:not(.spin) {
+  transition: translate var(--product-settle) var(--product-ease),
+    color var(--product-fast), opacity var(--product-fast);
+}
+
+:is(.app-shell, .auth-shell, .onboarding, .bench)
+  :is(.button, .auth-submit, .icon-button, .sidebar nav button,
+      .onboarding-steps button, .choice, .bench-toggle button):focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 4px;
+}
+
+.onboarding .onboarding-steps button:focus-visible { outline-color: var(--parchment); }
+
+.auth-shell .field,
+.onboarding .field {
+  transition: color var(--product-fast);
+}
+.auth-shell .field:focus-within,
+.onboarding .field:focus-within { color: var(--olive); }
+
+:is(.app-shell, .auth-shell, .onboarding)
+  :is(input, select, textarea, .question-input, .table-search) {
+  transition: border-color var(--product-fast),
+    background-color var(--product-fast), box-shadow var(--product-settle);
+}
+
+.app-shell :is(.kpi-card, .dashboard-card),
+.bench :is(.bench-card, .bench-facts > div) {
+  transition: border-color var(--product-settle), box-shadow var(--product-settle);
+}
+
+.app-shell :is(.bar-row, .chart-legend button, .data-table tbody tr),
+.bench .bench-table tbody tr {
+  transition: background-color var(--product-fast), color var(--product-fast);
+}
+
+.app-shell .bar-fill {
+  transition: width 480ms var(--product-ease),
+    opacity var(--product-fast), background-color var(--product-fast);
+}
+.app-shell :is(.relational-line, .relational-scatter, .donut-layout) circle[role=button] {
+  transition: stroke-width var(--product-fast), opacity var(--product-fast);
+}
+.bench :is(.bench-fill, .bench-stack .seg),
+.onboarding .progress span {
+  transition: width 480ms var(--product-ease), opacity var(--product-fast),
+    background-color var(--product-fast);
+}
+.password-meter span { transition: background-color var(--product-settle); }
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.app-shell, .auth-shell, .onboarding)
+    :is(.button, .auth-submit):hover:not(:disabled) {
+    translate: 0 -2px;
+  }
+  /* This button also inherits the shared pill style; use one movement. */
+  .auth-shell .auth-submit:hover { transform: none; }
+  :is(.app-shell, .onboarding) .icon-button:hover:not(:disabled) { translate: 0 -1px; }
+  .app-shell .sidebar nav button:hover:not(:disabled) > svg { translate: 2px 0; }
+  :is(.app-shell, .auth-shell, .onboarding)
+    :is(.button, .auth-submit, .text-button):hover:not(:disabled) > svg:last-child:not(.spin) {
+    translate: 2px 0;
+  }
+  .auth-shell .back-link:hover > svg { translate: -3px 0; }
+  .onboarding .choice:hover { translate: 0 -3px; border-color: var(--olive); }
+  .app-shell :is(.kpi-card, .dashboard-card):hover,
+  .bench :is(.bench-card, .bench-facts > div):hover {
+    border-color: var(--sage);
+    box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+}
+
+:is(.app-shell, .auth-shell, .onboarding, .bench)
+  :is(.button, .auth-submit, .icon-button, .sidebar nav button,
+      .onboarding-steps button, .choice, .bench-toggle button):active:not(:disabled) {
+  translate: 0 1px;
+  transition-duration: 80ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-card,
+  .onboarding-card,
+  .app-shell .page-heading {
+    animation: product-arrive 500ms var(--product-ease) both;
+  }
+  .auth-story :is(h1, p, .auth-points) {
+    animation: product-arrive 600ms var(--product-ease) both;
+  }
+  .auth-story p { animation-delay: 70ms; }
+  .auth-story .auth-points { animation-delay: 130ms; }
+  .app-shell .kpi-card,
+  .bench .bench-facts > div {
+    animation: product-arrive 500ms var(--product-ease) both;
+  }
+  :is(.kpi-grid, .bench-facts) > :nth-child(2) { animation-delay: 60ms; }
+  :is(.kpi-grid, .bench-facts) > :nth-child(3) { animation-delay: 120ms; }
+  :is(.kpi-grid, .bench-facts) > :nth-child(4) { animation-delay: 180ms; }
+
+  .app-shell :is(.result-panel, .dashboard-card, .query-error),
+  .auth-shell :is(.form-error, .interest-done),
+  .onboarding :is(.choice-grid, .chip-group, .privacy-box) {
+    animation: product-fade-in 320ms var(--product-ease) both;
+  }
+
+  /* Conditional chart, table and SQL roots remount when a view is selected.
+     Opacity keeps point positions, scroll offsets and hit targets stable. */
+  .app-shell .result-panel > :is([data-testid='query-chart'], .data-table, .sql-content) {
+    animation: product-fade-in 240ms ease-out both;
+  }
+  .app-shell :is(.result-tabs, .query-mode) button[aria-selected=true] > svg,
+  .app-shell .chart-type button[aria-pressed=true] > svg {
+    animation: product-fade-in 220ms ease-out;
+  }
+}
+
+@keyframes product-arrive {
+  from { opacity: 0; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes product-fade-in {
+  from { opacity: .15; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.app-shell, .auth-shell, .onboarding, .bench),
+  :is(.app-shell, .auth-shell, .onboarding, .bench) *,
+  :is(.app-shell, .auth-shell, .onboarding, .bench) *::before,
+  :is(.app-shell, .auth-shell, .onboarding, .bench) *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+    translate: none !important;
+  }
+}

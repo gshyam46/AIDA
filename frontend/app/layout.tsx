@@ -3,13 +3,15 @@ import './fonts.css'
 import './globals.css'
 import './aida.css'
 import './theme.css'
+import './motion.css'
+import './product-motion.css'
 export const metadata: Metadata = {
   title: 'AIDA — A clearer view of your business',
   description: 'Ask business questions in plain language, explore the answers, and create dashboards with a clear view of the data behind every result.',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#F3EEDF',
+  themeColor: '#FBFAF4',
   colorScheme: 'light',
 }
 

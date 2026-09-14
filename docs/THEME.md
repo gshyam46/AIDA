@@ -1,39 +1,55 @@
-# Parchment + Olive
+# Parchment, Olive + Citron
 
 AIDA uses one visual theme across the website, account flow and analytics
-workspace. Warm surfaces, restrained olive accents, editorial headings and clear
-interface typography provide hierarchy without changing the query or dashboard
-workflow.
+workspace. Light parchment, fresh olive and citron surfaces pair with forest-green
+accents, confident headings and responsive motion. Query and dashboard behavior
+remain independent of these presentation styles.
 
 ## Shared palette and typography
 
 | Token | Color | Use |
 | --- | --- | --- |
-| `--parchment` | `#F3EEDF` | Page background and browser theme color |
-| `--surface` | `#FAF7EF` | Forms, panels and working surfaces |
-| `--olive` | `#555D38` | Primary actions, selected controls and chart accents |
-| `--olive-dark` | `#303724` | Dark sections and strong brand color |
-| `--ink` | `#2B3024` | Main text |
-| `--muted` | `#6B6D5C` | Secondary text |
-| `--line` | `#D8D3C3` | Dividers and borders |
-| `--sage` | `#B5BA94` | Supporting chart and accent color |
-| `--hero-green` | `#4F6A34` | Fresh green at the start of the hero background |
-| `--olive-mid` | `#557236` | Middle shade of the hero background |
-| `--olive-light` | `#5D773C` | Brighter olive behind the parchment demo |
+| `--parchment` | `#FBFAF4` | Page background and browser theme color |
+| `--surface` | `#FFFFFF` | Forms, panels and working surfaces |
+| `--olive` | `#526B23` | Primary actions, selected controls and chart accents |
+| `--olive-dark` | `#183C2E` | Forest-green accents and strong brand color |
+| `--ink` | `#19372B` | Main text |
+| `--muted` | `#626D5C` | Secondary text |
+| `--line` | `#DCE3D2` | Dividers and borders |
+| `--sage` | `#B9D393` | Supporting chart and accent color |
+| `--hero-green` | `#EDF3CD` | Light olive hero background |
+| `--olive-mid` | `#667F2B` | Supporting olive accent |
+| `--olive-light` | `#E1EF87` | Citron highlights and selected controls |
 
-Use **Manrope** (`--font-ui`) for controls, tables, navigation and body text.
-Use **Newsreader** (`--font-display`) for prominent headings; its real italic
-provides occasional editorial emphasis. Dense data and table values stay in the UI
-font; headline totals may use Newsreader. Other scripts fall back to system fonts.
+Use **Manrope** (`--font-ui`) for controls, tables, navigation, body text and primary
+headings. Headings use weight 650 for stronger hierarchy. **Newsreader**
+(`--font-display`) supplies occasional italic accents and selected headline totals.
+Other scripts fall back to system fonts.
 
-The hero uses a larger Newsreader headline at weight 400, with real italic
-emphasis and a Manrope lead at weight 500. Its fresh green-to-olive
-background combines faint hatching with static engraved curves from
-`public/hero-contours.svg`. Decoration stays behind the content and accepts no
-pointer events. On mobile, the curves sit lower to keep the headline clear. The
-light demo panel and fresh sage call to action provide contrast against the green.
-Small hero text stays white and the curves use 4% opacity to keep labels readable
-over the brighter end of the background.
+The hero pairs a bold Manrope heading with a Newsreader italic accent at weight
+450. A light olive-to-citron background uses sparse CSS dots and a large outline
+ring behind the white demo panel. It has no image download or grain overlay.
+Decoration accepts no pointer events. Dark forest text and controls contrast with
+the light canvas; the console header reverses to citron on forest green.
+
+## Motion and interaction
+
+Hero copy enters in a short stagger. Sections and cards enter once as they scroll
+into view. Existing demo stages, definition rows, chart bars, security details and
+privacy choices transition when selected. Buttons, arrows, navigation, forms and
+product panels provide short hover, focus, press and arrival feedback. A thin
+navigation progress line follows scroll position without rerendering the page.
+
+The walkthrough has an explicit pause/play button. Its typing and autoplay pause
+when less than 15% of the demo is visible, when the document is hidden or when the
+visitor pauses it. Manual stage selection stays selected until play or another
+example is chosen. A paused walkthrough stays paused when examples are changed.
+
+`prefers-reduced-motion` disables autoplay, typing and visual animations, including
+when the preference changes during a visit. Examples and tabs remain interactive.
+Server-rendered content starts visible with a complete question; scroll effects
+never leave content hidden if JavaScript is unavailable. Motion uses CSS and native
+Web Animations, with no animation dependency or model calls.
 
 Both font families are self-hosted WOFF2 files with pinned Fontsource 5.3.0
 provenance, SHA-256 checksums and SIL Open Font License 1.1 files in
@@ -50,12 +66,16 @@ when distributing the application.
 - [`theme.css`](../frontend/app/theme.css) is the shared palette and visual hierarchy
   layer. It loads after the base CSS. Put shared theme adjustments here and keep
   route-specific colors from drifting away from the palette.
+- [`motion.css`](../frontend/app/motion.css) owns landing interactions; the page
+  coordinates viewport, visibility and motion preferences.
+- [`product-motion.css`](../frontend/app/product-motion.css) owns workspace,
+  account, onboarding and benchmark transitions. Both load after the theme.
 - [`BrandLogo`](../frontend/components/BrandLogo.tsx) renders the architectural A
   with a folded ledger crossbar and a wordmark. It inherits `currentColor`, accepts
   `className` and `compact`, and leaves navigation to its parent link. Its CSS
   module owns the signature proportions.
-- [`icon.svg`](../frontend/app/icon.svg) uses the same symbol in parchment on deep
-  olive. [`layout.tsx`](../frontend/app/layout.tsx) owns the global font imports,
+- [`icon.svg`](../frontend/app/icon.svg) uses the same symbol in citron on forest
+  green. [`layout.tsx`](../frontend/app/layout.tsx) owns the global font imports,
   preloads, page metadata and parchment browser theme color.
 
 The theme covers `/`, `/benchmarks`, `/signup`, `/login`, `/waitlist`,

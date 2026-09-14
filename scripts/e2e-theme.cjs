@@ -18,7 +18,7 @@ const widths = [1440, 1024, 768, 390, 320];
 const routes = ['/', '/signup', '/login', '/benchmarks'];
 const report = {
   started_at: new Date().toISOString(), base_url: base, steps: [], routes: [],
-  page_errors: [], console_errors: [], failed_requests: [], font_requests: [], mutation_requests: [],
+  page_errors: [], console_errors: [], failed_requests: [], expected_script_blocks: [], font_requests: [], mutation_requests: [],
 };
 fs.mkdirSync(artifacts, {recursive: true});
 const save = () => fs.writeFileSync(path.join(artifacts, 'report.json'), JSON.stringify(report, null, 2));
@@ -48,13 +48,23 @@ async function launch() {
     const page = await context.newPage();
     page.setDefaultTimeout(12000);
     page.setDefaultNavigationTimeout(45000);
-    page.on('pageerror', error => report.page_errors.push({url: page.url(), message: error.message}));
-    page.on('console', message => {if (message.type() === 'error') report.console_errors.push({url: page.url(), message: message.text()});});
-    page.on('requestfailed', request => report.failed_requests.push({url: request.url(), failure: request.failure()?.errorText}));
-    page.on('response', response => {
-      if (response.request().resourceType() === 'font') report.font_requests.push({url: response.url(), status: response.status()});
-    });
-    await context.route('**/api/v1/**', route => {
+    const observePage = (target, {scriptsDisabled = false} = {}) => {
+      target.on('pageerror', error => report.page_errors.push({url: target.url(), message: error.message}));
+      target.on('console', message => {if (message.type() === 'error') report.console_errors.push({url: target.url(), message: message.text()});});
+      target.on('requestfailed', request => {
+        const failure = {url: request.url(), failure: request.failure()?.errorText, resource_type: request.resourceType()};
+        const url = new URL(failure.url);
+        // Chromium can report the intentionally disabled hydration script as a CSP block.
+        // Record this separately only for same-origin Next.js scripts in the explicit no-JS context.
+        if (scriptsDisabled && failure.failure === 'csp' && failure.resource_type === 'script' && url.origin === new URL(base).origin && /^\/_next\/static\/chunks\/[^?#]+\.js$/.test(url.pathname)) {
+          report.expected_script_blocks.push({...failure, reason: 'JavaScript disabled for static-content verification'});
+        } else report.failed_requests.push(failure);
+      });
+      target.on('response', response => {
+        if (response.request().resourceType() === 'font') report.font_requests.push({url: response.url(), status: response.status()});
+      });
+    };
+    const preventMutations = target => target.route('**/api/v1/**', route => {
       const request = route.request();
       if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method())) {
         report.mutation_requests.push({url: request.url(), method: request.method()});
@@ -62,6 +72,8 @@ async function launch() {
       }
       return route.continue();
     });
+    observePage(page);
+    await preventMutations(context);
 
     async function visit(route) {
       const response = await page.goto(`${base}${route}`, {waitUntil: 'networkidle'});
@@ -135,6 +147,117 @@ async function launch() {
       return {url, content_type: response.headers()['content-type']};
     });
 
+    const demoState = target => target.evaluate(() => ({
+      question: document.querySelector('.console-question > span[aria-hidden="true"]').textContent,
+      stage: document.querySelector('.stage-rail [aria-selected="true"]').textContent,
+    }));
+    const waitForPlayback = (target, playing) => target.waitForFunction(expected => document.querySelector('.demo-frame')?.dataset.demoPlaying === String(expected), playing);
+    // Long enough to span a complete walkthrough stage, rather than merely checking a CSS class.
+    const playbackWindow = 5000;
+    await step('walkthrough autoplay pauses outside the viewport and in a hidden document', async () => {
+      const motionContext = await browser.newContext({viewport: {width: 1440, height: 1000}, reducedMotion: 'no-preference'});
+      await preventMutations(motionContext);
+      const motionPage = await motionContext.newPage();
+      observePage(motionPage);
+      try {
+        await motionPage.goto(base, {waitUntil: 'networkidle'});
+        await motionPage.locator('.demo-frame').scrollIntoViewIfNeeded();
+        await waitForPlayback(motionPage, true);
+        const initial = await demoState(motionPage);
+        await motionPage.waitForFunction(previous => document.querySelector('.console-question > span[aria-hidden="true"]').textContent !== previous.question || document.querySelector('.stage-rail [aria-selected="true"]').textContent !== previous.stage, initial, {timeout: 8000});
+
+        await motionPage.locator('.landing-footer').scrollIntoViewIfNeeded();
+        await waitForPlayback(motionPage, false);
+        const offscreen = await demoState(motionPage);
+        await motionPage.waitForTimeout(playbackWindow);
+        assert.deepEqual(await demoState(motionPage), offscreen, 'Offscreen content must stop typing and changing stages');
+
+        await motionPage.locator('.demo-frame').scrollIntoViewIfNeeded();
+        await waitForPlayback(motionPage, true);
+        // Simulate the browser visibility signal; actual tab focus differs across headless engines.
+        await motionPage.evaluate(() => {
+          Object.defineProperty(document, 'visibilityState', {configurable: true, value: 'hidden'});
+          Object.defineProperty(document, 'hidden', {configurable: true, value: true});
+          document.dispatchEvent(new Event('visibilitychange'));
+        });
+        await waitForPlayback(motionPage, false);
+        const hidden = await demoState(motionPage);
+        await motionPage.waitForTimeout(playbackWindow);
+        assert.deepEqual(await demoState(motionPage), hidden, 'A hidden document must not advance the walkthrough');
+        await motionPage.evaluate(() => {
+          delete document.visibilityState;
+          delete document.hidden;
+          document.dispatchEvent(new Event('visibilitychange'));
+        });
+        await waitForPlayback(motionPage, true);
+        await motionPage.waitForFunction(previous => document.querySelector('.console-question > span[aria-hidden="true"]').textContent !== previous.question || document.querySelector('.stage-rail [aria-selected="true"]').textContent !== previous.stage, hidden, {timeout: 8000});
+        await motionPage.screenshot({path: path.join(artifacts, 'walkthrough-normal-motion.png'), fullPage: false});
+        return {offscreen_pauses: true, visibility_signal_pauses: true, resumes_when_visible: true};
+      } finally {await motionContext.close();}
+    });
+
+    await step('walkthrough pause persists across manual example and stage selection', async () => {
+      const motionContext = await browser.newContext({viewport: {width: 1440, height: 1000}, reducedMotion: 'no-preference'});
+      await preventMutations(motionContext);
+      const motionPage = await motionContext.newPage();
+      observePage(motionPage);
+      try {
+        await motionPage.goto(base, {waitUntil: 'networkidle'});
+        await motionPage.locator('.demo-frame').scrollIntoViewIfNeeded();
+        await waitForPlayback(motionPage, true);
+        await motionPage.getByRole('button', {name: 'Pause walkthrough', exact: true}).click();
+        await waitForPlayback(motionPage, false);
+        await motionPage.getByRole('button', {name: 'Calculated ratio', exact: true}).click();
+        await motionPage.getByRole('tab', {name: 'Answer', exact: true}).click();
+        await motionPage.getByRole('tabpanel').getByText('49.64', {exact: true}).waitFor();
+        const selected = await demoState(motionPage);
+        await motionPage.waitForTimeout(playbackWindow);
+        assert.deepEqual(await demoState(motionPage), selected, 'User-selected content must remain stable while paused');
+        await waitForPlayback(motionPage, false);
+        await motionPage.getByRole('button', {name: 'Play walkthrough', exact: true}).click();
+        await waitForPlayback(motionPage, true);
+      } finally {await motionContext.close();}
+    });
+
+    await step('reduced motion shows the complete question and keeps manual controls usable', async () => {
+      await visit('/');
+      await page.locator('.demo-frame').scrollIntoViewIfNeeded();
+      await waitForPlayback(page, false);
+      assert.equal((await demoState(page)).question.trim(), 'Top 3 categories by revenue in Q3 2025');
+      const initial = await demoState(page);
+      await page.waitForTimeout(playbackWindow);
+      assert.deepEqual(await demoState(page), initial, 'Reduced motion must disable automatic typing and stage changes');
+      assert.equal(await page.evaluate(() => document.getAnimations().filter(animation => animation.playState === 'running' && animation.effect?.getTiming().iterations === Infinity).length), 0, 'Reduced motion must not leave decorative loops running');
+      await page.getByRole('button', {name: 'Attack attempt', exact: true}).click();
+      await page.getByRole('tab', {name: 'Answer', exact: true}).click();
+      await page.getByRole('tabpanel').getByText(/No SQL ran/).waitFor();
+      await waitForPlayback(page, false);
+      return {autoplay: false, manual_controls: 'usable'};
+    });
+
+    await step('landing content remains visible and readable without JavaScript', async () => {
+      const staticContext = await browser.newContext({viewport: {width: 390, height: 844}, javaScriptEnabled: false, reducedMotion: 'no-preference'});
+      await preventMutations(staticContext);
+      const staticPage = await staticContext.newPage();
+      observePage(staticPage, {scriptsDisabled: true});
+      try {
+        const response = await staticPage.goto(base, {waitUntil: 'networkidle'});
+        assert.equal(response.status(), 200);
+        const detail = await staticPage.evaluate(() => ({
+          question: document.querySelector('.console-question > span[aria-hidden="true"]').textContent.trim(),
+          revealed: [...document.querySelectorAll('.reveal')].map(element => ({text: element.textContent.trim().slice(0, 70), opacity: Number(getComputedStyle(element).opacity), visibility: getComputedStyle(element).visibility, height: element.getBoundingClientRect().height})),
+          viewport: window.innerWidth, width: document.documentElement.scrollWidth,
+        }));
+        assert(detail.revealed.length > 0);
+        assert(detail.revealed.every(element => element.opacity > 0 && element.visibility === 'visible' && element.height > 0), `Content was hidden without JavaScript: ${JSON.stringify(detail.revealed.filter(element => element.opacity === 0 || element.visibility !== 'visible' || element.height === 0))}`);
+        assert.equal(detail.question, 'Top 3 categories by revenue in Q3 2025');
+        assert(detail.width <= detail.viewport + 1, 'Static landing fits the mobile viewport');
+        assert.equal(await staticPage.locator('.landing-actions').getByRole('link', {name: /Sign up/}).getAttribute('href'), '/signup');
+        await staticPage.screenshot({path: path.join(artifacts, 'landing-no-javascript-390.png'), fullPage: false});
+        return {visible_reveal_elements: detail.revealed.length, complete_question: true};
+      } finally {await staticContext.close();}
+    });
+
     for (const width of widths) {
       await page.setViewportSize({width, height: width <= 390 ? 844 : 1000});
       for (const route of routes) await step(`${route} at ${width}px: fonts, content and horizontal overflow`, async () => {
@@ -152,6 +275,10 @@ async function launch() {
           body_width: document.body.scrollWidth,
           body_font: getComputedStyle(document.body).fontFamily,
           heading_font: getComputedStyle(document.querySelector('h1, h2')).fontFamily,
+          heading_weight: getComputedStyle(document.querySelector('h1, h2')).fontWeight,
+          hero_accent_font: document.querySelector('.hero h1 em') ? getComputedStyle(document.querySelector('.hero h1 em')).fontFamily : null,
+          hero_accent_style: document.querySelector('.hero h1 em') ? getComputedStyle(document.querySelector('.hero h1 em')).fontStyle : null,
+          accent_fonts: [...document.querySelectorAll('.hero h1 em, .auth-story h1 em, .final-cta h2 em, .bench-facts strong')].map(element => getComputedStyle(element).fontFamily),
           font_faces: Array.from(document.fonts).map(font => ({family: font.family, style: font.style, status: font.status})),
           overflow_candidates: Array.from(document.querySelectorAll('main *, .auth-shell *')).map(element => {
             const rect = element.getBoundingClientRect();
@@ -166,9 +293,15 @@ async function launch() {
         assert(detail.document_width <= width + 1 && detail.body_width <= width + 1,
           `Page overflows ${width}px: document ${detail.document_width}px, body ${detail.body_width}px; ${JSON.stringify(detail.overflow_candidates)}`);
         assert.match(detail.body_font, /Manrope/);
-        assert.match(detail.heading_font, /Newsreader/);
-        for (const family of ['Manrope', 'Newsreader']) assert(detail.font_faces.some(font => font.family.replace(/["']/g, '') === family && font.status === 'loaded'), `${family} must actually load`);
-        return {route, width, document_width: detail.document_width, fonts: ['Manrope', 'Newsreader']};
+        assert.match(detail.heading_font, /Manrope/);
+        assert.equal(Number(detail.heading_weight), 650, 'Primary headings use the shared Manrope 650 style');
+        if (route === '/') {
+          assert.match(detail.hero_accent_font, /Newsreader/);
+          assert.equal(detail.hero_accent_style, 'italic');
+        }
+        const requiredFonts = ['Manrope', ...(detail.accent_fonts.some(font => /Newsreader/.test(font)) ? ['Newsreader'] : [])];
+        for (const family of requiredFonts) assert(detail.font_faces.some(font => font.family.replace(/["']/g, '') === family && font.status === 'loaded'), `${family} must actually load when used`);
+        return {route, width, document_width: detail.document_width, fonts: requiredFonts, heading_weight: detail.heading_weight};
       });
     }
 

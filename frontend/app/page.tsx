@@ -1,6 +1,6 @@
 'use client'
 import {useEffect, useRef, useState} from 'react'
-import {ArrowRight, Ban, Boxes, Calculator, CalendarRange, Check, Database, Eye, EyeOff, Fingerprint, GitBranch, KeyRound, LayoutDashboard, LockKeyhole, MessageSquareText, ScanSearch, ShieldCheck, Table2, Timer, UserPlus, Workflow, X} from 'lucide-react'
+import {ArrowRight, Ban, Boxes, Calculator, CalendarRange, Check, Database, Eye, EyeOff, Fingerprint, GitBranch, KeyRound, LayoutDashboard, LockKeyhole, MessageSquareText, Pause, Play, ScanSearch, ShieldCheck, Table2, Timer, UserPlus, Workflow, X} from 'lucide-react'
 import {getSession, SessionState} from '../lib/api'
 import {keyFacts, pct, runName} from '../lib/benchmarks'
 import {PREVIEW} from '../lib/mode'
@@ -56,38 +56,107 @@ export default function Landing() {
   const [open, setOpen] = useState(false)
   const [demo, setDemo] = useState(0)
   const [stage, setStage] = useState(0)
-  const [typed, setTyped] = useState(0)
+  // Server-rendered and reduced-motion views always start with a complete question.
+  const [typed, setTyped] = useState(DEMOS[0].question.length)
   const [manual, setManual] = useState(false)
+  const [paused, setPaused] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(true)
+  const [motionReady, setMotionReady] = useState(false)
+  const [demoInView, setDemoInView] = useState(false)
+  const [pageVisible, setPageVisible] = useState(true)
   const [layer, setLayer] = useState(0)
   const [sees, setSees] = useState<'yes' | 'no'>('yes')
   const root = useRef<HTMLDivElement>(null)
+  const demoFrame = useRef<HTMLDivElement>(null)
+  const progress = useRef<HTMLSpanElement>(null)
   const current = DEMOS[demo]
+  const autoplay = motionReady && !reducedMotion && demoInView && pageVisible && !paused && !manual
   useEffect(() => {if (!PREVIEW) getSession().then(setSession).catch(() => undefined)}, [])
-  useEffect(() => {const timer = setTimeout(() => setOpen(true), 500); return () => clearTimeout(timer)}, [])
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) {setTyped(current.question.length); return}
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncPreference = () => {
+      setReducedMotion(preference.matches)
+      if (preference.matches) root.current?.getAnimations({subtree: true}).forEach(animation => animation.cancel())
+    }
+    const syncVisibility = () => setPageVisible(document.visibilityState === 'visible')
+    syncPreference()
+    syncVisibility()
+    setMotionReady(true)
+    setOpen(true)
+    preference.addEventListener('change', syncPreference)
+    document.addEventListener('visibilitychange', syncVisibility)
+    const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+      setDemoInView(entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= .15))
+    }, {threshold: [0, .15]}) : null
+    if (demoFrame.current && observer) observer.observe(demoFrame.current)
+    else setDemoInView(true)
+    return () => {
+      preference.removeEventListener('change', syncPreference)
+      document.removeEventListener('visibilitychange', syncVisibility)
+      observer?.disconnect()
+    }
+  }, [])
+  useEffect(() => {
+    if (reducedMotion) {setTyped(current.question.length); return}
+    if (!autoplay) return
     if (typed < current.question.length) {const timer = setTimeout(() => setTyped(typed + 1), 26); return () => clearTimeout(timer)}
-    if (manual) return
     const timer = setTimeout(() => {
       if (stage < STAGES.length - 1) setStage(stage + 1)
       else {setDemo((demo + 1) % DEMOS.length); setStage(0); setTyped(0)}
     }, stage === STAGES.length - 1 ? 4200 : 2300)
     return () => clearTimeout(timer)
-  }, [typed, stage, demo, manual, current.question.length])
+  }, [typed, stage, demo, autoplay, reducedMotion, current.question.length])
   useEffect(() => {
-    const items = root.current?.querySelectorAll('.reveal') || []
-    if (!('IntersectionObserver' in window)) {items.forEach(item => item.classList.add('visible')); return}
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {if (entry.isIntersecting) {entry.target.classList.add('visible'); observer.unobserve(entry.target)}}), {threshold: .12})
+    if (!motionReady || reducedMotion || !root.current) return
+    const animations = new Set<Animation>()
+    const enter = (element: Element, index = 0) => {
+      if (!(element instanceof HTMLElement) || !element.animate) return
+      const animation = element.animate([
+        {opacity: 0, transform: 'translateY(22px)'},
+        {opacity: 1, transform: 'translateY(0)'},
+      ], {duration: 650, delay: Math.min(index * 65, 230), easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards'})
+      animations.add(animation)
+      animation.finished.then(() => animations.delete(animation)).catch(() => animations.delete(animation))
+    }
+    root.current.querySelectorAll('.hero-copy > *, .demo-frame').forEach((element, index) => enter(element, index))
+    const items = root.current.querySelectorAll('.reveal')
+    if (!('IntersectionObserver' in window)) return () => animations.forEach(animation => animation.cancel())
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (!entry.isIntersecting) return
+      const element = entry.target
+      element.classList.add('visible')
+      if (element.matches('.proof, .steps')) Array.from(element.children).forEach((child, index) => enter(child, index))
+      else {
+        const siblings = Array.from(element.parentElement?.children || []).filter(child => child.matches('.reveal'))
+        enter(element, siblings.indexOf(element))
+      }
+      observer.unobserve(element)
+    }), {threshold: .08, rootMargin: '0px 0px -24px 0px'})
     items.forEach(item => observer.observe(item))
-    return () => observer.disconnect()
-  }, [])
-  const chooseDemo = (index: number) => {setDemo(index); setStage(0); setTyped(0); setManual(false)}
+    return () => {observer.disconnect(); animations.forEach(animation => animation.cancel())}
+  }, [motionReady, reducedMotion])
+  useEffect(() => {
+    if (!motionReady || reducedMotion) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const range = document.documentElement.scrollHeight - window.innerHeight
+      const amount = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0
+      progress.current?.style.setProperty('transform', `scaleX(${amount})`)
+    }
+    const queue = () => {if (!frame) frame = requestAnimationFrame(update)}
+    update()
+    window.addEventListener('scroll', queue, {passive: true})
+    window.addEventListener('resize', queue, {passive: true})
+    return () => {cancelAnimationFrame(frame); window.removeEventListener('scroll', queue); window.removeEventListener('resize', queue)}
+  }, [motionReady, reducedMotion])
+  const chooseDemo = (index: number) => {setDemo(index); setStage(0); setTyped(reducedMotion || paused ? DEMOS[index].question.length : 0); setManual(false)}
   const signedIn = !!session?.user || session?.auth_required === false
   const primary = !PREVIEW && signedIn ? {href: session?.user && !session.onboarding ? '/onboarding' : '/workspace', label: session?.user && !session.onboarding ? 'Finish setup' : 'Open workspace'} : {href: '/signup', label: 'Sign up'}
   const max = current.answer ? Math.max(...current.answer.map(item => item[1])) : 1
-  return <div className="landing" ref={root}>
+  return <div className="landing" ref={root} data-motion={motionReady && !reducedMotion ? 'ready' : 'static'}>
     <header className="landing-nav">
+      <span className="page-progress" aria-hidden="true"><span ref={progress}/></span>
       <a className="brand" href="/" aria-label="AIDA home"><BrandLogo/></a>
       <nav className="landing-links" aria-label="Landing sections"><a href="#how">How it works</a><a href="#trust">Security</a><a href="#capabilities">Capabilities</a><a href="/benchmarks">Benchmarks</a><a href="#start">Get started</a></nav>
       <div className="landing-actions">{!signedIn && <a className="pill-button pill-ghost" href="/login">Sign in</a>}<a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={14}/></a></div>
@@ -95,16 +164,16 @@ export default function Landing() {
     <main>
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-inner">
-          <div>
+          <div className="hero-copy">
             <button type="button" className={`acronym ${open ? 'open' : ''}`} onClick={() => setOpen(!open)} aria-label="AIDA stands for Artificial Intelligence Data Analyst" aria-expanded={open}>{ACRONYM.map(([letter, rest], index) => <span key={index}><b>{letter}</b><i>{rest}</i></span>)}</button>
             <h1 id="hero-title">A clearer view<br/><em>of your business.</em></h1>
             <p className="hero-lead">Good decisions begin with a good question. Ask yours in plain language, explore the answer, and keep the view that matters. Your business data, thoughtfully understood.</p>
             <div className="hero-cta"><a className="pill-button pill-lime" href={primary.href}>{primary.label}<ArrowRight size={15}/></a><a className="hero-demo-link" href="#demo">Explore a question <ArrowRight size={15}/></a></div>
             <div className="hero-facts"><div><strong>Private by design</strong><span>Your rows stay out of model prompts.</span></div><div><strong>Open to inspection</strong><span>See the query behind every answer.</span></div></div>
           </div>
-          <div className="demo-frame" id="demo"><div className="demo-caption"><span>A question, explored</span><span>Interactive demo <ArrowRight size={12}/></span></div><div className="console" aria-label="Interactive walkthrough of one question">
-            <div className="console-bar"><BrandLogo compact/><span>{current.source}</span></div>
-            <div className="console-question" aria-live="polite">{current.question.slice(0, typed)}<span className="caret" aria-hidden="true"/></div>
+          <div className="demo-frame" id="demo" ref={demoFrame} data-demo-playing={autoplay} data-typing={autoplay && typed < current.question.length}><div className="demo-caption"><span>A question, explored</span><span>Interactive demo <ArrowRight size={12}/></span></div><div className="console" aria-label="Interactive walkthrough of one question">
+            <div className="console-bar"><BrandLogo compact/><span>{current.source}</span>{motionReady && !reducedMotion && <button type="button" className="demo-playback" aria-label={paused || manual ? 'Play walkthrough' : 'Pause walkthrough'} onClick={() => {if (paused || manual) {setPaused(false); setManual(false)} else setPaused(true)}}>{paused || manual ? <Play size={12}/> : <Pause size={12}/>}<span>{paused || manual ? 'Play' : 'Pause'}</span></button>}</div>
+            <div className="console-question"><span aria-hidden="true">{current.question.slice(0, typed)}<span className="caret"/></span><span className="sr-only" aria-live="polite">{current.question}</span></div>
             <div className="console-examples">{DEMOS.map((item, index) => <button key={item.label} type="button" aria-pressed={demo === index} onClick={() => chooseDemo(index)}>{item.label}</button>)}</div>
             <div className="stage-rail" role="tablist" aria-label="Pipeline stage">{STAGES.map((label, index) => <button key={label} type="button" role="tab" aria-selected={stage === index} aria-current={stage === index ? 'step' : undefined} onClick={() => {setStage(index); setTyped(current.question.length); setManual(true)}}>{label}</button>)}</div>
             <div className="stage-body" key={`${demo}-${stage}`} role="tabpanel">

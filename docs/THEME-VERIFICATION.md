@@ -1,4 +1,4 @@
-# Parchment & Olive frontend verification
+# Parchment, Olive & Citron frontend verification
 
 This change covers the landing page, workspace, dashboards, data catalog, charts,
 benchmarks, account screens, onboarding, registration confirmation, logo and favicon.
@@ -8,13 +8,16 @@ See [the theme guide](THEME.md) for the design tokens, fonts and asset ownership
 ## Verified results
 
 The production build, including TypeScript, passed. The browser suites passed
-**50 checks**: 25 public-page theme checks, 14 account/product journey checks and
+**54 checks**: 29 public-page theme/motion checks, 14 account/product journey checks and
 11 availability checks. See the [recorded results](evidence/theme-ui.json).
 
 Chart switching preserved the results, and saved dashboard refresh/reopen used
 the validated plan with zero model calls. KPI values fit their cards at 768, 390
 and 320 pixels; signup and sign-in links remain visible at 320 pixels. Desktop and
 mobile screenshots were inspected after correcting contrast and narrow layouts.
+KPI typography scales with each card's available width. A normal-motion browser
+inspection also confirmed active chart-bar animations and card hover movement;
+switching to reduced motion stopped walkthrough playback immediately.
 
 ## Reproduce
 
@@ -39,7 +42,11 @@ suite prints each result to the terminal.
 The theme suite checks the landing, signup, login and benchmark pages at 320, 390,
 768, 1024 and 1440 pixels; all demo stages and examples; keyboard activation of the
 security controls; the privacy toggle; local font loading; the favicon; page
-overflow and browser errors.
+overflow and browser errors. It also verifies offscreen and simulated document
+visibility pause/resume, explicit pause across manual selections, usable static
+controls with reduced motion, and readable server-rendered content with JavaScript
+disabled. Expected CSP blocks for Next.js scripts in that deliberately disabled
+context are recorded separately; unexpected failures still fail the suite.
 
 The availability suite simulates unavailable services and interest-storage
 responses in the browser. It checks successful registration, confirmation reload,
@@ -55,9 +62,12 @@ model calls. Real question evaluation is separate from this frontend change.
 ## Visual review
 
 Review the desktop landing and workspace, mobile landing and signup, the benchmark
-page and registration confirmation screenshots. Check serif headings and headline
-totals, readable UI labels, olive selected states, warm chart series and the same
+page and registration confirmation screenshots. Check bold Manrope headings,
+selective Newsreader accents, readable UI labels, citron selected states and the same
 logo across routes. Local font files also ship in the standalone/Docker runtime.
+With normal motion, inspect the hero entrance, section reveal, card hover,
+walkthrough transitions, security selection, privacy toggle and product controls.
+With reduced motion, confirm complete text and functional controls without movement.
 
 The signup and sign-in entry points remain visible on mobile. Preview signup uses
 name/email registration and opens the waitlist confirmation after a successful

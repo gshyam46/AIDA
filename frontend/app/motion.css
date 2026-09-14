@@ -1,0 +1,170 @@
+/* Motion enhances visible content; no reveal depends on JavaScript to become readable. */
+.landing .reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.landing :is(.stage-body, .check-list > div, .resolve-list > div, .mini-bars span,
+  .layer-content, .sees-grid > div, .console-question .caret) {
+  animation: none;
+}
+
+.page-progress {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.page-progress > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--olive);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.landing[data-motion='static'] .page-progress { display: none; }
+
+.demo-playback {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  margin: -4px -7px -4px 5px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.console-bar .demo-playback svg { width: 12px; height: 12px; }
+.console-bar .demo-playback span { margin-left: 0; }
+.demo-playback:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.demo-playback:focus-visible { outline-color: currentColor; }
+
+.demo-frame[data-typing='false'] .caret { opacity: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing {
+    --motion-ease: cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .landing :is(.pill-button, .hero-demo-link, .console-examples button,
+    .stage-rail button, .sees-toggle button, .layer-stack button) {
+    transition: color 180ms, background 180ms, border-color 180ms,
+      box-shadow 220ms, transform 280ms var(--motion-ease);
+  }
+
+  .landing :is(.pill-button, .hero-demo-link) > svg {
+    transition: transform 320ms var(--motion-ease);
+  }
+
+  .landing :is(.pill-button, .hero-demo-link):hover > svg {
+    transform: translateX(4px);
+  }
+
+  .landing :is(.pill-button, .console-examples button):active {
+    transform: translateY(1px) scale(.98);
+  }
+
+  .landing :is(.flow-card, .capability) {
+    transition: transform 400ms var(--motion-ease), box-shadow 400ms var(--motion-ease), border-color 250ms;
+  }
+
+  .landing :is(.flow-card, .capability) svg {
+    transition: transform 450ms var(--motion-ease);
+  }
+
+  .landing[data-motion='ready'] .stage-body {
+    animation: panel-arrive 400ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] :is(.check-list > div, .resolve-list > div) {
+    animation: detail-arrive 460ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] .resolve-list > div:nth-child(2) { animation-delay: 65ms; }
+  .landing[data-motion='ready'] .resolve-list > div:nth-child(3) { animation-delay: 130ms; }
+  .landing[data-motion='ready'] .resolve-list > div:nth-child(4) { animation-delay: 195ms; }
+  .landing[data-motion='ready'] .resolve-list > div:nth-child(5) { animation-delay: 260ms; }
+
+  .landing[data-motion='ready'] .mini-bars span {
+    transform-origin: left center;
+    animation: bar-arrive 800ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] .stage-rail button[aria-current='step']::after {
+    transform-origin: left;
+    animation: stage-underline 350ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] .layer-content {
+    animation: panel-arrive 450ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] .sees-grid > div {
+    animation: detail-arrive 420ms var(--motion-ease) both;
+  }
+
+  .landing[data-motion='ready'] .demo-frame[data-typing='true'] .caret {
+    animation: question-caret 650ms steps(2) infinite;
+  }
+
+  @media (hover: hover) {
+    .landing :is(.flow-card, .capability):hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .landing :is(.flow-card, .capability):hover svg {
+      transform: translateY(-2px) rotate(-5deg);
+    }
+
+    .landing .layer-stack button:hover { transform: translateX(4px); }
+    .landing .console-examples button:hover { transform: translateY(-2px); }
+  }
+}
+
+@keyframes panel-arrive {
+  from { opacity: .15; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes detail-arrive {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bar-arrive {
+  from { transform: scaleX(.025); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes stage-underline {
+  from { transform: scaleX(.15); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes question-caret {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing *, .landing *::before, .landing *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .landing .reveal { opacity: 1; transform: none; }
+  .landing .page-progress, .landing .caret { display: none; }
+}
